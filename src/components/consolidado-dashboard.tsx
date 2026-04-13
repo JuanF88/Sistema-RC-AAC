@@ -8,6 +8,8 @@ type Props = {
   data: ConsolidadoDashboard;
 };
 
+type ViewMode = "consolidado" | "facultades" | "detalle";
+
 function formatDate(value: string | null): string {
   if (!value) return "Sin fecha";
   const date = new Date(value);
@@ -23,7 +25,7 @@ function statusChip(label: string, tone: "ok" | "warn" | "neutral") {
   const styles = {
     ok: "bg-emerald-100 text-emerald-800 border-emerald-300",
     warn: "bg-amber-100 text-amber-900 border-amber-300",
-    neutral: "bg-slate-100 text-slate-700 border-slate-300",
+    neutral: "bg-blue-100 text-blue-800 border-blue-300",
   };
 
   return (
@@ -36,6 +38,8 @@ function statusChip(label: string, tone: "ok" | "warn" | "neutral") {
 export function ConsolidadoDashboardClient({ data }: Props) {
   const [search, setSearch] = useState("");
   const [faculty, setFaculty] = useState("Todas");
+  const [view, setView] = useState<ViewMode>("consolidado");
+  const [menuOpen, setMenuOpen] = useState(true);
   const [selectedId, setSelectedId] = useState<string | null>(data.programs[0]?.id ?? null);
 
   const faculties = useMemo(() => {
@@ -56,73 +60,116 @@ export function ConsolidadoDashboardClient({ data }: Props) {
 
   const selected = filtered.find((program) => program.id === selectedId) ?? filtered[0] ?? null;
 
+  const menuItems: Array<{ id: ViewMode; label: string; subtitle: string }> = [
+    { id: "consolidado", label: "Consolidado", subtitle: "Matriz general" },
+    { id: "facultades", label: "Facultades", subtitle: "Vista agregada" },
+    { id: "detalle", label: "Programa", subtitle: "Ficha especifica" },
+  ];
+
   return (
-    <div className="relative min-h-screen overflow-hidden bg-[radial-gradient(circle_at_20%_10%,#f9d18f_0%,transparent_35%),radial-gradient(circle_at_80%_90%,#9ed7ff_0%,transparent_35%),linear-gradient(180deg,#fefdf8_0%,#f3f8ff_100%)]">
-      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_right,rgba(20,40,80,0.05)_1px,transparent_1px),linear-gradient(to_bottom,rgba(20,40,80,0.05)_1px,transparent_1px)] bg-[size:32px_32px]" />
+    <div className="relative min-h-screen overflow-hidden bg-[radial-gradient(circle_at_0%_0%,#1f4fa9_0%,transparent_35%),radial-gradient(circle_at_100%_100%,#36a2eb_0%,transparent_30%),linear-gradient(180deg,#f5faff_0%,#eaf3ff_100%)]">
+      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_right,rgba(13,52,124,0.06)_1px,transparent_1px),linear-gradient(to_bottom,rgba(13,52,124,0.06)_1px,transparent_1px)] bg-[size:28px_28px]" />
 
-      <main className="relative mx-auto flex w-full max-w-7xl flex-col gap-8 px-4 py-10 sm:px-6 lg:px-10">
-        <section className="animate-[fadeIn_500ms_ease-out] rounded-3xl border border-slate-200 bg-white/80 p-6 shadow-[0_24px_80px_-40px_rgba(5,55,110,0.55)] backdrop-blur md:p-8">
-          <p className="text-xs font-semibold uppercase tracking-[0.25em] text-sky-700">Universidad del Cauca</p>
-          <h1 className="mt-2 max-w-3xl text-3xl font-black tracking-tight text-slate-900 sm:text-5xl">
-            Consolidado de Registro Calificado y Acreditacion
-          </h1>
-          <p className="mt-4 max-w-2xl text-sm text-slate-700 sm:text-base">
-            Vista general y detalle por programa con logica de vencimientos, alertas RRC y seguimiento AAC.
-          </p>
-          <p className="mt-3 text-xs text-slate-500">
-            Fuente activa: <strong>{data.source.toUpperCase()}</strong> · Actualizado {formatDate(data.generatedAt)}
-          </p>
-        </section>
-
-        <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-          {[
-            ["Programas", data.summary.totalPrograms],
-            ["Facultades", data.summary.faculties],
-            ["RC vigente", data.summary.activeRc],
-            ["RC vencido", data.summary.expiredRc],
-            ["Acreditados", data.summary.accredited],
-            ["Alertas 120 dias", data.summary.upcomingRrcIn120Days],
-          ].map(([label, value], idx) => (
-            <article
-              key={String(label)}
-              className="animate-[riseIn_450ms_ease-out] rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"
-              style={{ animationDelay: `${idx * 60}ms` }}
+      <div className="relative flex min-h-screen">
+        <aside
+          className={`z-20 shrink-0 border-r border-blue-900/15 bg-[linear-gradient(180deg,#0b2d73_0%,#133f93_100%)] text-blue-50 shadow-xl transition-all duration-300 ${
+            menuOpen ? "w-72" : "w-20"
+          }`}
+        >
+          <div className="flex items-center justify-between px-4 py-4">
+            {menuOpen && <p className="text-sm font-bold tracking-widest text-blue-100">SIAC UNICAUCA</p>}
+            <button
+              type="button"
+              onClick={() => setMenuOpen((value) => !value)}
+              className="rounded-lg border border-blue-300/20 bg-blue-900/30 p-2 hover:bg-blue-800/40"
+              aria-label="Abrir o cerrar menu"
             >
-              <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">{label}</p>
-              <p className="mt-2 text-3xl font-black text-slate-900">{value}</p>
-            </article>
-          ))}
-        </section>
+              <div className="flex w-4 flex-col gap-1">
+                <span className="h-0.5 w-4 bg-blue-100" />
+                <span className="h-0.5 w-4 bg-blue-100" />
+                <span className="h-0.5 w-4 bg-blue-100" />
+              </div>
+            </button>
+          </div>
 
-        <section className="grid gap-5 lg:grid-cols-[1.1fr_1.6fr]">
-          <aside className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
-            <h2 className="text-lg font-extrabold text-slate-900">Vista general por facultad</h2>
-            <div className="mt-4 space-y-3">
-              {data.byFaculty.map((row) => (
-                <div key={row.faculty} className="rounded-xl border border-slate-100 bg-slate-50 p-3">
-                  <p className="text-sm font-bold text-slate-800">{row.faculty}</p>
-                  <p className="mt-1 text-xs text-slate-600">
-                    {row.programs} programas · {row.activeRc} RC vigentes · {row.accredited} acreditados
-                  </p>
-                </div>
-              ))}
-            </div>
-          </aside>
+          <nav className="px-3 pb-3 pt-2">
+            {menuItems.map((item) => {
+              const active = view === item.id;
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => setView(item.id)}
+                  className={`mb-2 flex w-full items-center rounded-xl px-3 py-3 text-left transition ${
+                    active ? "bg-white text-blue-900" : "text-blue-100 hover:bg-blue-800/50"
+                  }`}
+                >
+                  <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-blue-200/20 text-xs font-bold">
+                    {item.label.slice(0, 1)}
+                  </span>
+                  {menuOpen && (
+                    <span className="ml-3">
+                      <span className="block text-sm font-bold">{item.label}</span>
+                      <span className={`block text-xs ${active ? "text-blue-700" : "text-blue-200"}`}>{item.subtitle}</span>
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </nav>
+        </aside>
 
-          <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <h2 className="text-lg font-extrabold text-slate-900">Vista especifica por programa</h2>
+        <main className="flex w-full min-w-0 flex-col gap-5 p-3 sm:p-5 lg:p-7">
+          <section className="animate-[fadeIn_500ms_ease-out] rounded-3xl border border-blue-100 bg-white/90 p-5 shadow-[0_24px_80px_-40px_rgba(5,55,110,0.55)] backdrop-blur md:p-7">
+            <p className="text-xs font-semibold uppercase tracking-[0.25em] text-blue-700">Universidad del Cauca</p>
+            <h1 className="mt-2 max-w-4xl text-2xl font-black tracking-tight text-slate-900 sm:text-4xl">
+            Consolidado de Registro Calificado y Acreditacion
+            </h1>
+            <p className="mt-3 max-w-3xl text-sm text-slate-700 sm:text-base">
+              Interfaz pensada para analisis: menu lateral para vistas, matriz amplia para navegar mas datos y panel detallado
+              por programa.
+            </p>
+            <p className="mt-2 text-xs text-slate-500">
+              Fuente activa: <strong>{data.source.toUpperCase()}</strong> · Actualizado {formatDate(data.generatedAt)}
+            </p>
+          </section>
+
+          <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+            {[
+              ["Programas", data.summary.totalPrograms],
+              ["Facultades", data.summary.faculties],
+              ["RC vigente", data.summary.activeRc],
+              ["RC vencido", data.summary.expiredRc],
+              ["Acreditados", data.summary.accredited],
+              ["Alertas 120 dias", data.summary.upcomingRrcIn120Days],
+            ].map(([label, value], idx) => (
+              <article
+                key={String(label)}
+                className="animate-[riseIn_450ms_ease-out] rounded-2xl border border-blue-100 bg-white p-4 shadow-sm"
+                style={{ animationDelay: `${idx * 60}ms` }}
+              >
+                <p className="text-xs font-semibold uppercase tracking-wider text-blue-600">{label}</p>
+                <p className="mt-2 text-3xl font-black text-slate-900">{value}</p>
+              </article>
+            ))}
+          </section>
+
+          <section className="rounded-3xl border border-blue-100 bg-white p-4 shadow-sm md:p-5">
+            <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+              <h2 className="text-lg font-black text-slate-900">
+                {view === "consolidado" ? "Matriz Consolidado" : view === "facultades" ? "Vista por Facultades" : "Detalle de Programa"}
+              </h2>
               <div className="flex flex-col gap-2 sm:flex-row">
                 <input
                   value={search}
                   onChange={(event) => setSearch(event.target.value)}
-                  className="rounded-xl border border-slate-300 bg-slate-50 px-3 py-2 text-sm outline-none transition focus:border-sky-500 focus:bg-white"
+                  className="rounded-xl border border-blue-200 bg-blue-50/40 px-3 py-2 text-sm outline-none transition focus:border-blue-500 focus:bg-white"
                   placeholder="Buscar por programa, codigo o SNIES"
                 />
                 <select
                   value={faculty}
                   onChange={(event) => setFaculty(event.target.value)}
-                  className="rounded-xl border border-slate-300 bg-slate-50 px-3 py-2 text-sm outline-none transition focus:border-sky-500 focus:bg-white"
+                  className="rounded-xl border border-blue-200 bg-blue-50/40 px-3 py-2 text-sm outline-none transition focus:border-blue-500 focus:bg-white"
                 >
                   {faculties.map((name) => (
                     <option key={name} value={name}>
@@ -133,32 +180,85 @@ export function ConsolidadoDashboardClient({ data }: Props) {
               </div>
             </div>
 
-            <div className="mt-4 grid gap-4 md:grid-cols-[0.9fr_1.1fr]">
-              <div className="max-h-[420px] overflow-y-auto rounded-2xl border border-slate-100">
-                {filtered.map((program) => (
-                  <button
-                    key={program.id}
-                    type="button"
-                    onClick={() => setSelectedId(program.id)}
-                    className={`w-full border-b border-slate-100 px-4 py-3 text-left transition last:border-0 ${
-                      selected?.id === program.id ? "bg-sky-50" : "hover:bg-slate-50"
-                    }`}
-                  >
-                    <p className="text-sm font-bold text-slate-900">{program.program}</p>
-                    <p className="text-xs text-slate-600">
-                      {program.faculty} · Proceso {program.processCode} · SNIES {program.snies || "N/D"}
-                    </p>
-                  </button>
-                ))}
-                {filtered.length === 0 && (
-                  <p className="px-4 py-6 text-sm text-slate-500">No hay programas para ese filtro.</p>
-                )}
+            {view === "consolidado" && (
+              <div className="overflow-hidden rounded-2xl border border-blue-100">
+                <div className="max-h-[65vh] overflow-auto">
+                  <table className="min-w-[1450px] border-collapse text-sm">
+                    <thead className="sticky top-0 z-10 bg-blue-900 text-blue-50">
+                      <tr>
+                        {[
+                          "Codigo",
+                          "SNIES",
+                          "Facultad",
+                          "Programa",
+                          "Nivel",
+                          "Modalidad",
+                          "Inicio RC",
+                          "Vencimiento RC",
+                          "RRC MinEdu",
+                          "Acreditable",
+                          "Acreditado",
+                          "Proceso AAC",
+                          "Inicio AAC",
+                          "Vencimiento AAC",
+                        ].map((header) => (
+                          <th key={header} className="whitespace-nowrap border-b border-blue-700 px-3 py-3 text-left text-xs uppercase tracking-wider">
+                            {header}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filtered.map((program) => (
+                        <tr
+                          key={program.id}
+                          onClick={() => {
+                            setSelectedId(program.id);
+                            setView("detalle");
+                          }}
+                          className="cursor-pointer odd:bg-white even:bg-blue-50/30 hover:bg-blue-100/50"
+                        >
+                          <td className="whitespace-nowrap border-b border-blue-50 px-3 py-2 font-semibold text-slate-800">{program.processCode}</td>
+                          <td className="whitespace-nowrap border-b border-blue-50 px-3 py-2 text-slate-600">{program.snies || "N/D"}</td>
+                          <td className="whitespace-nowrap border-b border-blue-50 px-3 py-2 text-slate-700">{program.faculty}</td>
+                          <td className="whitespace-nowrap border-b border-blue-50 px-3 py-2 font-semibold text-slate-900">{program.program}</td>
+                          <td className="whitespace-nowrap border-b border-blue-50 px-3 py-2 text-slate-700">{program.level || "-"}</td>
+                          <td className="whitespace-nowrap border-b border-blue-50 px-3 py-2 text-slate-700">{program.modality || "-"}</td>
+                          <td className="whitespace-nowrap border-b border-blue-50 px-3 py-2 text-slate-700">{formatDate(program.rcStart)}</td>
+                          <td className="whitespace-nowrap border-b border-blue-50 px-3 py-2 text-slate-700">{formatDate(program.rcEnd)}</td>
+                          <td className="whitespace-nowrap border-b border-blue-50 px-3 py-2 text-slate-700">{formatDate(program.rrcMineducacion)}</td>
+                          <td className="whitespace-nowrap border-b border-blue-50 px-3 py-2">{program.acreditable ? "Si" : "No"}</td>
+                          <td className="whitespace-nowrap border-b border-blue-50 px-3 py-2">{program.accredited ? "Si" : "No"}</td>
+                          <td className="whitespace-nowrap border-b border-blue-50 px-3 py-2">{program.inAccreditationProcess ? "Si" : "No"}</td>
+                          <td className="whitespace-nowrap border-b border-blue-50 px-3 py-2 text-slate-700">{formatDate(program.aacStart)}</td>
+                          <td className="whitespace-nowrap border-b border-blue-50 px-3 py-2 text-slate-700">{formatDate(program.aacEnd)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                {filtered.length === 0 && <p className="p-6 text-sm text-slate-500">No hay programas para ese filtro.</p>}
               </div>
+            )}
 
-              <article className="rounded-2xl border border-slate-100 bg-slate-50 p-4">
+            {view === "facultades" && (
+              <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+                {data.byFaculty.map((row) => (
+                  <article key={row.faculty} className="rounded-2xl border border-blue-100 bg-blue-50/40 p-4">
+                    <h3 className="text-base font-extrabold text-slate-900">{row.faculty}</h3>
+                    <p className="mt-2 text-sm text-slate-700">Programas: {row.programs}</p>
+                    <p className="text-sm text-slate-700">RC vigentes: {row.activeRc}</p>
+                    <p className="text-sm text-slate-700">Acreditados: {row.accredited}</p>
+                  </article>
+                ))}
+              </div>
+            )}
+
+            {view === "detalle" && (
+              <article className="rounded-2xl border border-blue-100 bg-blue-50/30 p-4">
                 {selected ? (
                   <>
-                    <h3 className="text-xl font-black text-slate-900">{selected.program}</h3>
+                    <h3 className="text-2xl font-black text-slate-900">{selected.program}</h3>
                     <p className="mt-1 text-sm text-slate-700">
                       {selected.faculty} · {selected.degree || "Sin titulo"}
                     </p>
@@ -169,7 +269,15 @@ export function ConsolidadoDashboardClient({ data }: Props) {
                       {statusChip(selected.accredited ? "Acreditado" : "No acreditado", selected.accredited ? "ok" : "warn")}
                     </div>
 
-                    <dl className="mt-5 grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
+                    <dl className="mt-5 grid grid-cols-1 gap-3 text-sm sm:grid-cols-2 lg:grid-cols-4">
+                      <div>
+                        <dt className="font-semibold text-slate-500">Codigo proceso</dt>
+                        <dd className="font-bold text-slate-800">{selected.processCode || "Sin dato"}</dd>
+                      </div>
+                      <div>
+                        <dt className="font-semibold text-slate-500">SNIES</dt>
+                        <dd className="font-bold text-slate-800">{selected.snies || "Sin dato"}</dd>
+                      </div>
                       <div>
                         <dt className="font-semibold text-slate-500">Inicio RC</dt>
                         <dd className="font-bold text-slate-800">{formatDate(selected.rcStart)}</dd>
@@ -179,12 +287,12 @@ export function ConsolidadoDashboardClient({ data }: Props) {
                         <dd className="font-bold text-slate-800">{formatDate(selected.rcEnd)}</dd>
                       </div>
                       <div>
-                        <dt className="font-semibold text-slate-500">Plazo RRC (MinEducacion)</dt>
-                        <dd className="font-bold text-slate-800">{formatDate(selected.rrcMineducacion)}</dd>
-                      </div>
-                      <div>
                         <dt className="font-semibold text-slate-500">Entrega CGCAI</dt>
                         <dd className="font-bold text-slate-800">{formatDate(selected.rrcSiga)}</dd>
+                      </div>
+                      <div>
+                        <dt className="font-semibold text-slate-500">Plazo MinEducacion</dt>
+                        <dd className="font-bold text-slate-800">{formatDate(selected.rrcMineducacion)}</dd>
                       </div>
                       <div>
                         <dt className="font-semibold text-slate-500">Inicio AAC</dt>
@@ -199,21 +307,27 @@ export function ConsolidadoDashboardClient({ data }: Props) {
                         <dd className="font-bold text-slate-800">{formatDate(selected.improvementHalfway)}</dd>
                       </div>
                       <div>
-                        <dt className="font-semibold text-slate-500">Lugar / Modalidad</dt>
-                        <dd className="font-bold text-slate-800">
-                          {[selected.location, selected.modality].filter(Boolean).join(" · ") || "Sin dato"}
-                        </dd>
+                        <dt className="font-semibold text-slate-500">Lugar</dt>
+                        <dd className="font-bold text-slate-800">{selected.location || "Sin dato"}</dd>
+                      </div>
+                      <div>
+                        <dt className="font-semibold text-slate-500">Nivel</dt>
+                        <dd className="font-bold text-slate-800">{selected.level || "Sin dato"}</dd>
+                      </div>
+                      <div>
+                        <dt className="font-semibold text-slate-500">Modalidad</dt>
+                        <dd className="font-bold text-slate-800">{selected.modality || "Sin dato"}</dd>
                       </div>
                     </dl>
                   </>
                 ) : (
-                  <p className="text-sm text-slate-500">Selecciona un programa para ver el detalle.</p>
+                  <p className="text-sm text-slate-500">Selecciona un programa desde la matriz.</p>
                 )}
               </article>
-            </div>
-          </div>
-        </section>
-      </main>
+            )}
+          </section>
+        </main>
+      </div>
     </div>
   );
 }
