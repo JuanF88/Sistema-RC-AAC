@@ -1,36 +1,35 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Sistema RC AAC
 
-## Getting Started
+Dashboard inicial de Consolidado (Registro Calificado y Acreditacion) para Unicauca, con carga de datos desde Excel y lectura desde Supabase.
 
-First, run the development server:
+## Ejecutar local
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Crear tabla en Supabase
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+1. Abre SQL Editor en tu proyecto Supabase.
+2. Ejecuta el script [supabase/001_consolidado_schema.sql](supabase/001_consolidado_schema.sql).
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Cargar datos del Excel a Supabase
 
-## Learn More
+Con `.env.local` configurado (URL + service role key):
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+npm run sync:consolidado
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Este comando:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- lee [Consolidado-RC AAC  GENERAL (3).xlsx](Consolidado-RC AAC  GENERAL (3).xlsx)
+- transforma la hoja `Consolidado`
+- hace `upsert` en `public.consolidado_programas`
 
-## Deploy on Vercel
+## Build de produccion
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+npm run build
+```

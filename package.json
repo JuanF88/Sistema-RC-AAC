@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "sync:consolidado": "node --env-file=.env.local scripts/sync-consolidado-to-supabase.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.103.0",
