@@ -144,12 +144,19 @@ async function main() {
     );
   }
 
+  const { error: deleteError } = await client
+    .from(tableName)
+    .delete()
+    .gte("created_at", "1900-01-01T00:00:00Z");
+
+  if (deleteError) {
+    throw new Error(`No se pudo limpiar la tabla antes de cargar: ${deleteError.message}`);
+  }
+
   const chunkSize = 200;
   for (let i = 0; i < rows.length; i += chunkSize) {
     const chunk = rows.slice(i, i + chunkSize);
-    const { error } = await client
-      .from(tableName)
-      .upsert(chunk, { onConflict: "process_code,snies", ignoreDuplicates: false });
+    const { error } = await client.from(tableName).insert(chunk);
 
     if (error) {
       throw new Error(`Error insertando bloque ${i / chunkSize + 1}: ${error.message}`);
