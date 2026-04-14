@@ -6,27 +6,81 @@ import * as XLSX from "xlsx";
 
 export type ConsolidadoProgram = {
   id: string;
+  
+  // Basic Program Information
   processCode: string;
-  snies: string;
   faculty: string;
   program: string;
-  degree: string;
-  location: string;
-  level: string;
-  modality: string;
+  degree: string | null;
+  snies: string | null;
+
+  // Administrative Details
+  creationAgreement: string | null;
+  noRenewal: string | null;
+  authorizedAdmissionsMen: number | null;
+  admissionPeriodicity: string | null;
+  agreementCode: string | null;
+  agreementIes: string | null;
+  agreementAdministrator: string | null;
+
+  // Location and Format
+  location: string | null;
+  workday: string | null;
+  regionalized: boolean;
+  level: string | null;
+  academicLevel: string | null;
+  modality: string | null;
+  methodology: string | null;
+
+  // Academic Credits
+  researchCredits: number | null;
+  deepeningCredits: number | null;
+  totalAcademicCredits: number | null;
+  duration: number | null;
+
+  // Reforms
+  reformAcademicCouncil: string | null;
+  reformSuperiorCouncil: string | null;
+  reformMineducacion: string | null;
+  ticPercentage: number | null;
+
+  // Current R.C. (Registro de Calificación)
+  hasCurrentRc: boolean | null;
+  rcResolution: string | null;
   rcStart: string | null;
   rcDurationYears: number | null;
+  rcSiga: string | null;
+  rcMineducacion: string | null;
   rcEnd: string | null;
-  rrcSiga: string | null;
-  rrcMineducacion: string | null;
-  hasCurrentRc: boolean | null;
+  rcExtensionDecree1330: string | null;
+  rcExtensionDecree1174: string | null;
+  rcHistoricalResolutions: string | null;
+  rcResolutionCount: number | null;
+  rcOfficialResolution: string | null;
+  rcDeniedResolution: string | null;
+
+  // Graduates
+  numberGraduates: number | null;
+
+  // Accreditation (A.A.C.)
   acreditable: boolean;
   accredited: boolean;
   inAccreditationProcess: boolean;
+  aacResolution: string | null;
   aacStart: string | null;
   aacDurationYears: number | null;
+  aacCgcaiDelivery: string | null;
+  aacMineducacionFiling: string | null;
   aacEnd: string | null;
-  improvementHalfway: string | null;
+  aacImprovementHalfway: string | null;
+  aacHistoricalResolutions: string | null;
+  aacResolutionCount: number | null;
+  aacDeniedResolution: string | null;
+
+  // Notes and Metadata
+  accreditationGuideline: string | null;
+  generalObservations: string | null;
+  programCoordinator: string | null;
   source: "supabase" | "excel";
 };
 
@@ -59,19 +113,23 @@ function addMonths(isoDate: string | null, months: number): string | null {
   return date.toISOString().slice(0, 10);
 }
 
+function toIsoFromParts(year: number, month: number, day: number): string {
+  return `${String(year).padStart(4, "0")}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+}
+
 function toIsoDate(value: unknown): string | null {
   if (value === null || value === undefined || value === "") return null;
 
   if (value instanceof Date && !Number.isNaN(value.getTime())) {
-    return value.toISOString().slice(0, 10);
+    return toIsoFromParts(value.getFullYear(), value.getMonth() + 1, value.getDate());
   }
 
   if (typeof value === "number") {
-    const parsed = XLSX.SSF.parse_date_code(value);
-    if (parsed?.y && parsed?.m && parsed?.d) {
-      return new Date(Date.UTC(parsed.y, parsed.m - 1, parsed.d))
-        .toISOString()
-        .slice(0, 10);
+    const excelEpoch = new Date(Date.UTC(1899, 11, 30));
+    const wholeDays = Math.trunc(value);
+    const date = new Date(excelEpoch.getTime() + wholeDays * 24 * 60 * 60 * 1000);
+    if (!Number.isNaN(date.getTime())) {
+      return toIsoFromParts(date.getUTCFullYear(), date.getUTCMonth() + 1, date.getUTCDate());
     }
   }
 
@@ -79,9 +137,12 @@ function toIsoDate(value: unknown): string | null {
     const clean = value.trim();
     if (!clean) return null;
 
+    const isoMatch = clean.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (isoMatch) return clean;
+
     const direct = new Date(clean);
     if (!Number.isNaN(direct.getTime())) {
-      return direct.toISOString().slice(0, 10);
+      return toIsoFromParts(direct.getFullYear(), direct.getMonth() + 1, direct.getDate());
     }
 
     const latinDate = clean.match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{2,4})$/);
@@ -159,12 +220,12 @@ function mapSupabaseRow(raw: Record<string, unknown>): ConsolidadoProgram | null
     toIsoDate(getFirst(raw, ["rc_end", "vencimiento_rc", "fin_rc", "vencimiento_r_c"])) ??
     addMonths(rcStart, (rcDurationYears ?? 0) * 12);
 
-  const rrcSiga =
-    toIsoDate(getFirst(raw, ["rrc_siga", "siga_rrc", "fecha_siga_rrc"])) ??
+  const rcSiga =
+    toIsoDate(getFirst(raw, ["rc_siga", "siga_rrc", "fecha_siga_rrc"])) ??
     addMonths(rcStart, (rcDurationYears ?? 0) * 12 - 14);
 
-  const rrcMineducacion =
-    toIsoDate(getFirst(raw, ["rrc_mineducacion", "plazo_radicacion_rrc", "rrc_min"])) ??
+  const rcMineducacion =
+    toIsoDate(getFirst(raw, ["rc_mineducacion", "plazo_radicacion_rrc", "rrc_min"])) ??
     addMonths(rcStart, (rcDurationYears ?? 0) * 12 - 12);
 
   const aacStart = toIsoDate(getFirst(raw, ["aac_start", "inicio_aac", "inicio_acreditacion"]));
@@ -173,8 +234,8 @@ function mapSupabaseRow(raw: Record<string, unknown>): ConsolidadoProgram | null
     toIsoDate(getFirst(raw, ["aac_end", "vencimiento_aac", "fin_aac"])) ??
     addMonths(aacStart, (aacDurationYears ?? 0) * 12);
 
-  const improvementHalfway =
-    toIsoDate(getFirst(raw, ["improvement_halfway", "mitad_vigencia_aac", "plan_mejora_fecha"])) ??
+  const aacImprovementHalfway =
+    toIsoDate(getFirst(raw, ["aac_improvement_halfway", "mitad_vigencia_aac", "plan_mejora_fecha"])) ??
     addMonths(aacStart, ((aacDurationYears ?? 0) * 12) / 2);
 
   const acreditable = toYesNo(getFirst(raw, ["acreditable", "es_acreditable"]));
@@ -186,28 +247,64 @@ function mapSupabaseRow(raw: Record<string, unknown>): ConsolidadoProgram | null
       .includes("proceso");
 
   return {
-    id: String(getFirst(raw, ["id", "program_id", "codigo_proceso", "snies", "codigo"]) ?? program),
+    id: String(getFirst(raw, ["id", "program_id", "codigo_proceso", "snies", "codigo"]) ?? `${program}-${Date.now()}`),
     processCode: String(getFirst(raw, ["process_code", "codigo_proceso", "codigo"]) ?? ""),
-    snies: String(getFirst(raw, ["snies", "codigo_snies"]) ?? ""),
     faculty,
     program,
-    degree: String(getFirst(raw, ["degree", "titulo_otorgado", "titulo"]) ?? ""),
-    location: String(getFirst(raw, ["location", "lugar_desarrollo", "sede"]) ?? ""),
-    level: String(getFirst(raw, ["level", "nivel_academico", "nivel"]) ?? ""),
-    modality: String(getFirst(raw, ["modality", "modalidad"]) ?? ""),
+    degree: String(getFirst(raw, ["degree", "titulo_otorgado", "titulo"]) ?? "") || null,
+    snies: String(getFirst(raw, ["snies", "codigo_snies"]) ?? "") || null,
+    creationAgreement: String(getFirst(raw, ["creation_agreement", "acuerdo_creacion"]) ?? "") || null,
+    noRenewal: String(getFirst(raw, ["no_renewal", "no_renovacion"]) ?? "") || null,
+    authorizedAdmissionsMen: toNumber(getFirst(raw, ["authorized_admissions_men", "admitidos_autorizados", "admitidos_men"])) || null,
+    admissionPeriodicity: String(getFirst(raw, ["admission_periodicity", "periodicidad_admision"]) ?? "") || null,
+    agreementCode: String(getFirst(raw, ["agreement_code", "codigo_convenio"]) ?? "") || null,
+    agreementIes: String(getFirst(raw, ["agreement_ies", "ies_convenio"]) ?? "") || null,
+    agreementAdministrator: String(getFirst(raw, ["agreement_administrator", "administrador_convenio"]) ?? "") || null,
+    location: String(getFirst(raw, ["location", "lugar_desarrollo", "sede"]) ?? "") || null,
+    workday: String(getFirst(raw, ["workday", "jornada"]) ?? "") || null,
+    regionalized: toYesNo(getFirst(raw, ["regionalized", "regionalizado"])),
+    level: String(getFirst(raw, ["level", "nivel_academico", "nivel"]) ?? "") || null,
+    academicLevel: String(getFirst(raw, ["academic_level", "nivel_formacion_academico"]) ?? "") || null,
+    modality: String(getFirst(raw, ["modality", "modalidad"]) ?? "") || null,
+    methodology: String(getFirst(raw, ["methodology", "metodologia"]) ?? "") || null,
+    researchCredits: toNumber(getFirst(raw, ["research_credits", "creditos_investigacion"])) || null,
+    deepeningCredits: toNumber(getFirst(raw, ["deepening_credits", "creditos_profundizacion"])) || null,
+    totalAcademicCredits: toNumber(getFirst(raw, ["total_academic_credits", "total_creditos_academicos"])) || null,
+    duration: toNumber(getFirst(raw, ["duration", "duracion"])) || null,
+    reformAcademicCouncil: String(getFirst(raw, ["reform_academic_council", "reforma_consejo_academico"]) ?? "") || null,
+    reformSuperiorCouncil: String(getFirst(raw, ["reform_superior_council", "reforma_consejo_superior"]) ?? "") || null,
+    reformMineducacion: String(getFirst(raw, ["reform_mineducacion", "reforma_mineducacion"]) ?? "") || null,
+    ticPercentage: toNumber(getFirst(raw, ["tic_percentage", "porcentaje_tic"])) || null,
+    hasCurrentRc: isFuture(rcEnd),
+    rcResolution: String(getFirst(raw, ["rc_resolution", "resolucion_rc"]) ?? "") || null,
     rcStart,
     rcDurationYears,
+    rcSiga,
+    rcMineducacion,
     rcEnd,
-    rrcSiga,
-    rrcMineducacion,
-    hasCurrentRc: isFuture(rcEnd),
+    rcExtensionDecree1330: toIsoDate(getFirst(raw, ["rc_extension_decree_1330"])) || null,
+    rcExtensionDecree1174: toIsoDate(getFirst(raw, ["rc_extension_decree_1174"])) || null,
+    rcHistoricalResolutions: String(getFirst(raw, ["rc_historical_resolutions", "historico_resoluciones_rc"]) ?? "") || null,
+    rcResolutionCount: toNumber(getFirst(raw, ["rc_resolution_count", "cantidad_res_rc"])) || null,
+    rcOfficialResolution: String(getFirst(raw, ["rc_official_resolution", "resolucion_rc_oficio"]) ?? "") || null,
+    rcDeniedResolution: String(getFirst(raw, ["rc_denied_resolution", "resolucion_rc_negada"]) ?? "") || null,
+    numberGraduates: toNumber(getFirst(raw, ["number_graduates", "numero_egresados"])) || null,
     acreditable,
     accredited,
     inAccreditationProcess,
+    aacResolution: String(getFirst(raw, ["aac_resolution", "resolucion_aac"]) ?? "") || null,
     aacStart,
     aacDurationYears,
+    aacCgcaiDelivery: toIsoDate(getFirst(raw, ["aac_cgcai_delivery"])) || null,
+    aacMineducacionFiling: toIsoDate(getFirst(raw, ["aac_mineducacion_filing"])) || null,
     aacEnd,
-    improvementHalfway,
+    aacImprovementHalfway,
+    aacHistoricalResolutions: String(getFirst(raw, ["aac_historical_resolutions", "historico_resoluciones_aac"]) ?? "") || null,
+    aacResolutionCount: toNumber(getFirst(raw, ["aac_resolution_count", "cantidad_res_aac"])) || null,
+    aacDeniedResolution: String(getFirst(raw, ["aac_denied_resolution", "resolucion_aac_negada"]) ?? "") || null,
+    accreditationGuideline: String(getFirst(raw, ["accreditation_guideline", "lineamiento_acreditacion"]) ?? "") || null,
+    generalObservations: String(getFirst(raw, ["general_observations", "observaciones_generales"]) ?? "") || null,
+    programCoordinator: String(getFirst(raw, ["program_coordinator", "coordinador_programa"]) ?? "") || null,
     source: "supabase",
   };
 }
@@ -254,42 +351,95 @@ function mapExcelRow(ws: XLSX.WorkSheet, row: number): ConsolidadoProgram | null
 
   if (!program || !faculty || !processCode) return null;
 
+  // R.C. calculations
   const rcStart = toIsoDate(val("AF"));
   const rcDurationYears = toNumber(val("AG"));
   const rcEnd = toIsoDate(val("AJ")) ?? addMonths(rcStart, (rcDurationYears ?? 0) * 12);
-  const rrcSiga = toIsoDate(val("AH")) ?? addMonths(rcStart, (rcDurationYears ?? 0) * 12 - 14);
-  const rrcMineducacion =
-    toIsoDate(val("AI")) ?? addMonths(rcStart, (rcDurationYears ?? 0) * 12 - 12);
+  const rcSiga = toIsoDate(val("AH")) ?? addMonths(rcStart, (rcDurationYears ?? 0) * 12 - 14);
+  const rcMineducacion = toIsoDate(val("AI")) ?? addMonths(rcStart, (rcDurationYears ?? 0) * 12 - 12);
 
+  // A.A.C. calculations
   const aacStart = toIsoDate(val("AV"));
   const aacDurationYears = toNumber(val("AW"));
   const aacEnd = toIsoDate(val("AZ")) ?? addMonths(aacStart, (aacDurationYears ?? 0) * 12);
-  const improvementHalfway =
-    toIsoDate(val("BA")) ?? addMonths(aacStart, ((aacDurationYears ?? 0) * 12) / 2);
+  const aacImprovementHalfway = toIsoDate(val("BA")) ?? addMonths(aacStart, ((aacDurationYears ?? 0) * 12) / 2);
 
   return {
     id: `${processCode}-${String(val("G") ?? "")}`,
+    // Basic Program Information
     processCode,
-    snies: String(val("G") ?? "").trim(),
     faculty,
     program,
-    degree: String(val("E") ?? "").trim(),
-    location: String(val("N") ?? "").trim(),
-    level: String(val("R") ?? "").trim(),
-    modality: String(val("S") ?? "").trim(),
+    degree: String(val("E") ?? "").trim() || null,
+    snies: String(val("G") ?? "").trim() || null,
+
+    // Administrative Details
+    creationAgreement: String(val("F") ?? "").trim() || null,
+    noRenewal: String(val("H") ?? "").trim() || null,
+    authorizedAdmissionsMen: toNumber(val("I")) || null,
+    admissionPeriodicity: String(val("J") ?? "").trim() || null,
+    agreementCode: String(val("K") ?? "").trim() || null,
+    agreementIes: String(val("L") ?? "").trim() || null,
+    agreementAdministrator: String(val("M") ?? "").trim() || null,
+
+    // Location and Format
+    location: String(val("N") ?? "").trim() || null,
+    workday: String(val("O") ?? "").trim() || null,
+    regionalized: toYesNo(val("P")),
+    level: String(val("Q") ?? "").trim() || null,
+    academicLevel: String(val("R") ?? "").trim() || null,
+    modality: String(val("S") ?? "").trim() || null,
+    methodology: String(val("T") ?? "").trim() || null,
+
+    // Academic Credits
+    researchCredits: toNumber(val("U")) || null,
+    deepeningCredits: toNumber(val("V")) || null,
+    totalAcademicCredits: toNumber(val("W")) || null,
+    duration: toNumber(val("X")) || null,
+
+    // Reforms
+    reformAcademicCouncil: String(val("Y") ?? "").trim() || null,
+    reformSuperiorCouncil: String(val("Z") ?? "").trim() || null,
+    reformMineducacion: String(val("AA") ?? "").trim() || null,
+    ticPercentage: toNumber(val("AB")) || null,
+
+    // Current R.C. (Registro de Calificación)
+    hasCurrentRc: isFuture(rcEnd),
+    rcResolution: String(val("AC") ?? "").trim() || null,
     rcStart,
     rcDurationYears,
+    rcSiga,
+    rcMineducacion,
     rcEnd,
-    rrcSiga,
-    rrcMineducacion,
-    hasCurrentRc: isFuture(rcEnd),
+    rcExtensionDecree1330: toIsoDate(val("AK")) || null,
+    rcExtensionDecree1174: toIsoDate(val("AL")) || null,
+    rcHistoricalResolutions: String(val("AM") ?? "").trim() || null,
+    rcResolutionCount: toNumber(val("AN")) || null,
+    rcOfficialResolution: String(val("AO") ?? "").trim() || null,
+    rcDeniedResolution: String(val("AP") ?? "").trim() || null,
+
+    // Graduates
+    numberGraduates: toNumber(val("AQ")) || null,
+
+    // Accreditation (A.A.C.)
     acreditable: toYesNo(val("AR")),
     accredited: toYesNo(val("AS")),
     inAccreditationProcess: toYesNo(val("AT")) || String(val("AT") ?? "").trim().length > 0,
+    aacResolution: String(val("AU") ?? "").trim() || null,
     aacStart,
     aacDurationYears,
+    aacCgcaiDelivery: toIsoDate(val("AX")) || null,
+    aacMineducacionFiling: toIsoDate(val("AY")) || null,
     aacEnd,
-    improvementHalfway,
+    aacImprovementHalfway,
+    aacHistoricalResolutions: String(val("BB") ?? "").trim() || null,
+    aacResolutionCount: toNumber(val("BC")) || null,
+    aacDeniedResolution: String(val("BD") ?? "").trim() || null,
+
+    // Notes and Metadata
+    accreditationGuideline: String(val("BE") ?? "").trim() || null,
+    generalObservations: String(val("BF") ?? "").trim() || null,
+    programCoordinator: String(val("BG") ?? "").trim() || null,
     source: "excel",
   };
 }
@@ -323,7 +473,7 @@ function buildDashboard(programs: ConsolidadoProgram[]): ConsolidadoDashboard {
   const accredited = programs.filter((p) => p.accredited).length;
   const inAacProcess = programs.filter((p) => p.inAccreditationProcess).length;
   const upcomingRrcIn120Days = programs.filter((p) => {
-    const days = daysUntil(p.rrcMineducacion);
+    const days = daysUntil(p.rcMineducacion);
     return days !== null && days >= 0 && days <= 120;
   }).length;
 

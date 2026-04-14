@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f5f7fc;
-  --foreground: #182032;
+  --background: #f3f7ff;
+  --foreground: #12203a;
 }
 
 @theme inline {
@@ -13,15 +13,48 @@
 }
 
 body {
-  background: var(--background);
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at top left, rgba(37, 99, 235, 0.16), transparent 32%),
+    radial-gradient(circle at bottom right, rgba(14, 165, 233, 0.12), transparent 28%),
+    linear-gradient(180deg, #f9fbff 0%, #eef4ff 100%);
   color: var(--foreground);
   font-family: var(--font-title), "Segoe UI", sans-serif;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: rgba(37, 99, 235, 0.2);
+  color: #0f172a;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body::-webkit-scrollbar {
+  width: 0.75rem;
+}
+
+body::-webkit-scrollbar-track {
+  background: rgba(15, 23, 42, 0.05);
+}
+
+body::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgba(37, 99, 235, 0.45), rgba(14, 165, 233, 0.45));
+  border-radius: 999px;
+  border: 2px solid rgba(255, 255, 255, 0.7);
 }
 
 @keyframes fadeIn {
   from {
     opacity: 0;
-    transform: translateY(12px);
+    transform: translateY(14px);
   }
   to {
     opacity: 1;
