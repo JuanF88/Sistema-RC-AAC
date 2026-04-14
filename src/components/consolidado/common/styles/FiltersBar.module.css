@@ -1,7 +1,8 @@
 .row {
   margin-bottom: 1rem;
-  display: grid;
-  grid-template-columns: 1fr;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
   gap: 0.65rem;
 }
 
@@ -14,6 +15,9 @@
 
 .actions {
   display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  margin-left: auto;
   justify-content: flex-end;
 }
 
@@ -68,14 +72,9 @@
 }
 
 @media (min-width: 768px) {
-  .row {
-    grid-template-columns: minmax(0, 1fr) auto;
-    align-items: end;
-    gap: 1rem;
-  }
-
   .inputs {
     grid-template-columns: repeat(6, minmax(0, 1fr));
+    flex: 1 1 0;
   }
 
   .actions {

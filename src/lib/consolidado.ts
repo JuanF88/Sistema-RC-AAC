@@ -6,6 +6,7 @@ import * as XLSX from "xlsx";
 
 export type ConsolidadoProgram = {
   id: string;
+  documentCount: number;
   
   // Basic Program Information
   processCode: string;
@@ -207,6 +208,21 @@ function getFirst(row: Record<string, unknown>, keys: string[]): unknown {
   return null;
 }
 
+function createSupabaseClient() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  if (!supabaseUrl) return null;
+
+  const authKey = serviceRoleKey || anonKey;
+  if (!authKey) return null;
+
+  return createClient(supabaseUrl, authKey, {
+    auth: { persistSession: false },
+  });
+}
+
 function mapSupabaseRow(raw: Record<string, unknown>): ConsolidadoProgram | null {
   const program = String(getFirst(raw, ["program", "programa", "nombre_programa", "name"]) ?? "").trim();
   const faculty = String(getFirst(raw, ["faculty", "facultad", "nombre_facultad"]) ?? "").trim();
@@ -248,6 +264,7 @@ function mapSupabaseRow(raw: Record<string, unknown>): ConsolidadoProgram | null
 
   return {
     id: String(getFirst(raw, ["id", "program_id", "codigo_proceso", "snies", "codigo"]) ?? `${program}-${Date.now()}`),
+    documentCount: 0,
     processCode: String(getFirst(raw, ["process_code", "codigo_proceso", "codigo"]) ?? ""),
     faculty,
     program,
@@ -310,14 +327,9 @@ function mapSupabaseRow(raw: Record<string, unknown>): ConsolidadoProgram | null
 }
 
 async function fetchFromSupabase(): Promise<ConsolidadoProgram[] | null> {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const client = createSupabaseClient();
 
-  if (!supabaseUrl || !supabaseAnonKey) return null;
-
-  const client = createClient(supabaseUrl, supabaseAnonKey, {
-    auth: { persistSession: false },
-  });
+  if (!client) return null;
 
   const candidateTables = [
     "consolidado",
@@ -335,7 +347,26 @@ async function fetchFromSupabase(): Promise<ConsolidadoProgram[] | null> {
       .filter((row): row is ConsolidadoProgram => row !== null);
 
     if (mapped.length > 0) {
-      return mapped;
+      const programIds = mapped.map((program) => program.id);
+      const documentCounts = new Map<string, number>();
+
+      const { data: documentRows, error: documentError } = await client
+        .from("consolidado_documentos")
+        .select("program_id")
+        .in("program_id", programIds);
+
+      if (!documentError && Array.isArray(documentRows)) {
+        for (const row of documentRows as Array<{ program_id?: string | null }>) {
+          const programId = row.program_id ?? "";
+          if (!programId) continue;
+          documentCounts.set(programId, (documentCounts.get(programId) ?? 0) + 1);
+        }
+      }
+
+      return mapped.map((program) => ({
+        ...program,
+        documentCount: documentCounts.get(program.id) ?? 0,
+      }));
     }
   }
 
@@ -366,6 +397,7 @@ function mapExcelRow(ws: XLSX.WorkSheet, row: number): ConsolidadoProgram | null
 
   return {
     id: `${processCode}-${String(val("G") ?? "")}`,
+    documentCount: 0,
     // Basic Program Information
     processCode,
     faculty,

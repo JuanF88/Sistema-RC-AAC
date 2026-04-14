@@ -11,10 +11,14 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.103.0",
+    "highcharts": "^12.6.0",
+    "highcharts-react-official": "^3.2.3",
+    "html2canvas": "^1.4.1",
     "next": "16.2.3",
     "nextjs-toast-notify": "^1.60.0",
     "react": "19.2.4",
     "react-dom": "19.2.4",
+    "recharts": "^3.8.1",
     "xlsx": "^0.18.5"
   },
   "devDependencies": {

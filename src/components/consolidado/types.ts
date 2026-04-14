@@ -1,6 +1,10 @@
 import type { ConsolidadoProgram } from "@/lib/consolidado";
 
-export type ViewMode = "consolidado" | "alertas";
+export type ViewMode = "consolidado" | "alertas" | "registro-calificado" | "estadisticas";
+
+export type RegistroCalificadoGroupingMode = "programas" | "facultades";
+
+export type EstadisticasSubTab = "generales" | "registro-calificado";
 
 export type MenuItem = {
   id: ViewMode;

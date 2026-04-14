@@ -9,10 +9,12 @@ import { FACULTY_OPTIONS } from "./constants";
 import { DashboardHeader } from "./layout/DashboardHeader";
 import { SidebarMenu } from "./layout/SidebarMenu";
 import styles from "./styles/DashboardShell.module.css";
-import type { MenuItem, ProgramDocument, ProgramRecord, ViewMode } from "./types";
+import type { EstadisticasSubTab, MenuItem, ProgramDocument, ProgramRecord, RegistroCalificadoGroupingMode, ViewMode } from "./types";
 import { ConsolidadoMatrixView } from "./views/ConsolidadoMatrixView";
 import { ExpirationAlertsView } from "./views/ExpirationAlertsView";
 import { ProgramEditModal } from "./views/ProgramEditModal";
+import { RegistroCalificadoView } from "./views/RegistroCalificadoView";
+import { EstadisticasView } from "./views/EstadisticasView";
 import { KpiGrid } from "./widgets/KpiGrid";
 
 type Props = {
@@ -22,6 +24,8 @@ type Props = {
 const MENU_ITEMS: MenuItem[] = [
   { id: "consolidado", label: "Consolidado", subtitle: "Matriz editable" },
   { id: "alertas", label: "Alertas", subtitle: "Vencimientos RRC/AAC" },
+  { id: "registro-calificado", label: "Registro Calificado", subtitle: "Reporte por nivel" },
+  { id: "estadisticas", label: "Estadísticas", subtitle: "Análisis y gráficos" },
 ];
 
 function isUuid(value: string): boolean {
@@ -35,6 +39,7 @@ function mapProgramToApiPayload(program: ProgramRecord) {
 function createEmptyProgramDraft(): ProgramRecord {
   return {
     id: crypto.randomUUID(),
+    documentCount: 0,
     processCode: "",
     faculty: "",
     program: "",
@@ -104,6 +109,8 @@ export function ConsolidadoDashboardClient({ data }: Props) {
   const [level, setLevel] = useState("Todos");
   const [accreditationState, setAccreditationState] = useState("Todos");
   const [rcState, setRcState] = useState("Todos");
+  const [registryGrouping, setRegistryGrouping] = useState<RegistroCalificadoGroupingMode>("programas");
+  const [estadisticasSubTab, setEstadisticasSubTab] = useState<EstadisticasSubTab>("generales");
   const [view, setView] = useState<ViewMode>("consolidado");
   const [menuOpen, setMenuOpen] = useState(true);
   const [selectedId, setSelectedId] = useState<string | null>(data.programs[0]?.id ?? null);
@@ -192,6 +199,10 @@ export function ConsolidadoDashboardClient({ data }: Props) {
         ...current,
         [programId]: body.data ?? [],
       }));
+
+      setPrograms((current) =>
+        current.map((program) => (program.id === programId ? { ...program, documentCount: body.data?.length ?? 0 } : program)),
+      );
     } finally {
       setLoadingDocuments(false);
     }
@@ -331,7 +342,7 @@ export function ConsolidadoDashboardClient({ data }: Props) {
           <DashboardHeader source={data.source} generatedAt={data.generatedAt} />
           {view === "consolidado" && <KpiGrid summary={filteredSummary} />}
 
-          {view === "consolidado" ? (
+          {view === "consolidado" || view === "registro-calificado" ? (
             <section className={styles.panel}>
               <FiltersBar
                 search={search}
@@ -350,18 +361,56 @@ export function ConsolidadoDashboardClient({ data }: Props) {
                 onAccreditationStateChange={setAccreditationState}
                 onRcStateChange={setRcState}
                 onCreateProgram={handleCreateProgram}
+                showModality={view === "consolidado"}
+                showAccreditationState={view === "consolidado"}
+                showRcState={view === "consolidado"}
+                showCreateProgram={view === "consolidado"}
+                rightContent={
+                  view === "registro-calificado" ? (
+                    <div className={styles.switchWrap}>
+                      <span className={styles.switchLabel}>Agrupación</span>
+                      <div className={styles.switchGroup}>
+                        <button
+                          type="button"
+                          className={`${styles.switchButton} ${registryGrouping === "programas" ? styles.switchButtonActive : ""}`}
+                          onClick={() => setRegistryGrouping("programas")}
+                        >
+                          Programas
+                        </button>
+                        <button
+                          type="button"
+                          className={`${styles.switchButton} ${registryGrouping === "facultades" ? styles.switchButtonActive : ""}`}
+                          onClick={() => setRegistryGrouping("facultades")}
+                        >
+                          Facultades
+                        </button>
+                      </div>
+                    </div>
+                  ) : null
+                }
                 createDisabled={data.source !== "supabase"}
               />
 
-              <ConsolidadoMatrixView
-                rows={filtered}
-                selectedId={selectedId}
-                onSelect={setSelectedId}
-                onOpen={(id) => {
-                  setSelectedId(id);
-                  setModalOpen(true);
-                }}
-              />
+              {view === "consolidado" ? (
+                <ConsolidadoMatrixView
+                  rows={filtered}
+                  selectedId={selectedId}
+                  onSelect={setSelectedId}
+                  onOpen={(id) => {
+                    setSelectedId(id);
+                    setModalOpen(true);
+                  }}
+                />
+              ) : (
+                <RegistroCalificadoView
+                  rows={filtered}
+                  groupingMode={registryGrouping}
+                />
+              )}
+            </section>
+          ) : view === "estadisticas" ? (
+            <section className={styles.panel}>
+              <EstadisticasView programs={programs} subTab={estadisticasSubTab} onSubTabChange={setEstadisticasSubTab} />
             </section>
           ) : (
             <section className={styles.panel}>
