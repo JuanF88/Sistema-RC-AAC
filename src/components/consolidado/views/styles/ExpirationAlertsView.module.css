@@ -1,0 +1,131 @@
+.wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.switcher {
+  display: inline-flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.switchButton {
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  background: rgba(255, 255, 255, 0.78);
+  color: #1e293b;
+  border-radius: 999px;
+  padding: 0.48rem 0.9rem;
+  font-size: 0.84rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.switchButton:hover {
+  transform: translateY(-1px);
+  border-color: rgba(37, 99, 235, 0.36);
+}
+
+.switchButtonActive {
+  background: linear-gradient(135deg, #2563eb, #0ea5e9);
+  color: #ffffff;
+  border-color: rgba(37, 99, 235, 0.52);
+  box-shadow: 0 14px 28px -18px rgba(37, 99, 235, 0.8);
+}
+
+.tableWrap {
+  overflow: auto;
+  border-radius: 1rem;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+}
+
+.table {
+  width: 100%;
+  min-width: 1120px;
+  border-collapse: collapse;
+  table-layout: fixed;
+  font-size: 0.86rem;
+}
+
+.table thead {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 48%, #0ea5e9 100%);
+}
+
+.table thead th {
+  text-align: left;
+  padding: 0.72rem;
+  width: 12.5%;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: #e2e8f0;
+  background: transparent;
+}
+
+.table td {
+  padding: 0.55rem 0.72rem;
+  border-bottom: 1px solid rgba(226, 232, 240, 0.9);
+  color: #334155;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.table tbody tr:nth-child(odd) {
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.table tbody tr:nth-child(even) {
+  background: rgba(239, 246, 255, 0.72);
+}
+
+.programCell {
+  font-weight: 700;
+  color: #0f172a;
+  min-width: 260px;
+}
+
+.observations {
+  min-width: 280px;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 5.5rem;
+  border-radius: 999px;
+  padding: 0.26rem 0.58rem;
+  font-size: 0.72rem;
+  font-weight: 800;
+  border: 1px solid transparent;
+}
+
+.badgeDanger {
+  color: #991b1b;
+  background: #fee2e2;
+  border-color: #fca5a5;
+}
+
+.badgeWarning {
+  color: #92400e;
+  background: #fef3c7;
+  border-color: #fcd34d;
+}
+
+.badgeOk {
+  color: #166534;
+  background: #dcfce7;
+  border-color: #86efac;
+}
+
+.badgeNeutral {
+  color: #334155;
+  background: #e2e8f0;
+  border-color: #cbd5e1;
+}
