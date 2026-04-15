@@ -35,6 +35,15 @@
   pointer-events: none;
 }
 
+.topBar {
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.7rem;
+  flex-wrap: wrap;
+}
+
 .kicker {
   position: relative;
   display: inline-flex;
@@ -49,6 +58,28 @@
   text-transform: uppercase;
   letter-spacing: 0.25em;
   color: #1d4ed8;
+}
+
+.userBox {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.userText {
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: #1e3a8a;
+}
+
+.roleBadge {
+  border: 1px solid rgba(14, 116, 144, 0.35);
+  background: rgba(236, 254, 255, 0.85);
+  color: #0c4a6e;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 0.28rem 0.56rem;
 }
 
 .title {

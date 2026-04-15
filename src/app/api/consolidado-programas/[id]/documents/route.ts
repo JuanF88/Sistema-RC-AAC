@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { registerChangeAudit } from "@/lib/audit";
+import { getSessionFromRequest } from "@/lib/auth";
 
 type RouteContext = {
   params: Promise<{ id: string }>;
@@ -88,6 +90,14 @@ export async function GET(_request: Request, context: RouteContext) {
 
 export async function POST(request: Request, context: RouteContext) {
   try {
+    const session = getSessionFromRequest(request);
+    if (!session) {
+      return NextResponse.json({ error: "Sesion no valida o expirada." }, { status: 401 });
+    }
+    if (session.role === "visualizador") {
+      return NextResponse.json({ error: "Tu rol no permite modificar datos." }, { status: 403 });
+    }
+
     const { id } = await context.params;
     if (!isValidUuid(id)) {
       return NextResponse.json({ error: "Invalid program ID format" }, { status: 400 });
@@ -135,6 +145,14 @@ export async function POST(request: Request, context: RouteContext) {
         return NextResponse.json({ error: error.message }, { status: 400 });
       }
 
+      await registerChangeAudit({
+        sessionId: session.sid,
+        username: session.username,
+        action: "CREATE",
+        resource: "consolidado_documentos",
+        details: { id: data.id, programId: id, sourceType: "url" },
+      }).catch(() => undefined);
+
       return NextResponse.json({ data: mapDoc(data as DocumentRow) }, { status: 201 });
     }
 
@@ -177,6 +195,14 @@ export async function POST(request: Request, context: RouteContext) {
       await client.storage.from(BUCKET_NAME).remove([storagePath]);
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
+
+    await registerChangeAudit({
+      sessionId: session.sid,
+      username: session.username,
+      action: "CREATE",
+      resource: "consolidado_documentos",
+      details: { id: data.id, programId: id, sourceType: "file" },
+    }).catch(() => undefined);
 
     return NextResponse.json({ data: mapDoc(data as DocumentRow) }, { status: 201 });
   } catch (error) {

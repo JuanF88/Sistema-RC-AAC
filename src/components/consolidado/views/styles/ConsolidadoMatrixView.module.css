@@ -4,18 +4,30 @@
   border: 1px solid rgba(148, 163, 184, 0.18);
   background: rgba(255, 255, 255, 0.72);
   box-shadow: 0 24px 70px -52px rgba(15, 23, 42, 0.5);
+  display: flex;
+  flex-direction: column;
+}
+
+.header {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+  background: rgba(255, 255, 255, 0.4);
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
 }
 
 .scroller {
   max-height: 65vh;
   overflow: auto;
+  flex: 1;
 }
 
  .table {
    min-width: 2600px;
    table-layout: fixed;
    border-collapse: collapse;
-   font-size: 0.86rem;
+   font-size: 0.85rem;
 }
 
 .head {
@@ -29,17 +41,17 @@
 .table th {
   white-space: nowrap;
   border-bottom: 1px solid rgba(255, 255, 255, 0.18);
-  padding: 0.78rem 0.72rem;
+  padding: 0.72rem 0.64rem;
   text-align: left;
-  font-size: 0.7rem;
+  font-size: 0.72rem;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.07em;
 }
 
 .table td {
   white-space: nowrap;
-  border-bottom: 1px solid rgba(226, 232, 240, 0.8);
-  padding: 0.56rem 0.72rem;
+  border-bottom: 1px solid rgba(226, 232, 240, 0.92);
+  padding: 0.6rem 0.64rem;
   color: #334155;
 }
 
@@ -122,5 +134,5 @@
   white-space: normal;
   overflow-wrap: anywhere;
   word-break: break-word;
-  padding: 0.5rem 0.72rem;
+  padding: 0.6rem 0.64rem;
 }

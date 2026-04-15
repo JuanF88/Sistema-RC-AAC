@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, useRef } from "react";
 
 import type { ConsolidadoDashboard } from "@/lib/consolidado";
 
@@ -9,22 +9,30 @@ import { FACULTY_OPTIONS } from "./constants";
 import { DashboardHeader } from "./layout/DashboardHeader";
 import { SidebarMenu } from "./layout/SidebarMenu";
 import styles from "./styles/DashboardShell.module.css";
-import type { EstadisticasSubTab, MenuItem, ProgramDocument, ProgramRecord, RegistroCalificadoGroupingMode, ViewMode } from "./types";
+import type { AcreditacionGroupingMode, EstadisticasSubTab, MenuItem, ProgramDocument, ProgramRecord, RegistroCalificadoGroupingMode, UserRole, ViewMode } from "./types";
 import { ConsolidadoMatrixView } from "./views/ConsolidadoMatrixView";
 import { ExpirationAlertsView } from "./views/ExpirationAlertsView";
 import { ProgramEditModal } from "./views/ProgramEditModal";
 import { RegistroCalificadoView } from "./views/RegistroCalificadoView";
+import { AcreditacionProgramasView } from "./views/AcreditacionProgramasView";
+import { VisitasParesView } from "./views/VisitasParesView";
 import { EstadisticasView } from "./views/EstadisticasView";
+import { UsersManagementView } from "./views/UsersManagementView";
+import { ExportButton } from "./widgets/ExportButton";
 import { KpiGrid } from "./widgets/KpiGrid";
 
 type Props = {
   data: ConsolidadoDashboard;
+  currentUser: string;
+  currentRole: UserRole;
 };
 
 const MENU_ITEMS: MenuItem[] = [
   { id: "consolidado", label: "Consolidado", subtitle: "Matriz editable" },
   { id: "alertas", label: "Alertas", subtitle: "Vencimientos RRC/AAC" },
   { id: "registro-calificado", label: "Registro Calificado", subtitle: "Reporte por nivel" },
+  { id: "acreditacion-programas", label: "Acreditacion de Programas", subtitle: "Programas acreditados" },
+  { id: "visitas-pares", label: "Visitas de Pares", subtitle: "Seguimiento de visitas" },
   { id: "estadisticas", label: "Estadísticas", subtitle: "Análisis y gráficos" },
 ];
 
@@ -101,15 +109,17 @@ function createEmptyProgramDraft(): ProgramRecord {
   };
 }
 
-export function ConsolidadoDashboardClient({ data }: Props) {
+export function ConsolidadoDashboardClient({ data, currentUser, currentRole }: Props) {
   const [programs, setPrograms] = useState<ProgramRecord[]>(data.programs);
   const [search, setSearch] = useState("");
   const [faculty, setFaculty] = useState("Todas");
   const [modality, setModality] = useState("Todas");
   const [level, setLevel] = useState("Todos");
-  const [accreditationState, setAccreditationState] = useState("Todos");
+  const [acreditableFilter, setAcreditableFilter] = useState("Todos");
+  const [accreditedFilter, setAccreditedFilter] = useState("Todos");
   const [rcState, setRcState] = useState("Todos");
   const [registryGrouping, setRegistryGrouping] = useState<RegistroCalificadoGroupingMode>("programas");
+  const [acreditacionGrouping, setAcreditacionGrouping] = useState<AcreditacionGroupingMode>("programas");
   const [estadisticasSubTab, setEstadisticasSubTab] = useState<EstadisticasSubTab>("generales");
   const [view, setView] = useState<ViewMode>("consolidado");
   const [menuOpen, setMenuOpen] = useState(true);
@@ -119,6 +129,12 @@ export function ConsolidadoDashboardClient({ data }: Props) {
   const [draftProgram, setDraftProgram] = useState<ProgramRecord | null>(null);
   const [documentsByProgram, setDocumentsByProgram] = useState<Record<string, ProgramDocument[]>>({});
   const [loadingDocuments, setLoadingDocuments] = useState(false);
+  const [floatingExportState, setFloatingExportState] = useState<{ action: (() => Promise<void>) | null }>({ action: null });
+
+  const handleRegisterExportAction = useCallback((action: (() => Promise<void>) | null) => {
+    // Wrap in object to prevent React from executing function as updater
+    setFloatingExportState({ action });
+  }, []);
 
   const faculties = useMemo(() => FACULTY_OPTIONS, []);
   const modalities = useMemo(() => [...new Set(programs.map((program) => program.modality).filter((value): value is string => Boolean(value)))], [programs]);
@@ -134,13 +150,17 @@ export function ConsolidadoDashboardClient({ data }: Props) {
       const byLevel = level === "Todos" || program.level === level;
       if (!byLevel) return false;
 
-      const byAccreditation =
-        accreditationState === "Todos" ||
-        (accreditationState === "acreditado" && program.accredited) ||
-        (accreditationState === "acreditable" && program.acreditable && !program.accredited) ||
-        (accreditationState === "proceso" && program.inAccreditationProcess) ||
-        (accreditationState === "ninguno" && !program.acreditable && !program.accredited && !program.inAccreditationProcess);
-      if (!byAccreditation) return false;
+      const byAcreditable =
+        acreditableFilter === "Todos" ||
+        (acreditableFilter === "Si" && program.acreditable) ||
+        (acreditableFilter === "No" && !program.acreditable);
+      if (!byAcreditable) return false;
+
+      const byAccredited =
+        accreditedFilter === "Todos" ||
+        (accreditedFilter === "Si" && program.accredited) ||
+        (accreditedFilter === "No" && !program.accredited);
+      if (!byAccredited) return false;
 
       const byRc =
         rcState === "Todos" ||
@@ -154,7 +174,7 @@ export function ConsolidadoDashboardClient({ data }: Props) {
       const corpus = `${program.program} ${program.processCode} ${program.snies} ${program.faculty} ${program.degree} ${program.location} ${program.methodology} ${program.workday} ${program.generalObservations} ${program.programCoordinator}`.toLowerCase();
       return corpus.includes(query);
     });
-  }, [programs, faculty, modality, level, accreditationState, rcState, search]);
+  }, [programs, faculty, modality, level, acreditableFilter, accreditedFilter, rcState, search]);
 
   const filteredSummary = useMemo(() => {
     const faculties = new Set(filtered.map((program) => program.faculty)).size;
@@ -185,6 +205,11 @@ export function ConsolidadoDashboardClient({ data }: Props) {
   const selected = isCreatingProgram ? draftProgram : programs.find((program) => program.id === selectedId) ?? null;
   const selectedDocuments = selectedId && !isCreatingProgram ? (documentsByProgram[selectedId] ?? []) : [];
 
+  async function handleLogout() {
+    await fetch("/api/auth/logout", { method: "POST" });
+    window.location.href = "/login";
+  }
+
   async function loadDocuments(programId: string) {
     setLoadingDocuments(true);
     try {
@@ -212,6 +237,15 @@ export function ConsolidadoDashboardClient({ data }: Props) {
     if (!modalOpen || !selectedId || isCreatingProgram) return;
     void loadDocuments(selectedId);
   }, [modalOpen, selectedId, isCreatingProgram]);
+
+  // Track previous view to only clear export action when view actually changes
+  const prevViewRef = useRef<ViewMode | null>(null);
+  useEffect(() => {
+    if (prevViewRef.current !== null && prevViewRef.current !== view) {
+      setFloatingExportState({ action: null });
+    }
+    prevViewRef.current = view;
+  }, [view]);
 
   function handleCreateProgram() {
     setDraftProgram(createEmptyProgramDraft());
@@ -325,6 +359,41 @@ export function ConsolidadoDashboardClient({ data }: Props) {
     await loadDocuments(programId);
   }
 
+  async function handleDeleteProgram(programId: string) {
+    if (data.source !== "supabase") {
+      throw new Error("Solo se puede eliminar cuando la fuente activa es Supabase.");
+    }
+
+    if (!isUuid(programId)) {
+      throw new Error("ID de programa invalido.");
+    }
+
+    const response = await fetch(`/api/consolidado-programas/${programId}`, {
+      method: "DELETE",
+    });
+
+    const body = (await response.json()) as { error?: string };
+    if (!response.ok) {
+      throw new Error(body.error ?? "No se pudo eliminar el programa.");
+    }
+
+    setPrograms((current) => {
+      const next = current.filter((program) => program.id !== programId);
+      setSelectedId(next[0]?.id ?? null);
+      return next;
+    });
+
+    setDocumentsByProgram((current) => {
+      const next = { ...current };
+      delete next[programId];
+      return next;
+    });
+
+    setModalOpen(false);
+    setIsCreatingProgram(false);
+    setDraftProgram(null);
+  }
+
   return (
     <div className={styles.page}>
       <div className={styles.gridOverlay} />
@@ -334,15 +403,22 @@ export function ConsolidadoDashboardClient({ data }: Props) {
           menuOpen={menuOpen}
           view={view}
           items={MENU_ITEMS}
+          currentUser={currentUser}
+          currentRole={currentRole}
+          canOpenUsers={currentRole === "administrador"}
           onToggle={() => setMenuOpen((value) => !value)}
           onSelect={setView}
+          onOpenUsers={() => setView("usuarios")}
+          onLogout={handleLogout}
         />
 
         <main className={styles.main}>
-          <DashboardHeader source={data.source} generatedAt={data.generatedAt} />
+          {view === "consolidado" && (
+            <DashboardHeader source={data.source} generatedAt={data.generatedAt} currentUser={currentUser} currentRole={currentRole} />
+          )}
           {view === "consolidado" && <KpiGrid summary={filteredSummary} />}
 
-          {view === "consolidado" || view === "registro-calificado" ? (
+          {view === "consolidado" || view === "registro-calificado" || view === "acreditacion-programas" ? (
             <section className={styles.panel}>
               <FiltersBar
                 search={search}
@@ -350,7 +426,8 @@ export function ConsolidadoDashboardClient({ data }: Props) {
                 faculties={faculties}
                 modality={modality}
                 level={level}
-                accreditationState={accreditationState}
+                acreditableFilter={acreditableFilter}
+                accreditedFilter={accreditedFilter}
                 rcState={rcState}
                 modalities={modalities}
                 levels={levels}
@@ -358,7 +435,8 @@ export function ConsolidadoDashboardClient({ data }: Props) {
                 onFacultyChange={setFaculty}
                 onModalityChange={setModality}
                 onLevelChange={setLevel}
-                onAccreditationStateChange={setAccreditationState}
+                onAcreditableFilterChange={setAcreditableFilter}
+                onAccreditedFilterChange={setAccreditedFilter}
                 onRcStateChange={setRcState}
                 onCreateProgram={handleCreateProgram}
                 showModality={view === "consolidado"}
@@ -386,6 +464,33 @@ export function ConsolidadoDashboardClient({ data }: Props) {
                         </button>
                       </div>
                     </div>
+                  ) : view === "acreditacion-programas" ? (
+                    <div className={styles.switchWrap}>
+                      <span className={styles.switchLabel}>Agrupación</span>
+                      <div className={styles.switchGroup}>
+                        <button
+                          type="button"
+                          className={`${styles.switchButton} ${acreditacionGrouping === "programas" ? styles.switchButtonActive : ""}`}
+                          onClick={() => setAcreditacionGrouping("programas")}
+                        >
+                          Programas
+                        </button>
+                        <button
+                          type="button"
+                          className={`${styles.switchButton} ${acreditacionGrouping === "facultades" ? styles.switchButtonActive : ""}`}
+                          onClick={() => setAcreditacionGrouping("facultades")}
+                        >
+                          Facultades
+                        </button>
+                        <button
+                          type="button"
+                          className={`${styles.switchButton} ${acreditacionGrouping === "historicos" ? styles.switchButtonActive : ""}`}
+                          onClick={() => setAcreditacionGrouping("historicos")}
+                        >
+                          Históricos
+                        </button>
+                      </div>
+                    </div>
                   ) : null
                 }
                 createDisabled={data.source !== "supabase"}
@@ -395,30 +500,54 @@ export function ConsolidadoDashboardClient({ data }: Props) {
                 <ConsolidadoMatrixView
                   rows={filtered}
                   selectedId={selectedId}
+                  onExportReady={handleRegisterExportAction}
                   onSelect={setSelectedId}
                   onOpen={(id) => {
                     setSelectedId(id);
                     setModalOpen(true);
                   }}
                 />
-              ) : (
+              ) : view === "registro-calificado" ? (
                 <RegistroCalificadoView
                   rows={filtered}
                   groupingMode={registryGrouping}
+                  onExportReady={handleRegisterExportAction}
+                />
+              ) : (
+                <AcreditacionProgramasView
+                  rows={filtered}
+                  groupingMode={acreditacionGrouping}
+                  onExportReady={handleRegisterExportAction}
                 />
               )}
+            </section>
+          ) : view === "visitas-pares" ? (
+            <section className={styles.panel}>
+              <VisitasParesView programs={programs} onExportReady={handleRegisterExportAction} />
             </section>
           ) : view === "estadisticas" ? (
             <section className={styles.panel}>
               <EstadisticasView programs={programs} subTab={estadisticasSubTab} onSubTabChange={setEstadisticasSubTab} />
             </section>
+          ) : view === "usuarios" ? (
+            <section className={styles.panel}>
+              {currentRole === "administrador" ? (
+                <UsersManagementView currentRole={currentRole} onExportReady={handleRegisterExportAction} />
+              ) : (
+                <p>Solo administrador puede gestionar usuarios.</p>
+              )}
+            </section>
           ) : (
             <section className={styles.panel}>
-              <ExpirationAlertsView rows={programs} />
+              <ExpirationAlertsView rows={programs} onExportReady={handleRegisterExportAction} />
             </section>
           )}
         </main>
       </div>
+
+      {view !== "estadisticas" && floatingExportState.action && (
+        <ExportButton onExport={floatingExportState.action} floating label="Descargar" />
+      )}
 
       <ProgramEditModal
         open={modalOpen}
@@ -430,10 +559,14 @@ export function ConsolidadoDashboardClient({ data }: Props) {
         onAddUrlDocument={handleAddUrlDocument}
         onUploadDocument={handleUploadDocument}
         onDeleteDocument={handleDeleteDocument}
+        onDeleteProgram={handleDeleteProgram}
         onClose={handleCloseModal}
         onSave={handleSave}
       />
     </div>
   );
 }
+
+
+
 

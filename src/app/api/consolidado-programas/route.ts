@@ -2,11 +2,13 @@ import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
 import type { ProgramRecord } from "@/components/consolidado/types";
+import { registerChangeAudit } from "@/lib/audit";
+import { getSessionFromRequest } from "@/lib/auth";
 
 const FACULTY_OPTIONS = new Set([
   "Facultad de Artes",
   "Facultad de Ciencias Agrarias",
-  "Facultad de Ciencias Contables, Económicas u Administrativas",
+  "Facultad de Ciencias Contables, Económicas y Administrativas",
   "Facultad de Ciencias de la Salud",
   "Facultad de Ciencias Humanas y Sociales",
   "Facultad de Ciencias Naturales, Exactas y de la Educación",
@@ -91,6 +93,14 @@ function mapPayloadToInsert(payload: ProgramRecord) {
 
 export async function POST(request: Request) {
   try {
+    const session = getSessionFromRequest(request);
+    if (!session) {
+      return NextResponse.json({ error: "Sesion no valida o expirada." }, { status: 401 });
+    }
+    if (session.role === "visualizador") {
+      return NextResponse.json({ error: "Tu rol no permite modificar datos." }, { status: 403 });
+    }
+
     const payload = (await request.json()) as ProgramRecord;
 
     const processCode = payload.processCode?.trim() ?? "";
@@ -119,6 +129,14 @@ export async function POST(request: Request) {
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
+
+    await registerChangeAudit({
+      sessionId: session.sid,
+      username: session.username,
+      action: "CREATE",
+      resource: "consolidado_programas",
+      details: { id: data.id, program: payload.program },
+    }).catch(() => undefined);
 
     return NextResponse.json({ ok: true, data }, { status: 201 });
   } catch (error) {

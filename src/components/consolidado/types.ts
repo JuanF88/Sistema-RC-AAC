@@ -1,10 +1,14 @@
 import type { ConsolidadoProgram } from "@/lib/consolidado";
 
-export type ViewMode = "consolidado" | "alertas" | "registro-calificado" | "estadisticas";
+export type ViewMode = "consolidado" | "alertas" | "registro-calificado" | "acreditacion-programas" | "visitas-pares" | "estadisticas" | "usuarios";
+
+export type UserRole = "administrador" | "usuario" | "visualizador";
 
 export type RegistroCalificadoGroupingMode = "programas" | "facultades";
 
-export type EstadisticasSubTab = "generales" | "registro-calificado";
+export type AcreditacionGroupingMode = "programas" | "facultades" | "historicos";
+
+export type EstadisticasSubTab = "generales" | "registro-calificado" | "acreditacion-programas";
 
 export type MenuItem = {
   id: ViewMode;

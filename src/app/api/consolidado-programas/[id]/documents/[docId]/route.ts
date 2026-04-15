@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { registerChangeAudit } from "@/lib/audit";
+import { getSessionFromRequest } from "@/lib/auth";
 
 type RouteContext = {
   params: Promise<{ id: string; docId: string }>;
@@ -22,8 +24,16 @@ function isValidUuid(value: string): boolean {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
 }
 
-export async function DELETE(_request: Request, context: RouteContext) {
+export async function DELETE(request: Request, context: RouteContext) {
   try {
+    const session = getSessionFromRequest(request);
+    if (!session) {
+      return NextResponse.json({ error: "Sesion no valida o expirada." }, { status: 401 });
+    }
+    if (session.role === "visualizador") {
+      return NextResponse.json({ error: "Tu rol no permite modificar datos." }, { status: 403 });
+    }
+
     const { id, docId } = await context.params;
 
     if (!isValidUuid(id) || !isValidUuid(docId)) {
@@ -52,6 +62,14 @@ export async function DELETE(_request: Request, context: RouteContext) {
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
+
+    await registerChangeAudit({
+      sessionId: session.sid,
+      username: session.username,
+      action: "DELETE",
+      resource: "consolidado_documentos",
+      details: { id: docId, programId: id },
+    }).catch(() => undefined);
 
     return NextResponse.json({ ok: true });
   } catch (error) {

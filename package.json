@@ -7,10 +7,12 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "sync:consolidado": "node --env-file=.env.local scripts/sync-consolidado-to-supabase.mjs"
+    "sync:consolidado": "node --env-file=.env.local scripts/sync-consolidado-to-supabase.mjs",
+    "sync:visitas-pares": "node --env-file=.env.local scripts/sync-visitas-pares-to-supabase.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.103.0",
+    "exceljs": "^4.4.0",
     "highcharts": "^12.6.0",
     "highcharts-react-official": "^3.2.3",
     "html2canvas": "^1.4.1",

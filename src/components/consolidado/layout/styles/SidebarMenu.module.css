@@ -25,6 +25,14 @@
   width: 5rem;
 }
 
+.sidebarClosed .topRow {
+  justify-content: center;
+}
+
+.sidebarClosed .brandWrap {
+  display: none;
+}
+
 .topRow {
   display: flex;
   align-items: center;
@@ -34,13 +42,29 @@
   gap: 0.5rem;
 }
 
+.brandWrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-right: auto;
+  min-width: 0;
+  transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1) 0.1s;
+}
+
+.brandIcon {
+  border-radius: 0.45rem;
+  object-fit: cover;
+  box-shadow: 0 6px 14px rgba(15, 23, 42, 0.35);
+  flex-shrink: 0;
+}
+
 .brand {
   font-size: 0.78rem;
-  letter-spacing: 0.22em;
+  letter-spacing: 0.08em;
   font-weight: 800;
   color: rgba(226, 232, 240, 0.88);
-  transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1) 0.1s;
-  margin-right: auto;
+  text-transform: none;
+  white-space: nowrap;
 }
 
 .brandVisible {
@@ -130,23 +154,24 @@
   box-shadow: 0 20px 32px -22px rgba(15, 23, 42, 0.55);
 }
 
-.icon {
+.menuIcon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 2rem;
-  height: 2rem;
-  border-radius: 0.8rem;
-  background: linear-gradient(135deg, rgba(96, 165, 250, 0.34), rgba(14, 165, 233, 0.22));
-  font-weight: 700;
-  font-size: 0.75rem;
+  width: 1.7rem;
+  height: 1.7rem;
   flex-shrink: 0;
-  transition: background 0.3s ease, color 0.3s ease, transform 0.3s ease;
+  color: rgba(186, 230, 253, 0.95);
+  transition: color 0.3s ease, transform 0.3s ease;
 }
 
-.navItemActive .icon {
-  background: linear-gradient(135deg, #2563eb, #0f172a);
-  color: #ffffff;
+.menuIconSvg {
+  width: 1.45rem;
+  height: 1.45rem;
+}
+
+.navItemActive .menuIcon {
+  color: #1d4ed8;
   transform: scale(1.02);
 }
 
@@ -189,4 +214,95 @@
 
 .subtitleActive {
   color: #475569;
+}
+
+.footer {
+  border-top: 1px solid rgba(148, 163, 184, 0.2);
+  padding: 0.65rem 0.72rem 0.8rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.footerActions {
+  padding: 0.2rem 0.72rem 0.35rem;
+  display: flex;
+  justify-content: center;
+}
+
+.settingsButton {
+  width: 2.4rem;
+  height: 2.4rem;
+  border: 1px solid rgba(147, 197, 253, 0.35);
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 0.7rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+}
+
+.settingsButton:hover {
+  background: rgba(191, 219, 254, 0.2);
+  border-color: rgba(191, 219, 254, 0.6);
+  transform: translateY(-1px);
+}
+
+.settingsButtonActive {
+  background: rgba(37, 99, 235, 0.4);
+  border-color: rgba(191, 219, 254, 0.8);
+}
+
+.settingsIcon {
+  font-size: 1.1rem;
+  line-height: 1;
+  color: #e2e8f0;
+}
+
+.footerUser {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.1rem;
+  margin: 0 0.25rem;
+}
+
+.footerUserName {
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: #e2e8f0;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.footerUserRole {
+  font-size: 0.7rem;
+  color: #93c5fd;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 700;
+  text-align: center;
+}
+
+.logoutButton {
+  width: 100%;
+  border: 1px solid rgba(248, 113, 113, 0.35);
+  background: rgba(127, 29, 29, 0.15);
+  color: #fee2e2;
+  border-radius: 0.9rem;
+  text-align: left;
+  padding: 0.72rem 0.8rem;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  transition: background 0.24s ease, border-color 0.24s ease, transform 0.24s ease;
+}
+
+.logoutButton:hover {
+  background: rgba(220, 38, 38, 0.22);
+  border-color: rgba(248, 113, 113, 0.62);
+  transform: translateX(2px);
 }

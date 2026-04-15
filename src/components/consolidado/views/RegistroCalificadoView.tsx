@@ -1,7 +1,8 @@
 "use client";
 
-import { useMemo } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 
+import { exportToExcel, type ExportColumn } from "@/lib/export";
 import type { ProgramRecord } from "../types";
 import styles from "./styles/RegistroCalificadoView.module.css";
 import type { RegistroCalificadoGroupingMode } from "../types";
@@ -9,6 +10,7 @@ import type { RegistroCalificadoGroupingMode } from "../types";
 type Props = {
   rows: ProgramRecord[];
   groupingMode: RegistroCalificadoGroupingMode;
+  onExportReady?: (action: (() => Promise<void>) | null) => void;
 };
 
 type LevelBucket = "tecn" | "pregrado" | "esp" | "espMedQuir" | "maestria" | "doctorado";
@@ -118,7 +120,7 @@ function buildProgramRows(rows: ProgramRecord[]) {
   );
 }
 
-export function RegistroCalificadoView({ rows, groupingMode }: Props) {
+export function RegistroCalificadoView({ rows, groupingMode, onExportReady }: Props) {
   const summary = useMemo(() => buildSummary(rows), [rows]);
   const programRows = useMemo(() => buildProgramRows(rows), [rows]);
   const facultyRows = useMemo(() => buildFacultyRows(rows), [rows]);
@@ -131,6 +133,75 @@ export function RegistroCalificadoView({ rows, groupingMode }: Props) {
 
   const footerPregrado = `${summary.totalPregrado} (${formatPercent(summary.totalPregrado, summary.totalPrograms)})`;
   const footerPosgrado = `${summary.totalPosgrado} (${formatPercent(summary.totalPosgrado, summary.totalPrograms)})`;
+
+  // Keep reference to current data for export
+  const dataRef = useRef({ facultyRows, programRows, useFacultyGrouping });
+  useEffect(() => {
+    dataRef.current = { facultyRows, programRows, useFacultyGrouping };
+  }, [facultyRows, programRows, useFacultyGrouping]);
+
+  const handleExport = useCallback(async () => {
+    const timestamp = new Date().toLocaleDateString("es-CO");
+    const data = dataRef.current;
+    const modeLabel = data.useFacultyGrouping ? "Facultades" : "Programas";
+    const filename = `Registro-Calificado-${modeLabel}-${timestamp}`;
+
+    const columns: ExportColumn[] = [
+      { key: "faculty", header: "Facultad", width: 30 },
+      { key: data.useFacultyGrouping ? "programCount" : "program", header: data.useFacultyGrouping ? "Programas" : "Programa", width: data.useFacultyGrouping ? 14 : 36 },
+      ...(data.useFacultyGrouping ? [] : [{ key: "level", header: "Nivel", width: 20 }]),
+      ...LEVEL_COLUMNS.map((column) => ({ key: column.key, header: column.label, width: 14 })),
+      { key: "totalPregrado", header: "Total Pregrado", width: 16 },
+      { key: "totalPosgrado", header: "Total Posgrado", width: 16 },
+      { key: "total", header: "Total", width: 12 },
+    ];
+
+    const exportData = data.useFacultyGrouping
+      ? data.facultyRows.map((row) => {
+          const totalPregrado = row.counts.tecn + row.counts.pregrado;
+          const totalPosgrado = row.counts.esp + row.counts.espMedQuir + row.counts.maestria + row.counts.doctorado;
+          return {
+            faculty: row.faculty,
+            programCount: row.programs,
+            tecn: row.counts.tecn,
+            pregrado: row.counts.pregrado,
+            esp: row.counts.esp,
+            espMedQuir: row.counts.espMedQuir,
+            maestria: row.counts.maestria,
+            doctorado: row.counts.doctorado,
+            totalPregrado,
+            totalPosgrado,
+            total: row.programs,
+          };
+        })
+      : data.programRows.map((program) => {
+          const bucket = normalizeLevel(program);
+          const pregrado = isPregrado(bucket) ? 1 : 0;
+          const posgrado = isPosgrado(bucket) ? 1 : 0;
+          return {
+            faculty: program.faculty,
+            program: program.program,
+            level: program.academicLevel ?? program.level ?? "-",
+            tecn: bucket === "tecn" ? 1 : "",
+            pregrado: bucket === "pregrado" ? 1 : "",
+            esp: bucket === "esp" ? 1 : "",
+            espMedQuir: bucket === "espMedQuir" ? 1 : "",
+            maestria: bucket === "maestria" ? 1 : "",
+            doctorado: bucket === "doctorado" ? 1 : "",
+            totalPregrado: pregrado || "",
+            totalPosgrado: posgrado || "",
+            total: 1,
+          };
+        });
+
+    await exportToExcel(filename, `Registro ${modeLabel}`, columns, exportData);
+  }, []);
+
+  useEffect(() => {
+    if (!onExportReady) return;
+    onExportReady(handleExport);
+    return () => onExportReady(null);
+  }, [onExportReady]);
 
   return (
     <div className={styles.wrap}>

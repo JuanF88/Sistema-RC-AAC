@@ -53,11 +53,46 @@ export function EstadisticasGenerales({ programs }: Props) {
       { name: "Sin acreditación", y: totalPrograms - accredited - acreditable - inProcess },
     ].filter((d) => d.y > 0);
 
-    const rcData = [
-      { name: "RC Vigentes", y: activeRc },
-      { name: "RC Vencidos", y: expiredRc },
-      { name: "Sin definir", y: totalPrograms - activeRc - expiredRc },
-    ].filter((d) => d.y > 0);
+    const now = new Date();
+    now.setHours(0, 0, 0, 0);
+
+    const rcBuckets = {
+      vencido: 0,
+      vence6m: 0,
+      vence12m: 0,
+      mas12m: 0,
+      sinFecha: 0,
+    };
+
+    for (const program of programs) {
+      const rcEnd = program.rcEnd ? new Date(program.rcEnd) : null;
+      const hasValidDate = rcEnd && !Number.isNaN(rcEnd.getTime());
+
+      if (!hasValidDate) {
+        if (program.hasCurrentRc === false) {
+          rcBuckets.vencido += 1;
+        } else {
+          rcBuckets.sinFecha += 1;
+        }
+        continue;
+      }
+
+      rcEnd.setHours(0, 0, 0, 0);
+      const diffDays = Math.ceil((rcEnd.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+
+      if (diffDays < 0) rcBuckets.vencido += 1;
+      else if (diffDays <= 180) rcBuckets.vence6m += 1;
+      else if (diffDays <= 365) rcBuckets.vence12m += 1;
+      else rcBuckets.mas12m += 1;
+    }
+
+    const rcHorizonData = [
+      { name: "Vencido", y: rcBuckets.vencido, color: "#ef4444" },
+      { name: "Vence <= 6 meses", y: rcBuckets.vence6m, color: "#f59e0b" },
+      { name: "Vence 6-12 meses", y: rcBuckets.vence12m, color: "#facc15" },
+      { name: "Vigente > 12 meses", y: rcBuckets.mas12m, color: "#22c55e" },
+      { name: "Sin fecha RC", y: rcBuckets.sinFecha, color: "#94a3b8" },
+    ];
 
     return {
       totalPrograms,
@@ -69,7 +104,7 @@ export function EstadisticasGenerales({ programs }: Props) {
       faculties: Object.keys(byFaculty).length,
       facultyData,
       accreditationData,
-      rcData,
+      rcHorizonData,
     };
   }, [programs]);
 
@@ -121,11 +156,34 @@ export function EstadisticasGenerales({ programs }: Props) {
 
   const rcChartOptions = {
     credits: { enabled: false },
-    chart: { type: "pie", style: { fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif" } },
-    title: { text: "Distribución por Estado del RC", style: { fontSize: "16px", fontWeight: "bold" } },
-    tooltip: { pointFormat: "<b>{point.name}</b>: {point.y} ({point.percentage:.1f}%)" },
-    plotOptions: { pie: { allowPointSelect: true, cursor: "pointer", dataLabels: { enabled: true, format: "{point.name}: {point.y}" } } },
-    series: [{ name: "Programas", colorByPoint: true, data: stats.rcData }],
+    chart: { type: "column", style: { fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif" } },
+    title: { text: "Semaforo de Vencimiento del RC", style: { fontSize: "16px", fontWeight: "bold" } },
+    xAxis: {
+      categories: stats.rcHorizonData.map((item) => item.name),
+      title: { text: "Estado de vigencia" },
+    },
+    yAxis: { title: { text: "Cantidad de Programas" } },
+    tooltip: {
+      formatter: function (this: any) {
+        const total = stats.rcHorizonData.reduce((sum, item) => sum + item.y, 0);
+        const value = this.y ?? 0;
+        const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : "0.0";
+        return `<b>${this.x}</b><br/>Programas: ${value}<br/>Porcentaje: ${percentage}%`;
+      },
+      useHTML: true,
+    },
+    plotOptions: {
+      column: {
+        colorByPoint: true,
+        dataLabels: {
+          enabled: true,
+          formatter: function (this: any) {
+            return `${this.y ?? 0}`;
+          },
+        },
+      },
+    },
+    series: [{ name: "Programas", type: "column", data: stats.rcHorizonData }],
   } as Highcharts.Options;
 
   const facultyChartOptions = {

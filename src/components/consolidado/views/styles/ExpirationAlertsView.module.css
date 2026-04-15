@@ -2,6 +2,13 @@
   display: flex;
   flex-direction: column;
   gap: 0.8rem;
+  width: 100%;
+}
+
+.header {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
 }
 
 .switcher {
@@ -35,15 +42,17 @@
 }
 
 .tableWrap {
+  width: 100%;
   overflow: auto;
-  max-height: 65vh;
+  min-height: 68vh;
+  max-height: 85vh;
   border-radius: 1rem;
   border: 1px solid rgba(148, 163, 184, 0.22);
 }
 
 .table {
   width: 100%;
-  min-width: 1120px;
+  min-width: 100%;
   border-collapse: collapse;
   table-layout: fixed;
   font-size: 0.86rem;
@@ -58,21 +67,23 @@
 
 .table thead th {
   text-align: left;
-  padding: 0.72rem;
-  width: 12.5%;
-  font-size: 0.72rem;
+  padding: 0.5rem 0.6rem;
+  font-size: 0.68rem;
+  line-height: 1.1;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.07em;
+  letter-spacing: 0.05em;
   color: #e2e8f0;
   background: transparent;
+  white-space: nowrap;
 }
 
 .table td {
   padding: 0.55rem 0.72rem;
   border-bottom: 1px solid rgba(226, 232, 240, 0.9);
   color: #334155;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 
 .table tbody tr:nth-child(odd) {
@@ -86,11 +97,10 @@
 .programCell {
   font-weight: 700;
   color: #0f172a;
-  min-width: 260px;
 }
 
 .observations {
-  min-width: 280px;
+  max-width: 26rem;
   white-space: normal;
   overflow-wrap: anywhere;
 }
@@ -129,4 +139,11 @@
   color: #334155;
   background: #e2e8f0;
   border-color: #cbd5e1;
+}
+
+@media (max-height: 820px) {
+  .tableWrap {
+    min-height: 62vh;
+    max-height: 70vh;
+  }
 }

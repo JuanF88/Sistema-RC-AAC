@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import type { ProgramRecord } from "@/components/consolidado/types";
+import { registerChangeAudit } from "@/lib/audit";
+import { getSessionFromRequest } from "@/lib/auth";
 
 type RouteContext = {
   params: Promise<{ id: string }>;
@@ -9,7 +11,7 @@ type RouteContext = {
 const FACULTY_OPTIONS = new Set([
   "Facultad de Artes",
   "Facultad de Ciencias Agrarias",
-  "Facultad de Ciencias Contables, Económicas u Administrativas",
+  "Facultad de Ciencias Contables, Económicas y Administrativas",
   "Facultad de Ciencias de la Salud",
   "Facultad de Ciencias Humanas y Sociales",
   "Facultad de Ciencias Naturales, Exactas y de la Educación",
@@ -35,6 +37,14 @@ function isValidUuid(value: string): boolean {
 
 export async function PATCH(request: Request, context: RouteContext) {
   try {
+    const session = getSessionFromRequest(request);
+    if (!session) {
+      return NextResponse.json({ error: "Sesion no valida o expirada." }, { status: 401 });
+    }
+    if (session.role === "visualizador") {
+      return NextResponse.json({ error: "Tu rol no permite modificar datos." }, { status: 403 });
+    }
+
     const { id } = await context.params;
 
     if (!isValidUuid(id)) {
@@ -136,9 +146,68 @@ export async function PATCH(request: Request, context: RouteContext) {
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
 
+    await registerChangeAudit({
+      sessionId: session.sid,
+      username: session.username,
+      action: "UPDATE",
+      resource: "consolidado_programas",
+      details: { id, program: payload.program },
+    }).catch(() => undefined);
+
     return NextResponse.json({ ok: true, data });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown update error";
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
+}
+
+export async function DELETE(request: Request, context: RouteContext) {
+  try {
+    const session = getSessionFromRequest(request);
+    if (!session) {
+      return NextResponse.json({ error: "Sesion no valida o expirada." }, { status: 401 });
+    }
+    if (session.role === "visualizador") {
+      return NextResponse.json({ error: "Tu rol no permite modificar datos." }, { status: 403 });
+    }
+
+    const { id } = await context.params;
+    if (!isValidUuid(id)) {
+      return NextResponse.json({ error: "Invalid program ID format" }, { status: 400 });
+    }
+
+    const client = getAdminClient();
+
+    const { data: existing, error: fetchError } = await client
+      .from("consolidado_programas")
+      .select("id,program")
+      .eq("id", id)
+      .maybeSingle();
+
+    if (fetchError) {
+      return NextResponse.json({ error: fetchError.message }, { status: 400 });
+    }
+
+    if (!existing) {
+      return NextResponse.json({ error: "Programa no encontrado." }, { status: 404 });
+    }
+
+    const { error } = await client.from("consolidado_programas").delete().eq("id", id);
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 400 });
+    }
+
+    await registerChangeAudit({
+      sessionId: session.sid,
+      username: session.username,
+      action: "DELETE",
+      resource: "consolidado_programas",
+      details: { id, program: existing.program },
+    }).catch(() => undefined);
+
+    return NextResponse.json({ ok: true });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unknown delete error";
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

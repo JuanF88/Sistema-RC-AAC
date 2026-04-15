@@ -1,14 +1,16 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, useRef } from "react";
 
 import type { ProgramRecord } from "../types";
 import { formatDate } from "../utils";
+import { exportToExcel, type ExportColumn } from "@/lib/export";
 import styles from "./styles/ConsolidadoMatrixView.module.css";
 
 type Props = {
   rows: ProgramRecord[];
   selectedId: string | null;
+  onExportReady?: (action: (() => Promise<void>) | null) => void;
   onSelect: (id: string) => void;
   onOpen: (id: string) => void;
 };
@@ -76,9 +78,15 @@ const COLUMNS: ColumnDef[] = [
   { key: "generalObservations", label: "Observaciones", width: 340, sortable: true, render: (program) => program.generalObservations },
 ];
 
-export function ConsolidadoMatrixView({ rows, selectedId, onSelect, onOpen }: Props) {
+export function ConsolidadoMatrixView({ rows, selectedId, onExportReady, onSelect, onOpen }: Props) {
   const [sortKey, setSortKey] = useState<SortKey>("faculty");
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
+  
+  // Keep references to current sort state for export without recreating handleExport
+  const sortStateRef = useRef({ sortDirection, sortKey, rows });
+  useEffect(() => {
+    sortStateRef.current = { sortDirection, sortKey, rows };
+  }, [sortDirection, sortKey, rows]);
 
   const handleRowClick = (id: string) => {
     if (selectedId === id) {
@@ -92,6 +100,81 @@ export function ConsolidadoMatrixView({ rows, selectedId, onSelect, onOpen }: Pr
     if (value === null || value === undefined || value === "") return "-";
     return value;
   };
+
+  // handleExport doesn't depend on sortDirection/sortKey directly - uses ref
+  const handleExport = useCallback(async () => {
+    const timestamp = new Date().toLocaleDateString("es-CO");
+    const filename = `Consolidado-Programas-${timestamp}`;
+
+    const numericExportKeys = new Set<SortKey>([
+      "processCode",
+      "snies",
+      "totalAcademicCredits",
+      "duration",
+      "numberGraduates",
+    ]);
+
+    const columns: ExportColumn[] = COLUMNS.map((col) => ({
+      key: col.key,
+      header: col.label,
+      width: Math.max(14, Math.round(col.width / 10)),
+      formatter: (value) => {
+        const shown = displayValue(value as string | number | boolean | null | undefined);
+        if (shown === "-") return shown;
+
+        if (numericExportKeys.has(col.key)) {
+          if (typeof shown === "number" && Number.isFinite(shown)) {
+            return shown;
+          }
+
+          const normalized = String(shown).trim().replace(",", ".");
+          if (/^-?\d+(\.\d+)?$/.test(normalized)) {
+            return Number(normalized);
+          }
+        }
+
+        return String(shown);
+      },
+    }));
+
+    // Calculate sorted rows using current state from ref
+    const state = sortStateRef.current;
+    const column = COLUMNS.find((item) => item.key === state.sortKey);
+    
+    const normalize = (value: unknown): string | number => {
+      if (value === null || value === undefined) return "";
+      if (typeof value === "number") return value;
+      if (typeof value === "boolean") return value ? 1 : 0;
+      const asString = String(value).trim();
+      const parsedNumber = Number(asString);
+      return Number.isFinite(parsedNumber) && asString !== "" ? parsedNumber : asString.toLowerCase();
+    };
+
+    let exportRows = state.rows;
+    if (column) {
+      exportRows = [...state.rows].sort((left, right) => {
+        const leftValue = normalize(column.render(left));
+        const rightValue = normalize(column.render(right));
+
+        let comparison = 0;
+        if (typeof leftValue === "number" && typeof rightValue === "number") {
+          comparison = leftValue - rightValue;
+        } else {
+          comparison = String(leftValue).localeCompare(String(rightValue), "es", { sensitivity: "base" });
+        }
+
+        return state.sortDirection === "asc" ? comparison : -comparison;
+      });
+    }
+
+    const exportData = exportRows.map((program) => ({
+      ...Object.fromEntries(
+        COLUMNS.map((col) => [col.key, col.render(program)])
+      ),
+    }));
+
+    await exportToExcel(filename, "Consolidado", columns, exportData);
+  }, []); // No dependencies - uses ref instead
 
   const sortedRows = useMemo(() => {
     const column = COLUMNS.find((item) => item.key === sortKey);
@@ -131,6 +214,12 @@ export function ConsolidadoMatrixView({ rows, selectedId, onSelect, onOpen }: Pr
       setSortDirection("asc");
     }
   };
+
+  useEffect(() => {
+    if (!onExportReady) return;
+    onExportReady(handleExport);
+    return () => onExportReady(null);
+  }, [onExportReady]); // handleExport doesn't change, so only onExportReady in deps
 
   return (
     <div className={styles.wrap}>

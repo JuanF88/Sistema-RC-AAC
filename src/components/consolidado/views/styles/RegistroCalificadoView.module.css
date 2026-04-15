@@ -2,6 +2,7 @@
   display: flex;
   flex-direction: column;
   gap: 0.8rem;
+  width: 100%;
 }
 
 .switchHint {
@@ -78,17 +79,18 @@
 }
 
 .tableWrap {
+  width: 100%;
   overflow: auto;
-  max-height: 68vh;
+  min-height: 56vh;
+  max-height: 82vh;
   border-radius: 1rem;
   border: 1px solid rgba(148, 163, 184, 0.22);
 }
 
 .table {
   width: 100%;
-  min-width: 1410px;
+  min-width: 1460px;
   border-collapse: collapse;
-  table-layout: fixed;
   font-size: 0.85rem;
 }
 
@@ -100,11 +102,13 @@
 }
 
 .table thead th {
-  padding: 0.72rem 0.64rem;
+  padding: 0.5rem 0.6rem;
   text-align: left;
-  font-size: 0.72rem;
+  font-size: 0.68rem;
+  line-height: 1.1;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.07em;
+  letter-spacing: 0.05em;
   color: #e2e8f0;
   background: transparent;
 }
@@ -137,8 +141,8 @@
 }
 
 .programCell {
-  font-weight: 700;
-  color: #0f172a;
+  font-weight: 400;
+  color: #334155;
 }
 
 .numericCell,

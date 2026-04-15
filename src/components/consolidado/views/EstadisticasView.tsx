@@ -6,6 +6,7 @@ import type { ProgramRecord } from "../types";
 import type { EstadisticasSubTab } from "../types";
 import { EstadisticasGenerales } from "./estadisticas/EstadisticasGenerales";
 import { EstadisticasRegistroCalificado } from "./estadisticas/EstadisticasRegistroCalificado";
+import { EstadisticasAcreditacionProgramas } from "./estadisticas/EstadisticasAcreditacionProgramas";
 import styles from "./styles/EstadisticasView.module.css";
 
 type Props = {
@@ -17,6 +18,7 @@ type Props = {
 const SUB_TABS = [
   { id: "generales" as const, label: "Generales" },
   { id: "registro-calificado" as const, label: "Registro Calificado" },
+  { id: "acreditacion-programas" as const, label: "Acreditación de Programas" },
 ];
 
 export function EstadisticasView({ programs, subTab, onSubTabChange }: Props) {
@@ -40,6 +42,7 @@ export function EstadisticasView({ programs, subTab, onSubTabChange }: Props) {
       <div className={styles.content}>
         {subTab === "generales" && <EstadisticasGenerales programs={programs} />}
         {subTab === "registro-calificado" && <EstadisticasRegistroCalificado programs={programs} />}
+        {subTab === "acreditacion-programas" && <EstadisticasAcreditacionProgramas programs={programs} />}
       </div>
     </div>
   );

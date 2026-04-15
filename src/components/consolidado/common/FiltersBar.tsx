@@ -8,7 +8,8 @@ type Props = {
   faculties: readonly string[];
   modality: string;
   level: string;
-  accreditationState: string;
+  acreditableFilter: string;
+  accreditedFilter: string;
   rcState: string;
   modalities: string[];
   levels: string[];
@@ -16,7 +17,8 @@ type Props = {
   onFacultyChange: (value: string) => void;
   onModalityChange: (value: string) => void;
   onLevelChange: (value: string) => void;
-  onAccreditationStateChange: (value: string) => void;
+  onAcreditableFilterChange: (value: string) => void;
+  onAccreditedFilterChange: (value: string) => void;
   onRcStateChange: (value: string) => void;
   onCreateProgram: () => void;
   showModality?: boolean;
@@ -33,7 +35,8 @@ export function FiltersBar({
   faculties,
   modality,
   level,
-  accreditationState,
+  acreditableFilter,
+  accreditedFilter,
   rcState,
   modalities,
   levels,
@@ -41,7 +44,8 @@ export function FiltersBar({
   onFacultyChange,
   onModalityChange,
   onLevelChange,
-  onAccreditationStateChange,
+  onAcreditableFilterChange,
+  onAccreditedFilterChange,
   onRcStateChange,
   onCreateProgram,
   showModality = true,
@@ -87,12 +91,17 @@ export function FiltersBar({
           ))}
         </select>
         {showAccreditationState && (
-          <select value={accreditationState} onChange={(event) => onAccreditationStateChange(event.target.value)} className={styles.select}>
-            <option value="Todos">Estado AAC</option>
-            <option value="acreditado">Acreditado</option>
-            <option value="acreditable">Acreditable</option>
-            <option value="proceso">En proceso AAC</option>
-            <option value="ninguno">Sin acreditacion</option>
+          <select value={acreditableFilter} onChange={(event) => onAcreditableFilterChange(event.target.value)} className={styles.select}>
+            <option value="Todos">Acreditable</option>
+            <option value="Si">Si</option>
+            <option value="No">No</option>
+          </select>
+        )}
+        {showAccreditationState && (
+          <select value={accreditedFilter} onChange={(event) => onAccreditedFilterChange(event.target.value)} className={styles.select}>
+            <option value="Todos">Acreditado</option>
+            <option value="Si">Si</option>
+            <option value="No">No</option>
           </select>
         )}
         {showRcState && (

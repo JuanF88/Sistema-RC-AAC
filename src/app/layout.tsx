@@ -17,6 +17,11 @@ const monoFont = IBM_Plex_Mono({
 export const metadata: Metadata = {
   title: "Sistema RC AAC - Unicauca",
   description: "Consolidado de programas con seguimiento de Registro Calificado y Acreditacion.",
+  icons: {
+    icon: "/programa.png",
+    shortcut: "/programa.png",
+    apple: "/programa.png",
+  },
 };
 
 export default function RootLayout({

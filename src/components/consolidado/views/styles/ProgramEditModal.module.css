@@ -226,12 +226,20 @@
 .actions {
   margin-top: 1rem;
   display: flex;
-  justify-content: flex-end;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.actionsRight {
+  display: inline-flex;
+  align-items: center;
   gap: 0.5rem;
 }
 
 .primary,
-.secondary {
+.secondary,
+.danger {
   border-radius: 0.6rem;
   padding: 0.5rem 0.8rem;
   font-size: 0.85rem;
@@ -260,8 +268,22 @@
   box-shadow: 0 6px 14px rgba(15, 23, 42, 0.06);
 }
 
+.danger {
+  border: 1px solid #fecaca;
+  background: linear-gradient(180deg, #fee2e2 0%, #fecaca 100%);
+  color: #991b1b;
+  box-shadow: 0 8px 18px rgba(220, 38, 38, 0.16);
+}
+
+.danger:disabled {
+  opacity: 0.72;
+  cursor: wait;
+  box-shadow: none;
+}
+
 .primary:hover,
 .secondary:hover,
+.danger:hover,
 .closeButton:hover,
 .removeDoc:hover {
   transform: translateY(-1px);

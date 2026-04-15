@@ -15,6 +15,7 @@ type Props = {
   onAddUrlDocument: (programId: string, name: string, url: string) => Promise<void>;
   onUploadDocument: (programId: string, file: File, name?: string) => Promise<void>;
   onDeleteDocument: (programId: string, documentId: string) => Promise<void>;
+  onDeleteProgram: (programId: string) => Promise<void>;
   open: boolean;
   onClose: () => void;
   onSave: (next: ProgramRecord) => Promise<void>;
@@ -367,12 +368,14 @@ export function ProgramEditModal({
   onAddUrlDocument,
   onUploadDocument,
   onDeleteDocument,
+  onDeleteProgram,
   open,
   onClose,
   onSave,
 }: Props) {
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
+  const [deletingProgram, setDeletingProgram] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [uploadingDoc, setUploadingDoc] = useState(false);
   const [docName, setDocName] = useState("");
@@ -550,6 +553,27 @@ export function ProgramEditModal({
       showToast.error(message, { position: "top-right", transition: "slideInUp", duration: 3000 });
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleDeleteProgram = async () => {
+    if (isCreatingProgram || !program.id) return;
+
+    const confirmed = window.confirm("¿Seguro que deseas eliminar este programa? Esta acción no se puede deshacer.");
+    if (!confirmed) return;
+
+    setDeletingProgram(true);
+    setError(null);
+
+    try {
+      await onDeleteProgram(program.id);
+      showToast.warning("Programa eliminado.", { position: "top-right", transition: "slideInUp", duration: 2600 });
+    } catch (deleteError) {
+      const message = deleteError instanceof Error ? deleteError.message : "No se pudo eliminar el programa.";
+      setError(message);
+      showToast.error(message, { position: "top-right", transition: "slideInUp", duration: 3000 });
+    } finally {
+      setDeletingProgram(false);
     }
   };
 
@@ -802,12 +826,20 @@ export function ProgramEditModal({
           {error && <p className={styles.error}>{error}</p>}
 
           <div className={styles.actions}>
-            <button type="button" onClick={onClose} className={styles.secondary}>
-              Cancelar
-            </button>
-            <button type="submit" className={styles.primary} disabled={saving}>
-              {saving ? "Guardando..." : isCreatingProgram ? "Crear programa" : "Guardar cambios"}
-            </button>
+            {!isCreatingProgram && (
+              <button type="button" onClick={handleDeleteProgram} className={styles.danger} disabled={saving || deletingProgram}>
+                {deletingProgram ? "Eliminando..." : "Eliminar programa"}
+              </button>
+            )}
+
+            <div className={styles.actionsRight}>
+              <button type="button" onClick={onClose} className={styles.secondary} disabled={deletingProgram}>
+                Cancelar
+              </button>
+              <button type="submit" className={styles.primary} disabled={saving || deletingProgram}>
+                {saving ? "Guardando..." : isCreatingProgram ? "Crear programa" : "Guardar cambios"}
+              </button>
+            </div>
           </div>
         </form>
       </div>

@@ -1,13 +1,15 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, useRef } from "react";
 
 import type { ProgramRecord } from "../types";
 import { formatDate } from "../utils";
+import { exportToExcel, type ExportColumn } from "@/lib/export";
 import styles from "./styles/ExpirationAlertsView.module.css";
 
 type Props = {
   rows: ProgramRecord[];
+  onExportReady?: (action: (() => Promise<void>) | null) => void;
 };
 
 type AlertMode = "rrc" | "acreditados";
@@ -68,7 +70,7 @@ function alertClass(level: AlertLevel): string {
   return styles.badgeNeutral;
 }
 
-export function ExpirationAlertsView({ rows }: Props) {
+export function ExpirationAlertsView({ rows, onExportReady }: Props) {
   const [mode, setMode] = useState<AlertMode>("rrc");
 
   const rrcRows = useMemo(() => {
@@ -107,6 +109,73 @@ export function ExpirationAlertsView({ rows }: Props) {
       })
       .sort((a, b) => sortByClosestExpiration(a.aacEnd, b.aacEnd));
   }, [rows]);
+
+  // Keep reference to current data for export
+  const dataRef = useRef({ rrcRows, accreditedRows, mode });
+  useEffect(() => {
+    dataRef.current = { rrcRows, accreditedRows, mode };
+  }, [rrcRows, accreditedRows, mode]);
+
+  const handleExport = useCallback(async () => {
+    const timestamp = new Date().toLocaleDateString("es-CO");
+    const data = dataRef.current;
+    const modeLabel = data.mode === "rrc" ? "RRC" : "Acreditados";
+    const filename = `Alertas-Vencimientos-${modeLabel}-${timestamp}`;
+
+    const columns: ExportColumn[] =
+      data.mode === "rrc"
+        ? [
+            { key: "program", header: "Programa", width: 38 },
+            { key: "rcEnd", header: "Vencimiento R.C.", width: 18, formatter: (v) => formatDate(v as string | null | undefined) || "-" },
+            { key: "rcAlert", header: "Alerta R.C.", width: 16 },
+            { key: "rcDays", header: "Dias R.C.", width: 12 },
+            { key: "siacEnd", header: "Vencimiento SIAC RRC", width: 22, formatter: (v) => formatDate(v as string | null | undefined) || "-" },
+            { key: "siacAlert", header: "Alerta SIAC RRC", width: 18 },
+            { key: "siacDays", header: "Dias SIAC RRC", width: 15 },
+            { key: "observations", header: "Observaciones", width: 44 },
+          ]
+        : [
+            { key: "program", header: "Programa", width: 38 },
+            { key: "aacEnd", header: "Vencimiento AAC", width: 18, formatter: (v) => formatDate(v as string | null | undefined) || "-" },
+            { key: "aacAlert", header: "Alerta AAC", width: 16 },
+            { key: "aacDays", header: "Dias AAC", width: 12 },
+            { key: "siacEnd", header: "Vencimiento SIAC AAC", width: 22, formatter: (v) => formatDate(v as string | null | undefined) || "-" },
+            { key: "siacAlert", header: "Alerta SIAC AAC", width: 18 },
+            { key: "siacDays", header: "Dias SIAC AAC", width: 15 },
+            { key: "observations", header: "Observaciones", width: 44 },
+          ];
+
+    const exportData =
+      data.mode === "rrc"
+        ? data.rrcRows.map((row) => ({
+            program: row.program,
+            rcEnd: row.rcEnd,
+            rcAlert: row.rcAlert.label,
+            rcDays: row.rcAlert.days ?? "-",
+            siacEnd: row.siacEnd,
+            siacAlert: row.siacAlert.label,
+            siacDays: row.siacAlert.days ?? "-",
+            observations: row.observations ?? "-",
+          }))
+        : data.accreditedRows.map((row) => ({
+            program: row.program,
+            aacEnd: row.aacEnd,
+            aacAlert: row.aacAlert.label,
+            aacDays: row.aacAlert.days ?? "-",
+            siacEnd: row.siacEnd,
+            siacAlert: row.siacAlert.label,
+            siacDays: row.siacAlert.days ?? "-",
+            observations: row.observations ?? "-",
+          }));
+
+    await exportToExcel(filename, `Alertas ${modeLabel}`, columns, exportData);
+  }, []);
+
+  useEffect(() => {
+    if (!onExportReady) return;
+    onExportReady(handleExport);
+    return () => onExportReady(null);
+  }, [onExportReady]);
 
   return (
     <div className={styles.wrap}>
