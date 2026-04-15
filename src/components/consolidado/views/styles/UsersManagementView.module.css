@@ -1,0 +1,205 @@
+.wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.headerRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.7rem;
+  flex-wrap: wrap;
+}
+
+.title {
+  margin: 0;
+  font-size: 1rem;
+  color: #0f172a;
+  font-weight: 800;
+}
+
+.filters {
+  display: inline-flex;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+
+.filterBtn {
+  border: 1px solid rgba(148, 163, 184, 0.34);
+  background: #ffffff;
+  color: #334155;
+  border-radius: 999px;
+  padding: 0.34rem 0.62rem;
+  font-size: 0.76rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.filterBtnActive {
+  border-color: #1d4ed8;
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.formCard {
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  border-radius: 0.95rem;
+  padding: 0.75rem;
+  background: rgba(255, 255, 255, 0.92);
+}
+
+.formTitle {
+  margin: 0 0 0.55rem;
+  font-size: 0.84rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #475569;
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: 1.2fr 1.4fr 1fr 1fr auto;
+  gap: 0.5rem;
+}
+
+.input,
+.rowInput {
+  width: 100%;
+  border: 1px solid rgba(148, 163, 184, 0.42);
+  border-radius: 0.56rem;
+  background: #ffffff;
+  color: #0f172a;
+  font-size: 0.82rem;
+  padding: 0.42rem 0.52rem;
+}
+
+.passwordField {
+  position: relative;
+}
+
+.passwordInput {
+  padding-right: 2.2rem;
+}
+
+.eyeButton {
+  position: absolute;
+  top: 50%;
+  right: 0.26rem;
+  transform: translateY(-50%);
+  width: 1.8rem;
+  height: 1.8rem;
+  border: 0;
+  border-radius: 0.45rem;
+  background: transparent;
+  color: #475569;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.eyeButton:hover {
+  background: rgba(37, 99, 235, 0.14);
+  color: #1e40af;
+}
+
+.eyeIcon {
+  width: 1rem;
+  height: 1rem;
+}
+
+.createBtn,
+.saveBtn {
+  border: 1px solid #1d4ed8;
+  background: #dbeafe;
+  color: #1e3a8a;
+  border-radius: 0.56rem;
+  font-size: 0.76rem;
+  font-weight: 700;
+  padding: 0.4rem 0.62rem;
+  cursor: pointer;
+}
+
+.actionsCell {
+  display: inline-flex;
+  gap: 0.4rem;
+}
+
+.deleteBtn {
+  border: 1px solid rgba(220, 38, 38, 0.6);
+  background: rgba(254, 226, 226, 0.92);
+  color: #991b1b;
+  border-radius: 0.56rem;
+  font-size: 0.76rem;
+  font-weight: 700;
+  padding: 0.4rem 0.62rem;
+  cursor: pointer;
+}
+
+.deleteBtn:hover:not(:disabled) {
+  background: rgba(254, 202, 202, 0.98);
+}
+
+.saveBtn:disabled,
+.createBtn:disabled,
+.deleteBtn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.readOnlyMsg,
+.empty {
+  margin: 0;
+  color: #475569;
+  font-size: 0.88rem;
+}
+
+.tableWrap {
+  overflow: auto;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 0.95rem;
+}
+
+.table {
+  width: 100%;
+  min-width: 980px;
+  border-collapse: collapse;
+}
+
+.table thead {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 46%, #0ea5e9 100%);
+}
+
+.table th,
+.table td {
+  padding: 0.62rem 0.64rem;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.22);
+  font-size: 0.82rem;
+}
+
+.table th {
+  color: #e2e8f0;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 0.71rem;
+  text-align: left;
+}
+
+.table tbody tr:nth-child(odd) {
+  background: rgba(255, 255, 255, 0.92);
+}
+
+.table tbody tr:nth-child(even) {
+  background: rgba(239, 246, 255, 0.72);
+}
+
+@media (max-width: 1024px) {
+  .formGrid {
+    grid-template-columns: 1fr;
+  }
+}

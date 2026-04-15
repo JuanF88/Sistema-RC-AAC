@@ -1,0 +1,191 @@
+.wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.formCard {
+  border-radius: 1rem;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  background: rgba(255, 255, 255, 0.9);
+  padding: 0.9rem;
+}
+
+.formTitle {
+  margin: 0 0 0.75rem;
+  font-size: 0.98rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(150px, 1fr));
+  gap: 0.65rem;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.fieldFull {
+  grid-column: span 4;
+}
+
+.label {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: #64748b;
+  font-weight: 800;
+}
+
+.field input,
+.field select {
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  border-radius: 0.55rem;
+  background: #ffffff;
+  color: #0f172a;
+  font-size: 0.84rem;
+  padding: 0.5rem 0.6rem;
+}
+
+.field input:focus,
+.field select:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+}
+
+.actionsRow {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+}
+
+.saveBtn {
+  border: 1px solid #1d4ed8;
+  background: linear-gradient(135deg, #2563eb, #0ea5e9);
+  color: #ffffff;
+  border-radius: 0.6rem;
+  padding: 0.45rem 0.8rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.saveBtn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.message {
+  font-size: 0.8rem;
+  color: #0f766e;
+  font-weight: 600;
+}
+
+.tableWrap {
+  overflow: auto;
+  max-height: 62vh;
+  border-radius: 1rem;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+}
+
+.table {
+  width: 100%;
+  min-width: 900px;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.table thead {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 46%, #0ea5e9 100%);
+}
+
+.table th {
+  padding: 0.72rem 0.64rem;
+  text-align: left;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: #e2e8f0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.table td {
+  padding: 0.6rem 0.64rem;
+  border-bottom: 1px solid rgba(226, 232, 240, 0.92);
+  font-size: 0.85rem;
+  line-height: 1.35;
+  color: #334155;
+}
+
+.table tbody tr:nth-child(odd) {
+  background: rgba(255, 255, 255, 0.92);
+}
+
+.table tbody tr:nth-child(even) {
+  background: rgba(239, 246, 255, 0.72);
+}
+
+.table tbody tr:hover {
+  background: rgba(224, 242, 254, 0.9);
+}
+
+.programCell {
+  font-weight: 400;
+  color: #334155;
+}
+
+.deleteBtn {
+  border: 1px solid #dc2626;
+  background: #fef2f2;
+  color: #991b1b;
+  border-radius: 0.45rem;
+  font-size: 0.74rem;
+  font-weight: 700;
+  padding: 0.32rem 0.56rem;
+  cursor: pointer;
+}
+
+.deleteBtn:hover {
+  background: #fee2e2;
+}
+
+.deleteBtn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.empty {
+  margin: 0;
+  color: #475569;
+  font-size: 0.92rem;
+}
+
+@media (max-width: 1100px) {
+  .formGrid {
+    grid-template-columns: repeat(2, minmax(150px, 1fr));
+  }
+
+  .fieldFull {
+    grid-column: span 2;
+  }
+}
+
+@media (max-width: 640px) {
+  .formGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .fieldFull {
+    grid-column: span 1;
+  }
+}

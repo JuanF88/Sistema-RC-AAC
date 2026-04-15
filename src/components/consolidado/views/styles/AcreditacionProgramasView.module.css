@@ -1,0 +1,313 @@
+.wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  width: 100%;
+}
+
+.historyWrap {
+  border-radius: 16px;
+  border: 1px solid rgba(14, 165, 233, 0.22);
+  background: linear-gradient(180deg, rgba(248, 250, 252, 0.98) 0%, rgba(239, 246, 255, 0.9) 100%);
+  padding: 0.85rem;
+}
+
+.historyTitle {
+  margin: 0 0 0.6rem;
+  color: #0f172a;
+  font-size: 0.92rem;
+  font-weight: 700;
+}
+
+.historyHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.35rem;
+}
+
+.historyHint {
+  margin: 0 0 0.65rem;
+  font-size: 0.8rem;
+  color: #334155;
+}
+
+.historyMessage {
+  margin: 0 0 0.65rem;
+  font-size: 0.8rem;
+  color: #0f766e;
+  font-weight: 600;
+}
+
+.historyTableWrap {
+  width: 100%;
+  overflow: auto;
+  min-height: 48vh;
+  max-height: 68vh;
+}
+
+.historyTable {
+  width: 100%;
+  min-width: 980px;
+  border-collapse: collapse;
+}
+
+.historyTable thead {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 46%, #0ea5e9 100%);
+}
+
+.historyTable th,
+.historyTable td {
+  border-bottom: 1px solid rgba(148, 163, 184, 0.24);
+  padding: 0.6rem 0.64rem;
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+.historyTable tbody tr:nth-child(odd) {
+  background: rgba(255, 255, 255, 0.92);
+}
+
+.historyTable tbody tr:nth-child(even) {
+  background: rgba(239, 246, 255, 0.72);
+}
+
+.historyTable tbody tr:hover {
+  background: rgba(224, 242, 254, 0.9);
+}
+
+.historyTable th {
+  background: transparent;
+  color: #e2e8f0;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  font-size: 0.72rem;
+  white-space: nowrap;
+}
+
+.historyLabelCell {
+  text-align: left !important;
+  font-weight: 400;
+  min-width: 250px;
+}
+
+.historyHighlightCell {
+  font-weight: 700;
+  color: #0f766e;
+}
+
+.historyInput,
+.historyInputSmall {
+  width: 100%;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  border-radius: 0.45rem;
+  background: #ffffff;
+  color: #0f172a;
+  font-size: 0.8rem;
+  padding: 0.34rem 0.4rem;
+}
+
+.historyInput:focus,
+.historyInputSmall:focus {
+  outline: none;
+  border-color: #0284c7;
+  box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.15);
+}
+
+.historyInputSmall {
+  min-width: 74px;
+  text-align: center;
+}
+
+.historyAutoValue {
+  display: inline-flex;
+  min-width: 74px;
+  justify-content: center;
+  padding: 0.34rem 0.4rem;
+  border-radius: 0.45rem;
+  background: #f1f5f9;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  color: #0f172a;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.saveRowBtn {
+  border: 1px solid #16a34a;
+  background: #dcfce7;
+  color: #166534;
+  border-radius: 0.45rem;
+  font-size: 0.74rem;
+  font-weight: 700;
+  padding: 0.32rem 0.56rem;
+  cursor: pointer;
+}
+
+.saveRowBtn:hover {
+  background: #bbf7d0;
+}
+
+.saveRowBtn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.tableWrap {
+  width: 100%;
+  overflow: auto;
+  min-height: 48vh;
+  max-height: 78vh;
+  border-radius: 16px;
+  border: 1px solid rgba(37, 99, 235, 0.25);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(239, 246, 255, 0.92) 100%);
+}
+
+.segmentWrap {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.segmentLabel {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #1e3a8a;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.segmentButtons {
+  display: inline-flex;
+  gap: 0.35rem;
+  padding: 0.2rem;
+  border-radius: 999px;
+  border: 1px solid rgba(37, 99, 235, 0.22);
+  background: rgba(219, 234, 254, 0.8);
+}
+
+.segmentButton {
+  border: 1px solid transparent;
+  background: transparent;
+  color: #1e40af;
+  border-radius: 999px;
+  padding: 0.34rem 0.72rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.segmentButton:hover {
+  background: rgba(37, 99, 235, 0.12);
+}
+
+.segmentButtonActive {
+  background: #1d4ed8;
+  color: #ffffff;
+  border-color: #1d4ed8;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 1280px;
+}
+
+.table thead {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 46%, #0ea5e9 100%);
+}
+
+.table th {
+  background: transparent;
+  color: #e2e8f0;
+  font-size: 0.72rem;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.18);
+  padding: 0.72rem 0.64rem;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.table td {
+  border-bottom: 1px solid rgba(148, 163, 184, 0.24);
+  padding: 0.6rem 0.64rem;
+  font-size: 0.85rem;
+  color: #334155;
+  vertical-align: top;
+}
+
+.table tbody tr:nth-child(odd) {
+  background: rgba(255, 255, 255, 0.92);
+}
+
+.table tbody tr:nth-child(even) {
+  background: rgba(239, 246, 255, 0.72);
+}
+
+.table tbody tr:hover td {
+  background: rgba(224, 242, 254, 0.9);
+}
+
+.facultyCell {
+  min-width: 210px;
+  font-weight: 400;
+}
+
+.programCell {
+  min-width: 280px;
+}
+
+.levelCell {
+  min-width: 140px;
+}
+
+.estadoCell {
+  min-width: 200px;
+}
+
+.estadoSelect {
+  width: 100%;
+  border: 1px solid rgba(148, 163, 184, 0.45);
+  border-radius: 0.5rem;
+  background: #ffffff;
+  color: #0f172a;
+  font-size: 0.8rem;
+  padding: 0.4rem 0.5rem;
+}
+
+.estadoSelect:focus {
+  outline: none;
+  border-color: #1d4ed8;
+  box-shadow: 0 0 0 2px rgba(29, 78, 216, 0.15);
+}
+
+.dateCell,
+.numericCell {
+  text-align: center;
+  white-space: nowrap;
+}
+
+.textCell {
+  min-width: 180px;
+}
+
+.footerLabel,
+.footerCell {
+  background: #dbeafe;
+  color: #1e3a8a;
+  font-weight: 700;
+  border-top: 2px solid rgba(37, 99, 235, 0.35);
+}
+
+.empty {
+  color: #475569;
+  font-size: 0.92rem;
+  margin: 0;
+}

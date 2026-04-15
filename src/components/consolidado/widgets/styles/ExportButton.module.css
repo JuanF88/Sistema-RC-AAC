@@ -1,0 +1,68 @@
+.exportContainer {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.floating {
+  position: fixed;
+  right: 1.2rem;
+  bottom: 1.2rem;
+  z-index: 40;
+}
+
+.exportButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: linear-gradient(135deg, #16a34a, #22c55e);
+  color: white;
+  border: none;
+  border-radius: 0.6rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(22, 163, 74, 0.28);
+}
+
+.floating .exportButton {
+  min-height: 3.2rem;
+  padding: 0.75rem 1.05rem;
+  border-radius: 999px;
+  box-shadow: 0 14px 34px -14px rgba(22, 163, 74, 0.85);
+}
+
+.exportButton:hover:not(.disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(22, 163, 74, 0.4);
+}
+
+.exportButton:active:not(.disabled) {
+  transform: translateY(0);
+}
+
+.exportButton.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.icon {
+  width: 1.1rem;
+  height: 1.1rem;
+  stroke: currentColor;
+}
+
+@media (max-width: 768px) {
+  .floating {
+    right: 0.95rem;
+    bottom: 0.95rem;
+  }
+
+  .floating .exportButton {
+    min-height: 2.95rem;
+    padding: 0.66rem 0.92rem;
+    font-size: 0.8rem;
+  }
+}
