@@ -1,4 +1,4 @@
-export function formatDate(value: string | null): string {
+export function formatDate(value: string | null | undefined): string {
   if (!value) return "Sin fecha";
 
   const dateOnly = String(value).trim().match(/^(\d{4})-(\d{2})-(\d{2})$/);
