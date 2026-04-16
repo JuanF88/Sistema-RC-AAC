@@ -110,6 +110,8 @@ function createEmptyProgramDraft(): ProgramRecord {
 }
 
 export function ConsolidadoDashboardClient({ data, currentUser, currentRole }: Props) {
+  const tabIdRef = useRef<string>(crypto.randomUUID());
+  const [blockedByAnotherTab, setBlockedByAnotherTab] = useState(false);
   const [programs, setPrograms] = useState<ProgramRecord[]>(data.programs);
   const [search, setSearch] = useState("");
   const [faculty, setFaculty] = useState("Todas");
@@ -130,6 +132,53 @@ export function ConsolidadoDashboardClient({ data, currentUser, currentRole }: P
   const [documentsByProgram, setDocumentsByProgram] = useState<Record<string, ProgramDocument[]>>({});
   const [loadingDocuments, setLoadingDocuments] = useState(false);
   const [floatingExportState, setFloatingExportState] = useState<{ action: (() => Promise<void>) | null }>({ action: null });
+
+  useEffect(() => {
+    const lockKey = `siac_active_tab_lock:${currentUser}`;
+    const thisTabId = tabIdRef.current;
+
+    const claimLock = () => {
+      const payload = JSON.stringify({ tabId: thisTabId, username: currentUser, ts: Date.now() });
+      localStorage.setItem(lockKey, payload);
+    };
+
+    const handleStorage = (event: StorageEvent) => {
+      if (event.key !== lockKey || !event.newValue) return;
+
+      try {
+        const parsed = JSON.parse(event.newValue) as { tabId?: string; username?: string };
+        if (parsed.username !== currentUser) return;
+        if (parsed.tabId && parsed.tabId !== thisTabId) {
+          setBlockedByAnotherTab(true);
+        }
+      } catch {
+        // Ignore malformed lock payloads.
+      }
+    };
+
+    claimLock();
+    const heartbeat = window.setInterval(() => {
+      if (!blockedByAnotherTab) claimLock();
+    }, 2000);
+
+    window.addEventListener("storage", handleStorage);
+
+    return () => {
+      window.clearInterval(heartbeat);
+      window.removeEventListener("storage", handleStorage);
+
+      const currentLock = localStorage.getItem(lockKey);
+      if (!currentLock) return;
+      try {
+        const parsed = JSON.parse(currentLock) as { tabId?: string };
+        if (parsed.tabId === thisTabId) {
+          localStorage.removeItem(lockKey);
+        }
+      } catch {
+        // Ignore malformed lock payloads during cleanup.
+      }
+    };
+  }, [blockedByAnotherTab, currentUser]);
 
   const handleRegisterExportAction = useCallback((action: (() => Promise<void>) | null) => {
     // Wrap in object to prevent React from executing function as updater
@@ -392,6 +441,20 @@ export function ConsolidadoDashboardClient({ data, currentUser, currentRole }: P
     setModalOpen(false);
     setIsCreatingProgram(false);
     setDraftProgram(null);
+  }
+
+  if (blockedByAnotherTab) {
+    return (
+      <div className={styles.page}>
+        <div className={styles.gridOverlay} />
+        <main className={styles.main}>
+          <section className={styles.panel}>
+            <h2>Sesion activa en otra ventana</h2>
+            <p>Esta ventana se bloqueo para evitar cambios simultaneos con el mismo usuario. Puedes cerrar esta ventana y continuar en la otra.</p>
+          </section>
+        </main>
+      </div>
+    );
   }
 
   return (
