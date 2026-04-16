@@ -48,6 +48,18 @@ export async function registerLoginAudit(input: LoginAuditInput): Promise<void> 
   if (error) throw new Error(error.message);
 }
 
+export async function closeOtherActiveSessionsForUser(input: { username: string; keepSessionId: string }): Promise<void> {
+  const client = getAdminClient();
+  const { error } = await client
+    .from("auth_audit_sessions")
+    .update({ logout_at: new Date().toISOString() })
+    .eq("username", input.username)
+    .is("logout_at", null)
+    .neq("session_id", input.keepSessionId);
+
+  if (error) throw new Error(error.message);
+}
+
 export async function registerLogoutAudit(sessionId: string): Promise<void> {
   const client = getAdminClient();
   const { error } = await client

@@ -90,7 +90,7 @@ export async function GET(_request: Request, context: RouteContext) {
 
 export async function POST(request: Request, context: RouteContext) {
   try {
-    const session = getSessionFromRequest(request);
+    const session = await getSessionFromRequest(request);
     if (!session) {
       return NextResponse.json({ error: "Sesion no valida o expirada." }, { status: 401 });
     }
@@ -210,3 +210,4 @@ export async function POST(request: Request, context: RouteContext) {
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
+

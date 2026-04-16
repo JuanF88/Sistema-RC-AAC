@@ -99,6 +99,25 @@ function getAdminClient() {
   return createClient(supabaseUrl, serviceRoleKey, { auth: { persistSession: false } });
 }
 
+async function isSessionActiveInAudit(session: AuthSession): Promise<boolean> {
+  try {
+    const client = getAdminClient();
+    const { data, error } = await client
+      .from("auth_audit_sessions")
+      .select("session_id,logout_at,username")
+      .eq("session_id", session.sid)
+      .eq("username", session.username)
+      .maybeSingle();
+
+    if (error || !data) return false;
+    if (data.logout_at) return false;
+    return true;
+  } catch {
+    // If audit storage cannot be reached, do not hard-lock users out.
+    return true;
+  }
+}
+
 export function hashAuthPassword(password: string): string {
   return crypto.createHash("sha256").update(password).digest("hex");
 }
@@ -212,16 +231,22 @@ function readCookieValueFromHeader(cookieHeader: string, name: string): string |
   return null;
 }
 
-export function getSessionFromRequest(request: Request): AuthSession | null {
+export async function getSessionFromRequest(request: Request): Promise<AuthSession | null> {
   const cookieHeader = request.headers.get("cookie") ?? "";
   const token = readCookieValueFromHeader(cookieHeader, SESSION_COOKIE_NAME);
-  return verifySessionToken(token);
+  const session = verifySessionToken(token);
+  if (!session) return null;
+  const isActive = await isSessionActiveInAudit(session);
+  return isActive ? session : null;
 }
 
 export async function getSessionFromServerCookies(): Promise<AuthSession | null> {
   const cookieStore = await cookies();
   const token = cookieStore.get(SESSION_COOKIE_NAME)?.value;
-  return verifySessionToken(token);
+  const session = verifySessionToken(token);
+  if (!session) return null;
+  const isActive = await isSessionActiveInAudit(session);
+  return isActive ? session : null;
 }
 
 export function getSessionCookieMaxAgeSeconds(): number {

@@ -1,7 +1,7 @@
 import crypto from "node:crypto";
 import { NextResponse } from "next/server";
 
-import { registerLoginAudit } from "@/lib/audit";
+import { closeOtherActiveSessionsForUser, registerLoginAudit } from "@/lib/audit";
 import { getSessionCookieMaxAgeSeconds, issueSessionToken, SESSION_COOKIE_NAME, validateCredentials } from "@/lib/auth";
 
 type LoginPayload = {
@@ -47,6 +47,9 @@ export async function POST(request: Request) {
       ipAddress: getIpAddress(request),
       userAgent: request.headers.get("user-agent"),
     });
+
+    // Enforce a single active session per username.
+    await closeOtherActiveSessionsForUser({ username: validUser.username, keepSessionId: sid });
 
     const response = NextResponse.json({
       ok: true,

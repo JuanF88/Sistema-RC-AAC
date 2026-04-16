@@ -26,7 +26,7 @@ function isValidUuid(value: string): boolean {
 
 export async function DELETE(request: Request, context: RouteContext) {
   try {
-    const session = getSessionFromRequest(request);
+    const session = await getSessionFromRequest(request);
     if (!session) {
       return NextResponse.json({ error: "Sesion no valida o expirada." }, { status: 401 });
     }
@@ -77,3 +77,4 @@ export async function DELETE(request: Request, context: RouteContext) {
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
+

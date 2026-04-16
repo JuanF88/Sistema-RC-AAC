@@ -31,7 +31,7 @@ function parseRole(role: string | undefined): UserRole {
 
 export async function GET(request: Request) {
   try {
-    const session = getSessionFromRequest(request);
+    const session = await getSessionFromRequest(request);
     if (!session) return NextResponse.json({ error: "Sesion no valida o expirada." }, { status: 401 });
     if (session.role !== "administrador") return NextResponse.json({ error: "Permisos insuficientes." }, { status: 403 });
 
@@ -55,7 +55,7 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const session = getSessionFromRequest(request);
+    const session = await getSessionFromRequest(request);
     if (!session) return NextResponse.json({ error: "Sesion no valida o expirada." }, { status: 401 });
     if (session.role !== "administrador") return NextResponse.json({ error: "Permisos insuficientes." }, { status: 403 });
 
@@ -104,3 +104,4 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
+

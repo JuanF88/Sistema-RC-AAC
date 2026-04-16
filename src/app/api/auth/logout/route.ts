@@ -5,7 +5,7 @@ import { getSessionFromRequest, SESSION_COOKIE_NAME } from "@/lib/auth";
 
 export async function POST(request: Request) {
   try {
-    const session = getSessionFromRequest(request);
+    const session = await getSessionFromRequest(request);
     if (session) {
       await registerLogoutAudit(session.sid);
     }
@@ -25,3 +25,4 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
+
