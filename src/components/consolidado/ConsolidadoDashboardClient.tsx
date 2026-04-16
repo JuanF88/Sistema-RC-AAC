@@ -111,6 +111,7 @@ function createEmptyProgramDraft(): ProgramRecord {
 
 export function ConsolidadoDashboardClient({ data, currentUser, currentRole }: Props) {
   const tabIdRef = useRef<string>(crypto.randomUUID());
+  const sessionRedirectingRef = useRef(false);
   const [blockedByAnotherTab, setBlockedByAnotherTab] = useState(false);
   const [sessionInvalid, setSessionInvalid] = useState(false);
   const [programs, setPrograms] = useState<ProgramRecord[]>(data.programs);
@@ -189,11 +190,24 @@ export function ConsolidadoDashboardClient({ data, currentUser, currentRole }: P
   useEffect(() => {
     let cancelled = false;
 
+    const redirectToLogin = () => {
+      if (sessionRedirectingRef.current) return;
+      sessionRedirectingRef.current = true;
+      setSessionInvalid(true);
+      window.location.replace("/login?reason=duplicate-session");
+    };
+
     const checkSession = async () => {
       try {
         const response = await fetch("/api/auth/session", { cache: "no-store" });
         if (!response.ok) {
-          if (!cancelled) setSessionInvalid(true);
+          if (!cancelled) redirectToLogin();
+          return;
+        }
+
+        const body = (await response.json()) as { active?: boolean };
+        if (body.active === false) {
+          if (!cancelled) redirectToLogin();
           return;
         }
 
@@ -222,11 +236,6 @@ export function ConsolidadoDashboardClient({ data, currentUser, currentRole }: P
       document.removeEventListener("visibilitychange", handleFocus);
     };
   }, []);
-
-  useEffect(() => {
-    if (!sessionInvalid) return;
-    window.location.href = "/login?reason=duplicate-session";
-  }, [sessionInvalid]);
 
   const faculties = useMemo(() => FACULTY_OPTIONS, []);
   const modalities = useMemo(() => [...new Set(programs.map((program) => program.modality).filter((value): value is string => Boolean(value)))], [programs]);
@@ -501,7 +510,17 @@ export function ConsolidadoDashboardClient({ data, currentUser, currentRole }: P
   }
 
   if (sessionInvalid) {
-    return null;
+    return (
+      <div className={styles.page}>
+        <div className={styles.gridOverlay} />
+        <main className={styles.main}>
+          <section className={styles.panel}>
+            <h2>Sesion finalizada</h2>
+            <p>Tu sesion fue reemplazada por otro inicio de sesion. Redirigiendo al acceso...</p>
+          </section>
+        </main>
+      </div>
+    );
   }
 
   return (
