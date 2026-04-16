@@ -112,6 +112,7 @@ function createEmptyProgramDraft(): ProgramRecord {
 export function ConsolidadoDashboardClient({ data, currentUser, currentRole }: Props) {
   const tabIdRef = useRef<string>(crypto.randomUUID());
   const [blockedByAnotherTab, setBlockedByAnotherTab] = useState(false);
+  const [sessionInvalid, setSessionInvalid] = useState(false);
   const [programs, setPrograms] = useState<ProgramRecord[]>(data.programs);
   const [search, setSearch] = useState("");
   const [faculty, setFaculty] = useState("Todas");
@@ -184,6 +185,48 @@ export function ConsolidadoDashboardClient({ data, currentUser, currentRole }: P
     // Wrap in object to prevent React from executing function as updater
     setFloatingExportState({ action });
   }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const checkSession = async () => {
+      try {
+        const response = await fetch("/api/auth/session", { cache: "no-store" });
+        if (!response.ok) {
+          if (!cancelled) setSessionInvalid(true);
+          return;
+        }
+
+        if (!cancelled) setSessionInvalid(false);
+      } catch {
+        // If the check fails temporarily, keep the current UI until the next poll.
+      }
+    };
+
+    void checkSession();
+    const interval = window.setInterval(() => {
+      void checkSession();
+    }, 5000);
+
+    const handleFocus = () => {
+      void checkSession();
+    };
+
+    window.addEventListener("focus", handleFocus);
+    document.addEventListener("visibilitychange", handleFocus);
+
+    return () => {
+      cancelled = true;
+      window.clearInterval(interval);
+      window.removeEventListener("focus", handleFocus);
+      document.removeEventListener("visibilitychange", handleFocus);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!sessionInvalid) return;
+    window.location.href = "/login?reason=duplicate-session";
+  }, [sessionInvalid]);
 
   const faculties = useMemo(() => FACULTY_OPTIONS, []);
   const modalities = useMemo(() => [...new Set(programs.map((program) => program.modality).filter((value): value is string => Boolean(value)))], [programs]);
@@ -455,6 +498,10 @@ export function ConsolidadoDashboardClient({ data, currentUser, currentRole }: P
         </main>
       </div>
     );
+  }
+
+  if (sessionInvalid) {
+    return null;
   }
 
   return (
