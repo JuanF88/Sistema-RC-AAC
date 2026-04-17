@@ -1,0 +1,188 @@
+.wrap {
+  display: grid;
+  gap: 16px;
+}
+
+.headerCard,
+.formCard,
+.listCard {
+  border: 1px solid #dce7f6;
+  border-radius: 12px;
+  background: #ffffff;
+  padding: 16px;
+  box-shadow: 0 4px 14px rgba(20, 45, 90, 0.06);
+}
+
+.title {
+  margin: 0;
+  color: #103766;
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.description {
+  margin: 10px 0 0;
+  color: #2a4768;
+  line-height: 1.45;
+  font-size: 0.9rem;
+}
+
+.statsRow {
+  margin-top: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.statPill {
+  background: #e7f0ff;
+  color: #0f3d78;
+  border: 1px solid #c8dcff;
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-weight: 700;
+  font-size: 0.82rem;
+}
+
+.cardTitle {
+  margin: 0 0 12px;
+  color: #103766;
+  font-size: 0.95rem;
+}
+
+.formRow {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: minmax(220px, 1.2fr) minmax(180px, 1fr) auto;
+}
+
+.scheduleGrid {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(3, minmax(180px, 1fr)) auto;
+  align-items: end;
+}
+
+.fieldLabel {
+  display: grid;
+  gap: 6px;
+  color: #234267;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.scheduleMeta {
+  margin-top: 12px;
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  color: #3b5a80;
+  font-size: 0.8rem;
+}
+
+.input {
+  border: 1px solid #c8d6eb;
+  border-radius: 8px;
+  padding: 9px 11px;
+  font-size: 0.86rem;
+  color: #133252;
+}
+
+.input:focus {
+  outline: none;
+  border-color: #0f69d8;
+  box-shadow: 0 0 0 3px rgba(15, 105, 216, 0.14);
+}
+
+.primaryButton,
+.refreshButton,
+.activateButton,
+.deactivateButton,
+.deleteButton {
+  border: none;
+  border-radius: 8px;
+  padding: 8px 11px;
+  font-weight: 700;
+  font-size: 0.82rem;
+  cursor: pointer;
+}
+
+.primaryButton,
+.refreshButton,
+.activateButton {
+  background: #0f69d8;
+  color: #fff;
+}
+
+.deactivateButton {
+  background: #f9ce5f;
+  color: #5d4006;
+}
+
+.deleteButton {
+  background: #f56a6a;
+  color: #fff;
+}
+
+.list {
+  display: grid;
+  gap: 10px;
+}
+
+.item {
+  border: 1px solid #dbe6f3;
+  border-radius: 10px;
+  padding: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.itemInfo {
+  display: grid;
+  gap: 2px;
+  color: #25486d;
+  font-size: 0.86rem;
+}
+
+.itemInfo strong {
+  color: #123964;
+}
+
+.itemActions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.empty {
+  margin: 0;
+  color: #4e6c8f;
+}
+
+.primaryButton:disabled,
+.refreshButton:disabled,
+.activateButton:disabled,
+.deactivateButton:disabled,
+.deleteButton:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+@media (max-width: 900px) {
+  .formRow {
+    grid-template-columns: 1fr;
+  }
+
+  .scheduleGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .primaryButton {
+    width: 100%;
+  }
+}
