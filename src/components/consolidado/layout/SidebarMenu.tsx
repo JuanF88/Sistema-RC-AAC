@@ -132,8 +132,8 @@ export function SidebarMenu({ menuOpen, view, items, currentUser, currentRole, c
             type="button"
             className={`${styles.settingsButton} ${view === "usuarios" ? styles.settingsButtonActive : ""}`}
             onClick={onOpenUsers}
-            title="Usuarios"
-            aria-label="Abrir gestión de usuarios"
+            title="Configuracion"
+            aria-label="Abrir configuracion"
           >
             <span className={styles.settingsIcon}>⚙</span>
           </button>

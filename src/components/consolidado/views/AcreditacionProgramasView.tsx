@@ -11,16 +11,15 @@ type Props = {
   rows: ProgramRecord[];
   groupingMode: AcreditacionGroupingMode;
   onExportReady?: (action: (() => Promise<void>) | null) => void;
+  onProgramUpdate?: (program: ProgramRecord) => void;
 };
 
 type AcreditacionSegment = "acreditados" | "acreditables";
 
 const ESTADO_OPTIONS = [
-  "Renovaciones",
-  "En proceso renovación",
-  "Nuevos",
-  "En proceso de AAC",
-  "Acreditado a 2026",
+  "Acreditable",
+  "En proceso de Acreditacion",
+  "Acreditado 2026",
 ] as const;
 
 type EstadoOption = (typeof ESTADO_OPTIONS)[number];
@@ -30,6 +29,7 @@ type HistoricalGoalRow = {
   label: string;
   acreditados: string;
   acreditables: string;
+  compliancePercent?: string;
 };
 
 type DerivedHistoricalGoalRow = HistoricalGoalRow & {
@@ -81,6 +81,7 @@ const HISTORICAL_GOALS: HistoricalGoalRow[] = [
     label: "% cumplimiento de la meta a 31/12/2024",
     acreditados: "34",
     acreditables: "",
+    compliancePercent: "69",
   },
 ];
 
@@ -159,15 +160,18 @@ function mapApiRowsToView(rows: HistoricalApiRow[]): HistoricalGoalRow[] {
     label: row.label,
     acreditados: row.accredited_count !== null ? String(row.accredited_count) : "",
     acreditables: row.accreditable_count !== null ? String(row.accreditable_count) : "",
+    compliancePercent: row.compliance_percent !== null ? String(row.compliance_percent) : "",
   }));
 }
 
 function buildDerivedHistoricalRows(rows: HistoricalGoalRow[]): DerivedHistoricalGoalRow[] {
-  const row2026 = rows.find((row) => row.label.toLowerCase().includes("2026"));
-  const accreditable2026 = row2026 ? parseNullableNumber(row2026.acreditables) : null;
-  const target602026 = accreditable2026 !== null ? Math.round(accreditable2026 * 0.6) : null;
+  const latestRowWithAcreditables = [...rows]
+    .reverse()
+    .find((row) => parseNullableNumber(row.acreditables) !== null);
+  const latestAccreditable = latestRowWithAcreditables ? parseNullableNumber(latestRowWithAcreditables.acreditables) : null;
+  const latestTarget60 = latestAccreditable !== null ? Math.round(latestAccreditable * 0.6) : null;
 
-  return rows.map((row) => {
+  return rows.map((row, index) => {
     const acreditados = parseNullableNumber(row.acreditados);
     const acreditables = parseNullableNumber(row.acreditables);
 
@@ -175,10 +179,14 @@ function buildDerivedHistoricalRows(rows: HistoricalGoalRow[]): DerivedHistorica
     const target40 = acreditables !== null ? Math.round(acreditables * 0.4) : null;
     const target60 = acreditables !== null ? Math.round(acreditables * 0.6) : null;
 
+    const isMetaRow = index === rows.length - 1 || /cumplimiento|meta/i.test(row.label);
     let cumplimiento: number | null = null;
-    if (row.label.toLowerCase().includes("31/12/2024")) {
-      if (acreditados !== null && target602026 && target602026 > 0) {
-        cumplimiento = Math.round((acreditados / target602026) * 100);
+    if (isMetaRow) {
+      const persistedCompliance = parseNullablePercent(row.compliancePercent ?? "");
+      if (persistedCompliance !== null) {
+        cumplimiento = Math.round(persistedCompliance);
+      } else if (acreditados !== null && latestTarget60 !== null && latestTarget60 > 0) {
+        cumplimiento = Math.round((acreditados / latestTarget60) * 100);
       }
     } else if (acreditados !== null && acreditables && acreditables > 0) {
       cumplimiento = Math.round((acreditados / acreditables) * 100);
@@ -194,7 +202,7 @@ function buildDerivedHistoricalRows(rows: HistoricalGoalRow[]): DerivedHistorica
   });
 }
 
-export function AcreditacionProgramasView({ rows, groupingMode, onExportReady }: Props) {
+export function AcreditacionProgramasView({ rows, groupingMode, onExportReady, onProgramUpdate }: Props) {
   const useFacultyGrouping = groupingMode === "facultades";
   const [segment, setSegment] = useState<AcreditacionSegment>("acreditados");
   const [estadoByProgramId, setEstadoByProgramId] = useState<Record<string, EstadoOption>>({});
@@ -207,9 +215,15 @@ export function AcreditacionProgramasView({ rows, groupingMode, onExportReady }:
     (program: ProgramRecord): AcreditacionSegment | null => {
       const selectedEstado = estadoByProgramId[program.id];
 
+      // Hard rule: programs that are neither accreditable nor accredited
+      // must not appear in accreditation segments.
+      if (!program.acreditable && !program.accredited) {
+        return null;
+      }
+
       // Explicit estado selection has priority over boolean flags from payload.
       if (selectedEstado) {
-        return selectedEstado === "Acreditado a 2026" ? "acreditados" : "acreditables";
+        return selectedEstado === "Acreditado 2026" ? "acreditados" : "acreditables";
       }
 
       if (program.accredited) return "acreditados";
@@ -231,9 +245,9 @@ export function AcreditacionProgramasView({ rows, groupingMode, onExportReady }:
   const facultyRows = useMemo(() => buildFacultyRows(segmentRows), [segmentRows]);
 
   function inferEstado(program: ProgramRecord): EstadoOption {
-    if (program.accredited) return "Acreditado a 2026";
-    if (program.inAccreditationProcess) return "En proceso de AAC";
-    return "Nuevos";
+    if (program.accredited) return "Acreditado 2026";
+    if (program.inAccreditationProcess) return "En proceso de Acreditacion";
+    return "Acreditable";
   }
 
   async function loadEstados() {
@@ -250,6 +264,8 @@ export function AcreditacionProgramasView({ rows, groupingMode, onExportReady }:
       const mapped = body.data.reduce<Record<string, EstadoOption>>((acc, item) => {
         if (ESTADO_OPTIONS.includes(item.estado)) {
           acc[item.program_id] = item.estado;
+        } else if (item.estado === "Acreditado 2026") {
+          acc[item.program_id] = "Acreditado 2026";
         }
         return acc;
       }, {});
@@ -267,9 +283,10 @@ export function AcreditacionProgramasView({ rows, groupingMode, onExportReady }:
 
   async function handleEstadoChange(program: ProgramRecord, estado: EstadoOption) {
     const previous = estadoByProgramId[program.id];
+    const previousSegment = previous === "Acreditado 2026" ? "acreditados" : resolveProgramSegment(program) ?? "acreditables";
     setSavingEstadoId(program.id);
     setEstadoByProgramId((current) => ({ ...current, [program.id]: estado }));
-    setSegment(estado === "Acreditado a 2026" ? "acreditados" : "acreditables");
+    setSegment(estado === "Acreditado 2026" ? "acreditados" : "acreditables");
 
     try {
       const response = await fetch(`/api/acreditacion-estados/${encodeURIComponent(program.id)}`, {
@@ -282,6 +299,26 @@ export function AcreditacionProgramasView({ rows, groupingMode, onExportReady }:
       if (!response.ok) {
         throw new Error(body.error ?? "No se pudo guardar el estado del programa.");
       }
+
+      const updatedProgram: ProgramRecord = {
+        ...program,
+        acreditable: true,
+        inAccreditationProcess: estado === "En proceso de Acreditacion",
+        accredited: estado === "Acreditado 2026",
+      };
+
+      const syncResponse = await fetch(`/api/consolidado-programas/${encodeURIComponent(program.id)}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updatedProgram),
+      });
+
+      const syncBody = (await syncResponse.json()) as { error?: string };
+      if (!syncResponse.ok) {
+        throw new Error(syncBody.error ?? "No se pudo sincronizar el estado de acreditacion del programa.");
+      }
+
+      onProgramUpdate?.(updatedProgram);
 
       showToast.success("Estado actualizado.", {
         position: "top-right",
@@ -296,6 +333,7 @@ export function AcreditacionProgramasView({ rows, groupingMode, onExportReady }:
         else delete copy[program.id];
         return copy;
       });
+      setSegment(previousSegment);
       showToast.error(message, {
         position: "top-right",
         transition: "slideInUp",
@@ -307,37 +345,30 @@ export function AcreditacionProgramasView({ rows, groupingMode, onExportReady }:
   }
 
   async function seedHistoricalRows() {
-    await Promise.all(
-      HISTORICAL_GOALS.map(async (row, index) => {
-        const accreditableCount = parseNullableNumber(row.acreditables);
-        const target25 = accreditableCount !== null ? Math.round(accreditableCount * 0.25) : null;
-        const target40 = accreditableCount !== null ? Math.round(accreditableCount * 0.4) : null;
-        const target60 = accreditableCount !== null ? Math.round(accreditableCount * 0.6) : null;
+      const seededDerivedRows = buildDerivedHistoricalRows(HISTORICAL_GOALS);
 
-        const accreditedCount = parseNullableNumber(row.acreditados);
-        const compliancePercent =
-          row.label.toLowerCase().includes("31/12/2024")
-            ? null
-            : accreditedCount !== null && accreditableCount && accreditableCount > 0
-              ? Math.round((accreditedCount / accreditableCount) * 100)
-              : null;
+      await Promise.all(
+        HISTORICAL_GOALS.map(async (row, index) => {
+          const accreditedCount = parseNullableNumber(row.acreditados);
+          const accreditableCount = parseNullableNumber(row.acreditables);
+          const compliancePercent = parseNullablePercent(seededDerivedRows[index]?.cumplimiento ?? "");
 
-        await fetch("/api/acreditacion-historicos", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            label: row.label,
-            accreditedCount,
-            accreditableCount,
-            target25,
-            target40,
-            target60,
-            compliancePercent,
-            orderIndex: index,
-          }),
-        });
-      }),
-    );
+          await fetch("/api/acreditacion-historicos", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              label: row.label,
+              accreditedCount,
+              accreditableCount,
+              target25: parseNullableNumber(seededDerivedRows[index]?.target25 ?? ""),
+              target40: parseNullableNumber(seededDerivedRows[index]?.target40 ?? ""),
+              target60: parseNullableNumber(seededDerivedRows[index]?.target60 ?? ""),
+              compliancePercent,
+              orderIndex: index,
+            }),
+          });
+        }),
+      );
   }
 
   async function loadHistoricalRows(options?: { autoSeed?: boolean }) {
@@ -481,7 +512,7 @@ export function AcreditacionProgramasView({ rows, groupingMode, onExportReady }:
         { key: "faculty", header: "Facultad", width: 34 },
         { key: "total", header: "Programas", width: 14 },
         { key: "active", header: "AAC Vigente", width: 14 },
-        { key: "expired", header: "AAC Vencida", width: 14 },
+        { key: "expired", header: "AAC Extendida", width: 14 },
         { key: "unknown", header: "Sin Fecha AAC", width: 16 },
       ];
 
@@ -502,7 +533,7 @@ export function AcreditacionProgramasView({ rows, groupingMode, onExportReady }:
       { key: "level", header: "Nivel Academico", width: 22 },
       { key: "estado", header: "Estado", width: 24 },
       { key: "active", header: "AAC Vigente", width: 14 },
-      { key: "expired", header: "AAC Vencida", width: 14 },
+      { key: "expired", header: "AAC Extendida", width: 14 },
       { key: "unknown", header: "Sin Fecha AAC", width: 16 },
     ];
 
@@ -641,7 +672,7 @@ export function AcreditacionProgramasView({ rows, groupingMode, onExportReady }:
                   {!useFacultyGrouping && <th>Nivel Academico</th>}
                   {!useFacultyGrouping && <th>Estado</th>}
                   <th>AAC Vigente</th>
-                  <th>AAC Vencida</th>
+                  <th>AAC Extendida</th>
                   <th>Sin Fecha AAC</th>
                 </tr>
               </thead>

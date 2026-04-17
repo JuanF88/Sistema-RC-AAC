@@ -1,10 +1,66 @@
 .row {
   margin-bottom: 1rem;
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
+  flex-direction: column;
+  align-items: stretch;
   gap: 0.65rem;
+}
+
+.primaryRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  align-items: center;
+}
+
+.searchInput {
+  width: 100%;
+  flex: 1 1 340px;
+  min-width: 230px;
+}
+
+.toggleFiltersButton {
+  position: relative;
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  background: rgba(255, 255, 255, 0.88);
+  color: #1e293b;
+  border-radius: 999px;
+  padding: 0.4rem 0.7rem;
+  font-size: 0.77rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.42rem;
+}
+
+.toggleFiltersButton:hover {
+  border-color: rgba(37, 99, 235, 0.42);
+}
+
+.toggleIconImage {
+  width: 0.95rem;
+  height: 0.95rem;
+  object-fit: contain;
+  opacity: 0.9;
+  flex: 0 0 auto;
+}
+
+.filtersBadge {
+  position: absolute;
+  top: -0.36rem;
+  right: -0.16rem;
+  min-width: 1.02rem;
+  height: 1.02rem;
+  border-radius: 999px;
+  background: #dc2626;
+  color: #ffffff;
+  font-size: 0.66rem;
+  font-weight: 800;
+  line-height: 1.02rem;
+  text-align: center;
+  padding: 0 0.18rem;
+  border: 1px solid #ffffff;
 }
 
 .inputs {
@@ -12,14 +68,20 @@
   grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
   gap: 0.55rem;
   width: 100%;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: 0.95rem;
+  padding: 0.58rem;
+  background: rgba(248, 250, 252, 0.72);
 }
 
 .actions {
   display: flex;
   align-items: center;
+  flex-wrap: nowrap;
   gap: 0.65rem;
   margin-left: auto;
   justify-content: flex-end;
+  min-width: 0;
 }
 
 .input,
@@ -27,13 +89,114 @@
   border-radius: 0.9rem;
   border: 1px solid rgba(148, 163, 184, 0.22);
   background: rgba(255, 255, 255, 0.82);
-  padding: 0.62rem 0.98rem;
-  font-size: 0.85rem;
-  min-height: 2.7rem;
+  padding: 0.52rem 0.84rem;
+  font-size: 0.8rem;
+  min-height: 2.35rem;
   color: #0f172a;
   outline: none;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
   transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.multiFilter {
+  position: relative;
+}
+
+.multiFilterTrigger {
+  list-style: none;
+  border-radius: 0.9rem;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  background: rgba(255, 255, 255, 0.82);
+  padding: 0.52rem 0.84rem;
+  font-size: 0.8rem;
+  min-height: 2.35rem;
+  color: #0f172a;
+  outline: none;
+  cursor: pointer;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.multiFilterTrigger::-webkit-details-marker {
+  display: none;
+}
+
+.multiFilterTrigger::after {
+  content: "▾";
+  color: #475569;
+  font-size: 0.78rem;
+}
+
+.multiFilter[open] .multiFilterTrigger,
+.multiFilterTrigger:hover {
+  border-color: rgba(37, 99, 235, 0.52);
+  background: #ffffff;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.12);
+  transform: translateY(-1px);
+}
+
+.multiFilterPanel {
+  position: absolute;
+  top: calc(100% + 0.35rem);
+  left: 0;
+  z-index: 30;
+  width: min(440px, 92vw);
+  max-height: 300px;
+  overflow: hidden;
+  border: 1px solid rgba(148, 163, 184, 0.24);
+  border-radius: 0.9rem;
+  background: #ffffff;
+  box-shadow: 0 18px 34px -20px rgba(15, 23, 42, 0.5);
+}
+
+.multiFilterActions {
+  display: flex;
+  gap: 0.45rem;
+  padding: 0.55rem;
+  border-bottom: 1px solid rgba(226, 232, 240, 0.9);
+  background: rgba(248, 250, 252, 0.95);
+}
+
+.multiActionBtn {
+  border: 1px solid rgba(37, 99, 235, 0.24);
+  background: rgba(239, 246, 255, 0.95);
+  color: #1d4ed8;
+  border-radius: 999px;
+  padding: 0.3rem 0.66rem;
+  font-size: 0.74rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.multiActionBtn:hover {
+  background: rgba(219, 234, 254, 0.98);
+}
+
+.multiFilterList {
+  max-height: 240px;
+  overflow: auto;
+  padding: 0.45rem;
+}
+
+.multiFilterItem {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.36rem 0.4rem;
+  border-radius: 0.5rem;
+  font-size: 0.82rem;
+  color: #1e293b;
+}
+
+.multiFilterItem:hover {
+  background: rgba(239, 246, 255, 0.9);
+}
+
+.multiFilterItem input {
+  accent-color: #2563eb;
 }
 
 .inputs > * {
@@ -57,8 +220,8 @@
   background: linear-gradient(135deg, #2563eb 0%, #0ea5e9 100%);
   color: #ffffff;
   border-radius: 999px;
-  padding: 0.62rem 0.92rem;
-  font-size: 0.83rem;
+  padding: 0.52rem 0.82rem;
+  font-size: 0.78rem;
   font-weight: 800;
   cursor: pointer;
   box-shadow: 0 14px 28px -18px rgba(37, 99, 235, 0.8);
@@ -80,27 +243,12 @@
 @media (min-width: 768px) {
   .inputs {
     grid-template-columns: repeat(6, minmax(0, 1fr));
-    flex: 1 1 0;
-  }
-
-  .actions {
-    justify-content: flex-end;
   }
 }
 
 @media (min-width: 1280px) {
-  .row {
-    flex-wrap: nowrap;
-  }
-
   .inputs {
-    width: auto;
-    grid-template-columns: minmax(300px, 1.8fr) minmax(230px, 1.3fr) minmax(170px, 1fr) repeat(4, minmax(110px, 1fr));
-    flex: 1 1 auto;
-  }
-
-  .actions {
-    flex: 0 0 auto;
-    white-space: nowrap;
+    width: 100%;
+    grid-template-columns: minmax(280px, 1.8fr) minmax(220px, 1.3fr) repeat(auto-fit, minmax(130px, 1fr));
   }
 }

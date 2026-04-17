@@ -11,12 +11,14 @@ import { SidebarMenu } from "./layout/SidebarMenu";
 import styles from "./styles/DashboardShell.module.css";
 import type { AcreditacionGroupingMode, EstadisticasSubTab, MenuItem, ProgramDocument, ProgramRecord, RegistroCalificadoGroupingMode, UserRole, ViewMode } from "./types";
 import { ConsolidadoMatrixView } from "./views/ConsolidadoMatrixView";
+import { AlertasConfigView } from "./views/AlertasConfigView";
 import { ExpirationAlertsView } from "./views/ExpirationAlertsView";
 import { ProgramEditModal } from "./views/ProgramEditModal";
 import { RegistroCalificadoView } from "./views/RegistroCalificadoView";
 import { AcreditacionProgramasView } from "./views/AcreditacionProgramasView";
 import { VisitasParesView } from "./views/VisitasParesView";
 import { EstadisticasView } from "./views/EstadisticasView";
+import { HistorialView } from "./views/HistorialView";
 import { UsersManagementView } from "./views/UsersManagementView";
 import { ExportButton } from "./widgets/ExportButton";
 import { KpiGrid } from "./widgets/KpiGrid";
@@ -34,6 +36,7 @@ const MENU_ITEMS: MenuItem[] = [
   { id: "acreditacion-programas", label: "Acreditacion de Programas", subtitle: "Programas acreditados" },
   { id: "visitas-pares", label: "Visitas de Pares", subtitle: "Seguimiento de visitas" },
   { id: "estadisticas", label: "Estadísticas", subtitle: "Análisis y gráficos" },
+  { id: "historial", label: "Historial", subtitle: "Snapshots de BD" },
 ];
 
 function isUuid(value: string): boolean {
@@ -48,6 +51,7 @@ function createEmptyProgramDraft(): ProgramRecord {
   return {
     id: crypto.randomUUID(),
     documentCount: 0,
+    isActive: true,
     processCode: "",
     faculty: "",
     program: "",
@@ -105,6 +109,10 @@ function createEmptyProgramDraft(): ProgramRecord {
     accreditationGuideline: null,
     generalObservations: null,
     programCoordinator: null,
+    programCoordinatorEmail: null,
+    programCoordinatorTitle: null,
+    observacionesAlertaRrc: null,
+    observacionesAlertaAcreditados: null,
     source: "supabase",
   };
 }
@@ -119,13 +127,19 @@ export function ConsolidadoDashboardClient({ data, currentUser, currentRole }: P
   const [faculty, setFaculty] = useState("Todas");
   const [modality, setModality] = useState("Todas");
   const [level, setLevel] = useState("Todos");
+  const [locationFilter, setLocationFilter] = useState<string[]>([]);
+  const [regionalizedFilter, setRegionalizedFilter] = useState("Todos");
   const [acreditableFilter, setAcreditableFilter] = useState("Todos");
   const [accreditedFilter, setAccreditedFilter] = useState("Todos");
+  const [programStatusFilter, setProgramStatusFilter] = useState("Todos");
   const [rcState, setRcState] = useState("Todos");
   const [registryGrouping, setRegistryGrouping] = useState<RegistroCalificadoGroupingMode>("programas");
   const [acreditacionGrouping, setAcreditacionGrouping] = useState<AcreditacionGroupingMode>("programas");
   const [estadisticasSubTab, setEstadisticasSubTab] = useState<EstadisticasSubTab>("generales");
   const [view, setView] = useState<ViewMode>("consolidado");
+  const [settingsSection, setSettingsSection] = useState<"users" | "alerts">(
+    currentRole === "administrador" ? "users" : "alerts",
+  );
   const [menuOpen, setMenuOpen] = useState(true);
   const [selectedId, setSelectedId] = useState<string | null>(data.programs[0]?.id ?? null);
   const [modalOpen, setModalOpen] = useState(false);
@@ -134,6 +148,19 @@ export function ConsolidadoDashboardClient({ data, currentUser, currentRole }: P
   const [documentsByProgram, setDocumentsByProgram] = useState<Record<string, ProgramDocument[]>>({});
   const [loadingDocuments, setLoadingDocuments] = useState(false);
   const [floatingExportState, setFloatingExportState] = useState<{ action: (() => Promise<void>) | null }>({ action: null });
+
+  const resetFiltersToDefault = useCallback(() => {
+    setSearch("");
+    setFaculty("Todas");
+    setModality("Todas");
+    setLevel("Todos");
+    setLocationFilter([]);
+    setRegionalizedFilter("Todos");
+    setAcreditableFilter("Todos");
+    setAccreditedFilter("Todos");
+    setProgramStatusFilter("Todos");
+    setRcState("Todos");
+  }, []);
 
   useEffect(() => {
     const lockKey = `siac_active_tab_lock:${currentUser}`;
@@ -188,6 +215,12 @@ export function ConsolidadoDashboardClient({ data, currentUser, currentRole }: P
   }, []);
 
   useEffect(() => {
+    if (currentRole !== "administrador") {
+      setSettingsSection("alerts");
+    }
+  }, [currentRole]);
+
+  useEffect(() => {
     let cancelled = false;
 
     const redirectToLogin = () => {
@@ -240,16 +273,42 @@ export function ConsolidadoDashboardClient({ data, currentUser, currentRole }: P
   const faculties = useMemo(() => FACULTY_OPTIONS, []);
   const modalities = useMemo(() => [...new Set(programs.map((program) => program.modality).filter((value): value is string => Boolean(value)))], [programs]);
   const levels = useMemo(() => [...new Set(programs.map((program) => program.level).filter((value): value is string => Boolean(value)))], [programs]);
+  const locations = useMemo(
+    () =>
+      [...new Set(programs.map((program) => (program.location && program.location.trim() ? program.location.trim() : "Sin definir")))].sort(
+        (left, right) => left.localeCompare(right, "es", { sensitivity: "base" }),
+      ),
+    [programs],
+  );
+  const activePrograms = useMemo(() => programs.filter((program) => program.isActive !== false), [programs]);
 
   const filtered = useMemo(() => {
     const query = search.trim().toLowerCase();
     return programs.filter((program) => {
+      const byStatus =
+        view === "consolidado"
+          ? programStatusFilter === "Todos" ||
+            (programStatusFilter === "Activos" && program.isActive !== false) ||
+            (programStatusFilter === "Inactivos" && program.isActive === false)
+          : program.isActive !== false;
+      if (!byStatus) return false;
+
       const byFaculty = faculty === "Todas" || program.faculty === faculty;
       if (!byFaculty) return false;
       const byModality = modality === "Todas" || program.modality === modality;
       if (!byModality) return false;
       const byLevel = level === "Todos" || program.level === level;
       if (!byLevel) return false;
+
+      const currentLocation = program.location && program.location.trim() ? program.location.trim() : "Sin definir";
+      const byLocation = locationFilter.length === 0 || locationFilter.includes(currentLocation);
+      if (!byLocation) return false;
+
+      const byRegionalized =
+        regionalizedFilter === "Todos" ||
+        (regionalizedFilter === "Si" && program.regionalized) ||
+        (regionalizedFilter === "No" && !program.regionalized);
+      if (!byRegionalized) return false;
 
       const byAcreditable =
         acreditableFilter === "Todos" ||
@@ -275,15 +334,18 @@ export function ConsolidadoDashboardClient({ data, currentUser, currentRole }: P
       const corpus = `${program.program} ${program.processCode} ${program.snies} ${program.faculty} ${program.degree} ${program.location} ${program.methodology} ${program.workday} ${program.generalObservations} ${program.programCoordinator}`.toLowerCase();
       return corpus.includes(query);
     });
-  }, [programs, faculty, modality, level, acreditableFilter, accreditedFilter, rcState, search]);
+  }, [programs, view, programStatusFilter, faculty, modality, level, locationFilter, regionalizedFilter, acreditableFilter, accreditedFilter, rcState, search]);
 
   const filteredSummary = useMemo(() => {
-    const faculties = new Set(filtered.map((program) => program.faculty)).size;
-    const activeRc = filtered.filter((program) => program.hasCurrentRc === true).length;
-    const expiredRc = filtered.filter((program) => program.hasCurrentRc === false).length;
-    const accredited = filtered.filter((program) => program.accredited).length;
-    const inAacProcess = filtered.filter((program) => program.inAccreditationProcess).length;
-    const upcomingRrcIn120Days = filtered.filter((program) => {
+    const activeFiltered = filtered.filter((program) => program.isActive !== false);
+    const faculties = new Set(activeFiltered.map((program) => program.faculty)).size;
+    const accreditable = activeFiltered.filter((program) => program.acreditable).length;
+    const accredited = activeFiltered.filter((program) => program.accredited).length;
+    const accreditedOverAccreditablePct = accreditable > 0
+      ? Number(((accredited / accreditable) * 100).toFixed(1))
+      : 0;
+    const inAacProcess = activeFiltered.filter((program) => program.inAccreditationProcess).length;
+    const upcomingRrcIn120Days = activeFiltered.filter((program) => {
       if (!program.rcMineducacion) return false;
       const target = new Date(program.rcMineducacion);
       if (Number.isNaN(target.getTime())) return false;
@@ -293,11 +355,11 @@ export function ConsolidadoDashboardClient({ data, currentUser, currentRole }: P
       return days >= 0 && days <= 120;
     }).length;
     return {
-      totalPrograms: filtered.length,
+      totalPrograms: activeFiltered.length,
       faculties,
-      activeRc,
-      expiredRc,
+      accreditable,
       accredited,
+      accreditedOverAccreditablePct,
       inAacProcess,
       upcomingRrcIn120Days,
     };
@@ -344,9 +406,10 @@ export function ConsolidadoDashboardClient({ data, currentUser, currentRole }: P
   useEffect(() => {
     if (prevViewRef.current !== null && prevViewRef.current !== view) {
       setFloatingExportState({ action: null });
+      resetFiltersToDefault();
     }
     prevViewRef.current = view;
-  }, [view]);
+  }, [resetFiltersToDefault, view]);
 
   function handleCreateProgram() {
     setDraftProgram(createEmptyProgramDraft());
@@ -359,6 +422,10 @@ export function ConsolidadoDashboardClient({ data, currentUser, currentRole }: P
     setModalOpen(false);
     setIsCreatingProgram(false);
     setDraftProgram(null);
+  }
+
+  function handleProgramUpdate(nextProgram: ProgramRecord) {
+    setPrograms((current) => current.map((item) => (item.id === nextProgram.id ? nextProgram : item)));
   }
 
   async function handleSave(program: ProgramRecord) {
@@ -534,7 +601,7 @@ export function ConsolidadoDashboardClient({ data, currentUser, currentRole }: P
           items={MENU_ITEMS}
           currentUser={currentUser}
           currentRole={currentRole}
-          canOpenUsers={currentRole === "administrador"}
+          canOpenUsers={currentRole !== "visualizador"}
           onToggle={() => setMenuOpen((value) => !value)}
           onSelect={setView}
           onOpenUsers={() => setView("usuarios")}
@@ -555,21 +622,31 @@ export function ConsolidadoDashboardClient({ data, currentUser, currentRole }: P
                 faculties={faculties}
                 modality={modality}
                 level={level}
+                locationFilter={locationFilter}
+                regionalizedFilter={regionalizedFilter}
                 acreditableFilter={acreditableFilter}
                 accreditedFilter={accreditedFilter}
+                programStatusFilter={programStatusFilter}
                 rcState={rcState}
                 modalities={modalities}
                 levels={levels}
+                locations={locations}
                 onSearch={setSearch}
                 onFacultyChange={setFaculty}
                 onModalityChange={setModality}
                 onLevelChange={setLevel}
+                onLocationFilterChange={setLocationFilter}
+                onRegionalizedFilterChange={setRegionalizedFilter}
                 onAcreditableFilterChange={setAcreditableFilter}
                 onAccreditedFilterChange={setAccreditedFilter}
+                onProgramStatusFilterChange={setProgramStatusFilter}
                 onRcStateChange={setRcState}
                 onCreateProgram={handleCreateProgram}
                 showModality={view === "consolidado"}
+                showLocationFilter={view === "consolidado"}
+                showRegionalizedFilter={view === "consolidado"}
                 showAccreditationState={view === "consolidado"}
+                showProgramStatus={view === "consolidado"}
                 showRcState={view === "consolidado"}
                 showCreateProgram={view === "consolidado"}
                 rightContent={
@@ -647,34 +724,59 @@ export function ConsolidadoDashboardClient({ data, currentUser, currentRole }: P
                   rows={filtered}
                   groupingMode={acreditacionGrouping}
                   onExportReady={handleRegisterExportAction}
+                  onProgramUpdate={handleProgramUpdate}
                 />
               )}
             </section>
           ) : view === "visitas-pares" ? (
             <section className={styles.panel}>
-              <VisitasParesView programs={programs} onExportReady={handleRegisterExportAction} />
+              <VisitasParesView programs={activePrograms} onExportReady={handleRegisterExportAction} />
             </section>
           ) : view === "estadisticas" ? (
             <section className={styles.panel}>
-              <EstadisticasView programs={programs} subTab={estadisticasSubTab} onSubTabChange={setEstadisticasSubTab} />
+              <EstadisticasView programs={activePrograms} subTab={estadisticasSubTab} onSubTabChange={setEstadisticasSubTab} />
             </section>
+          ) : view === "historial" ? (
+            <HistorialView programs={activePrograms} generatedAt={data.generatedAt} />
           ) : view === "usuarios" ? (
             <section className={styles.panel}>
-              {currentRole === "administrador" ? (
+              <div className={`${styles.switchWrap} ${styles.settingsTabs}`}>
+                <span className={styles.switchLabel}>Configuracion</span>
+                <div className={styles.switchGroup}>
+                  {currentRole === "administrador" && (
+                    <button
+                      type="button"
+                      className={`${styles.switchButton} ${settingsSection === "users" ? styles.switchButtonActive : ""}`}
+                      onClick={() => setSettingsSection("users")}
+                    >
+                      Usuarios
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    className={`${styles.switchButton} ${settingsSection === "alerts" ? styles.switchButtonActive : ""}`}
+                    onClick={() => setSettingsSection("alerts")}
+                  >
+                    Configuracion de Alertas
+                  </button>
+                </div>
+              </div>
+
+              {currentRole === "administrador" && settingsSection === "users" ? (
                 <UsersManagementView currentRole={currentRole} onExportReady={handleRegisterExportAction} />
               ) : (
-                <p>Solo administrador puede gestionar usuarios.</p>
+                <AlertasConfigView />
               )}
             </section>
           ) : (
             <section className={styles.panel}>
-              <ExpirationAlertsView rows={programs} onExportReady={handleRegisterExportAction} />
+              <ExpirationAlertsView rows={activePrograms} onExportReady={handleRegisterExportAction} onProgramUpdate={handleProgramUpdate} />
             </section>
           )}
         </main>
       </div>
 
-      {view !== "estadisticas" && floatingExportState.action && (
+      {view !== "estadisticas" && view !== "historial" && floatingExportState.action && (
         <ExportButton onExport={floatingExportState.action} floating label="Descargar" />
       )}
 

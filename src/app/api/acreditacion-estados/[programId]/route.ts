@@ -12,10 +12,9 @@ type UpdateEstadoPayload = {
 };
 
 const ESTADO_OPTIONS = [
-  "Renovaciones",
-  "En proceso renovación",
-  "Nuevos",
-  "En proceso de AAC",
+  "Acreditable",
+  "En proceso de Acreditacion",
+  "Acreditado 2026",
   "Acreditado a 2026",
 ] as const;
 

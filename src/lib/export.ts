@@ -9,6 +9,12 @@ export interface ExportColumn {
   formatter?: (value: unknown, row: ExportRow) => string | number;
 }
 
+export interface ExportSheet {
+  sheetTitle: string;
+  columns: ExportColumn[];
+  data: ExportRow[];
+}
+
 type ExcelCellValue = string | number;
 
 function estimateTextWidth(value: unknown): number {
@@ -36,16 +42,7 @@ function triggerDownload(buffer: ArrayBuffer, filename: string): void {
   URL.revokeObjectURL(link.href);
 }
 
-export async function exportToExcel(
-  filename: string,
-  sheetTitle: string,
-  columns: ExportColumn[],
-  data: ExportRow[]
-): Promise<void> {
-  const workbook = new ExcelJS.Workbook();
-  workbook.creator = "Sistema RC AAC";
-  workbook.created = new Date();
-
+function writeSheet(workbook: ExcelJS.Workbook, sheetTitle: string, columns: ExportColumn[], data: ExportRow[]): void {
   const worksheet = workbook.addWorksheet(sanitizeSheetName(sheetTitle), {
     views: [{ state: "frozen", ySplit: 1 }],
   });
@@ -127,6 +124,21 @@ export async function exportToExcel(
     // Cap width to keep the workbook readable when a cell has very long text.
     worksheet.getColumn(index + 1).width = Math.min(70, Math.max(minWidth, fittedWidth));
   });
+}
+
+export async function exportToExcel(
+  filename: string,
+  sheetTitle: string,
+  columns: ExportColumn[],
+  data: ExportRow[],
+  additionalSheets: ExportSheet[] = []
+): Promise<void> {
+  const workbook = new ExcelJS.Workbook();
+  workbook.creator = "Sistema RC AAC";
+  workbook.created = new Date();
+
+  writeSheet(workbook, sheetTitle, columns, data);
+  additionalSheets.forEach((sheet) => writeSheet(workbook, sheet.sheetTitle, sheet.columns, sheet.data));
 
   const buffer = (await workbook.xlsx.writeBuffer()) as ArrayBuffer;
   triggerDownload(buffer, filename);

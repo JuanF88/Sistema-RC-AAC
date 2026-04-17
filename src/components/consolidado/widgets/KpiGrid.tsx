@@ -1,17 +1,22 @@
-import type { ConsolidadoDashboard } from "@/lib/consolidado";
 import styles from "./styles/KpiGrid.module.css";
 
 type Props = {
-  summary: ConsolidadoDashboard["summary"];
+  summary: {
+    totalPrograms: number;
+    faculties: number;
+    accreditable: number;
+    accredited: number;
+    accreditedOverAccreditablePct: number;
+  };
 };
 
 export function KpiGrid({ summary }: Props) {
-  const items: Array<[string, number]> = [
+  const items: Array<[string, string | number]> = [
     ["Programas", summary.totalPrograms],
     ["Facultades", summary.faculties],
-    ["RC vigente", summary.activeRc],
-    ["RC vencido", summary.expiredRc],
+    ["Acreditables", summary.accreditable],
     ["Acreditados", summary.accredited],
+    ["% acreditados sobre acreditables", `${summary.accreditedOverAccreditablePct}%`],
   ];
 
   return (

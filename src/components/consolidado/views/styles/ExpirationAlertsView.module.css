@@ -5,6 +5,144 @@
   width: 100%;
 }
 
+.recipientsPanel {
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 0.9rem;
+  background: rgba(248, 250, 252, 0.7);
+  padding: 0.9rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+
+.recipientsTitleRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.recipientsTitle {
+  margin: 0;
+  font-size: 0.94rem;
+  color: #0f172a;
+}
+
+.recipientsHint {
+  margin: 0;
+  color: #475569;
+  font-size: 0.8rem;
+}
+
+.refreshRecipientsButton {
+  border: 1px solid rgba(37, 99, 235, 0.26);
+  background: rgba(239, 246, 255, 0.9);
+  color: #1d4ed8;
+  border-radius: 999px;
+  padding: 0.34rem 0.72rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.recipientsForm {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) minmax(180px, 1fr) auto;
+  gap: 0.5rem;
+}
+
+.recipientInput {
+  border-radius: 0.65rem;
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  padding: 0.45rem 0.6rem;
+  font-size: 0.8rem;
+  color: #0f172a;
+}
+
+.addRecipientButton {
+  border: 1px solid rgba(5, 150, 105, 0.34);
+  background: linear-gradient(135deg, #059669, #10b981);
+  color: #ffffff;
+  border-radius: 0.65rem;
+  padding: 0.45rem 0.85rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.recipientsList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.recipientsEmpty {
+  margin: 0;
+  font-size: 0.8rem;
+  color: #64748b;
+}
+
+.recipientItem {
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 0.72rem;
+  padding: 0.48rem 0.6rem;
+  background: rgba(255, 255, 255, 0.92);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+}
+
+.recipientInfo {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.recipientInfo strong {
+  font-size: 0.8rem;
+  color: #0f172a;
+}
+
+.recipientInfo span {
+  font-size: 0.77rem;
+  color: #475569;
+  word-break: break-all;
+}
+
+.recipientActions {
+  display: inline-flex;
+  gap: 0.38rem;
+}
+
+.activateButton,
+.deactivateButton,
+.deleteRecipientButton {
+  border-radius: 999px;
+  padding: 0.28rem 0.62rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.activateButton {
+  border: 1px solid rgba(5, 150, 105, 0.34);
+  background: rgba(236, 253, 245, 0.92);
+  color: #047857;
+}
+
+.deactivateButton {
+  border: 1px solid rgba(217, 119, 6, 0.32);
+  background: rgba(254, 243, 199, 0.92);
+  color: #b45309;
+}
+
+.deleteRecipientButton {
+  border: 1px solid rgba(220, 38, 38, 0.3);
+  background: rgba(254, 226, 226, 0.9);
+  color: #b91c1c;
+}
+
 .header {
   display: flex;
   justify-content: flex-end;
@@ -41,6 +179,30 @@
   box-shadow: 0 14px 28px -18px rgba(37, 99, 235, 0.8);
 }
 
+.mailButton {
+  border: 1px solid rgba(5, 150, 105, 0.34);
+  background: linear-gradient(135deg, #059669, #10b981);
+  color: #ffffff;
+  border-radius: 999px;
+  padding: 0.48rem 0.9rem;
+  font-size: 0.84rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+}
+
+.mailButton:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 14px 28px -18px rgba(5, 150, 105, 0.8);
+}
+
+.mailButton:disabled {
+  opacity: 0.65;
+  cursor: wait;
+  transform: none;
+  box-shadow: none;
+}
+
 .tableWrap {
   width: 100%;
   overflow: auto;
@@ -75,15 +237,22 @@
   letter-spacing: 0.05em;
   color: #e2e8f0;
   background: transparent;
+  border-right: 1px solid rgba(255, 255, 255, 0.14);
   white-space: nowrap;
 }
 
 .table td {
   padding: 0.55rem 0.72rem;
   border-bottom: 1px solid rgba(226, 232, 240, 0.9);
+  border-right: 1px solid rgba(148, 163, 184, 0.2);
   color: #334155;
   white-space: normal;
   overflow-wrap: anywhere;
+}
+
+.table thead th:last-child,
+.table td:last-child {
+  border-right: 0;
 }
 
 .table tbody tr:nth-child(odd) {
@@ -99,10 +268,39 @@
   color: #0f172a;
 }
 
-.observations {
+.observationsCell {
   max-width: 26rem;
   white-space: normal;
   overflow-wrap: anywhere;
+}
+
+.observationInput {
+  width: 100%;
+  min-height: 2.8rem;
+  resize: none;
+  border-radius: 0.7rem;
+  border: 1px solid rgba(148, 163, 184, 0.24);
+  background: rgba(255, 255, 255, 0.9);
+  color: #0f172a;
+  padding: 0.35rem 0.55rem;
+  font: inherit;
+  font-size: 0.78rem;
+  line-height: 1.25;
+  outline: none;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.observationInput:focus {
+  border-color: rgba(37, 99, 235, 0.52);
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.12);
+}
+
+.saveHint {
+  display: inline-block;
+  margin-top: 0.25rem;
+  font-size: 0.72rem;
+  color: #64748b;
 }
 
 .badge {
@@ -145,5 +343,16 @@
   .tableWrap {
     min-height: 62vh;
     max-height: 70vh;
+  }
+}
+
+@media (max-width: 900px) {
+  .recipientsForm {
+    grid-template-columns: 1fr;
+  }
+
+  .recipientItem {
+    flex-direction: column;
+    align-items: flex-start;
   }
 }

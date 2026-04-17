@@ -25,6 +25,7 @@ type BoolString = "" | "true" | "false";
 
 type FormState = {
   processCode: string;
+  isActive: "true" | "false";
   faculty: string;
   program: string;
   degree: string;
@@ -81,10 +82,15 @@ type FormState = {
   accreditationGuideline: string;
   generalObservations: string;
   programCoordinator: string;
+  programCoordinatorEmail: string;
+  programCoordinatorTitle: string;
+  observacionesAlertaRrc: string;
+  observacionesAlertaAcreditados: string;
 };
 
 const EMPTY_FORM: FormState = {
   processCode: "",
+  isActive: "true",
   faculty: "",
   program: "",
   degree: "",
@@ -141,6 +147,10 @@ const EMPTY_FORM: FormState = {
   accreditationGuideline: "",
   generalObservations: "",
   programCoordinator: "",
+  programCoordinatorEmail: "",
+  programCoordinatorTitle: "",
+  observacionesAlertaRrc: "",
+  observacionesAlertaAcreditados: "",
 };
 
 const ADMISSION_PERIODICITY_OPTIONS = [
@@ -155,7 +165,14 @@ const ADMISSION_PERIODICITY_OPTIONS = [
 
 const WORKDAY_OPTIONS = ["Diurna", "Nocturna", "Mixta"];
 
-const LEVEL_OPTIONS = ["Doctorado", "Especialización", "Maestría", "Profesional Universitario", "Tecnología"];
+const LEVEL_OPTIONS = [
+  "Doctorado",
+  "Especialización",
+  "Especialización Médico Quirúrgica",
+  "Maestría",
+  "Profesional Universitario",
+  "Tecnología",
+];
 
 const ACADEMIC_LEVEL_OPTIONS = ["Posgrado", "Pregrado"];
 
@@ -238,6 +255,7 @@ function mapProgramToForm(program: ProgramRecord | null): FormState {
 
   return {
     processCode: program.processCode,
+    isActive: program.isActive === false ? "false" : "true",
     faculty: program.faculty,
     program: program.program,
     degree: text(program.degree),
@@ -294,6 +312,10 @@ function mapProgramToForm(program: ProgramRecord | null): FormState {
     accreditationGuideline: text(program.accreditationGuideline),
     generalObservations: text(program.generalObservations),
     programCoordinator: text(program.programCoordinator),
+    programCoordinatorEmail: text(program.programCoordinatorEmail),
+    programCoordinatorTitle: text(program.programCoordinatorTitle),
+    observacionesAlertaRrc: text(program.observacionesAlertaRrc),
+    observacionesAlertaAcreditados: text(program.observacionesAlertaAcreditados),
   };
 }
 
@@ -375,6 +397,7 @@ export function ProgramEditModal({
 }: Props) {
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
+  const [togglingActive, setTogglingActive] = useState(false);
   const [deletingProgram, setDeletingProgram] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [uploadingDoc, setUploadingDoc] = useState(false);
@@ -416,9 +439,77 @@ export function ProgramEditModal({
 
   if (!open || !program) return null;
 
+  const isProgramInactiveLocked = !isCreatingProgram && form.isActive === "false";
+
   const setField = (key: keyof FormState, value: string) => {
     setForm((prev) => ({ ...prev, [key]: value }));
   };
+
+  const buildProgramPayload = (nextIsActive?: boolean): ProgramRecord => ({
+    ...program,
+    processCode: form.processCode.trim(),
+    isActive: nextIsActive ?? (form.isActive === "true"),
+    faculty: form.faculty.trim(),
+    program: form.program.trim(),
+    degree: toNullableText(form.degree),
+    snies: toNullableText(form.snies),
+    creationAgreement: toNullableText(form.creationAgreement),
+    noRenewal: toNullableText(form.noRenewal),
+    authorizedAdmissionsMen: toNullableNumber(form.authorizedAdmissionsMen),
+    admissionPeriodicity: toNullableText(form.admissionPeriodicity),
+    agreementCode: toNullableText(form.agreementCode),
+    agreementIes: toNullableText(form.agreementIes),
+    agreementAdministrator: toNullableText(form.agreementAdministrator),
+    location: toNullableText(form.location),
+    workday: toNullableText(form.workday),
+    regionalized: form.regionalized === "true",
+    level: toNullableText(form.level),
+    academicLevel: toNullableText(form.academicLevel),
+    modality: toNullableText(form.modality),
+    methodology: toNullableText(form.methodology),
+    researchCredits: toNullableNumber(form.researchCredits),
+    deepeningCredits: toNullableNumber(form.deepeningCredits),
+    totalAcademicCredits: toNullableNumber(form.totalAcademicCredits),
+    duration: toNullableNumber(form.duration),
+    reformAcademicCouncil: toNullableText(form.reformAcademicCouncil),
+    reformSuperiorCouncil: toNullableText(form.reformSuperiorCouncil),
+    reformMineducacion: toNullableText(form.reformMineducacion),
+    ticPercentage: toNullableNumber(form.ticPercentage),
+    hasCurrentRc: toNullableBool(form.hasCurrentRc),
+    rcResolution: toNullableText(form.rcResolution),
+    rcStart: toNullableText(form.rcStart),
+    rcDurationYears: toNullableNumber(form.rcDurationYears),
+    rcSiga: toNullableText(form.rcSiga),
+    rcMineducacion: toNullableText(form.rcMineducacion),
+    rcEnd: toNullableText(form.rcEnd),
+    rcExtensionDecree1330: toNullableText(form.rcExtensionDecree1330),
+    rcExtensionDecree1174: toNullableText(form.rcExtensionDecree1174),
+    rcHistoricalResolutions: toNullableText(form.rcHistoricalResolutions),
+    rcResolutionCount: toNullableNumber(form.rcResolutionCount),
+    rcOfficialResolution: toNullableText(form.rcOfficialResolution),
+    rcDeniedResolution: toNullableText(form.rcDeniedResolution),
+    numberGraduates: toNullableNumber(form.numberGraduates),
+    acreditable: form.acreditable === "true",
+    accredited: form.accredited === "true",
+    inAccreditationProcess: form.inAccreditationProcess === "true",
+    aacResolution: toNullableText(form.aacResolution),
+    aacStart: toNullableText(form.aacStart),
+    aacDurationYears: toNullableNumber(form.aacDurationYears),
+    aacCgcaiDelivery: toNullableText(form.aacCgcaiDelivery),
+    aacMineducacionFiling: toNullableText(form.aacMineducacionFiling),
+    aacEnd: toNullableText(form.aacEnd),
+    aacImprovementHalfway: toNullableText(form.aacImprovementHalfway),
+    aacHistoricalResolutions: toNullableText(form.aacHistoricalResolutions),
+    aacResolutionCount: toNullableNumber(form.aacResolutionCount),
+    aacDeniedResolution: toNullableText(form.aacDeniedResolution),
+    accreditationGuideline: toNullableText(form.accreditationGuideline),
+    generalObservations: toNullableText(form.generalObservations),
+    programCoordinator: toNullableText(form.programCoordinator),
+    programCoordinatorEmail: toNullableText(form.programCoordinatorEmail),
+    programCoordinatorTitle: toNullableText(form.programCoordinatorTitle),
+    observacionesAlertaRrc: toNullableText(form.observacionesAlertaRrc),
+    observacionesAlertaAcreditados: toNullableText(form.observacionesAlertaAcreditados),
+  });
 
   const handleAddUrl = async () => {
     const cleanUrl = docUrl.trim();
@@ -481,70 +572,17 @@ export function ProgramEditModal({
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (isProgramInactiveLocked) {
+      const message = "Este programa está desactivado. Reactívalo para poder editarlo.";
+      setError(message);
+      showToast.warning(message, { position: "top-right", transition: "slideInUp", duration: 2800 });
+      return;
+    }
     setSaving(true);
     setError(null);
 
     try {
-      await onSave({
-        ...program,
-        processCode: form.processCode.trim(),
-        faculty: form.faculty.trim(),
-        program: form.program.trim(),
-        degree: toNullableText(form.degree),
-        snies: toNullableText(form.snies),
-        creationAgreement: toNullableText(form.creationAgreement),
-        noRenewal: toNullableText(form.noRenewal),
-        authorizedAdmissionsMen: toNullableNumber(form.authorizedAdmissionsMen),
-        admissionPeriodicity: toNullableText(form.admissionPeriodicity),
-        agreementCode: toNullableText(form.agreementCode),
-        agreementIes: toNullableText(form.agreementIes),
-        agreementAdministrator: toNullableText(form.agreementAdministrator),
-        location: toNullableText(form.location),
-        workday: toNullableText(form.workday),
-        regionalized: form.regionalized === "true",
-        level: toNullableText(form.level),
-        academicLevel: toNullableText(form.academicLevel),
-        modality: toNullableText(form.modality),
-        methodology: toNullableText(form.methodology),
-        researchCredits: toNullableNumber(form.researchCredits),
-        deepeningCredits: toNullableNumber(form.deepeningCredits),
-        totalAcademicCredits: toNullableNumber(form.totalAcademicCredits),
-        duration: toNullableNumber(form.duration),
-        reformAcademicCouncil: toNullableText(form.reformAcademicCouncil),
-        reformSuperiorCouncil: toNullableText(form.reformSuperiorCouncil),
-        reformMineducacion: toNullableText(form.reformMineducacion),
-        ticPercentage: toNullableNumber(form.ticPercentage),
-        hasCurrentRc: toNullableBool(form.hasCurrentRc),
-        rcResolution: toNullableText(form.rcResolution),
-        rcStart: toNullableText(form.rcStart),
-        rcDurationYears: toNullableNumber(form.rcDurationYears),
-        rcSiga: toNullableText(form.rcSiga),
-        rcMineducacion: toNullableText(form.rcMineducacion),
-        rcEnd: toNullableText(form.rcEnd),
-        rcExtensionDecree1330: toNullableText(form.rcExtensionDecree1330),
-        rcExtensionDecree1174: toNullableText(form.rcExtensionDecree1174),
-        rcHistoricalResolutions: toNullableText(form.rcHistoricalResolutions),
-        rcResolutionCount: toNullableNumber(form.rcResolutionCount),
-        rcOfficialResolution: toNullableText(form.rcOfficialResolution),
-        rcDeniedResolution: toNullableText(form.rcDeniedResolution),
-        numberGraduates: toNullableNumber(form.numberGraduates),
-        acreditable: form.acreditable === "true",
-        accredited: form.accredited === "true",
-        inAccreditationProcess: form.inAccreditationProcess === "true",
-        aacResolution: toNullableText(form.aacResolution),
-        aacStart: toNullableText(form.aacStart),
-        aacDurationYears: toNullableNumber(form.aacDurationYears),
-        aacCgcaiDelivery: toNullableText(form.aacCgcaiDelivery),
-        aacMineducacionFiling: toNullableText(form.aacMineducacionFiling),
-        aacEnd: toNullableText(form.aacEnd),
-        aacImprovementHalfway: toNullableText(form.aacImprovementHalfway),
-        aacHistoricalResolutions: toNullableText(form.aacHistoricalResolutions),
-        aacResolutionCount: toNullableNumber(form.aacResolutionCount),
-        aacDeniedResolution: toNullableText(form.aacDeniedResolution),
-        accreditationGuideline: toNullableText(form.accreditationGuideline),
-        generalObservations: toNullableText(form.generalObservations),
-        programCoordinator: toNullableText(form.programCoordinator),
-      });
+      await onSave(buildProgramPayload());
       showToast.success("Cambios guardados correctamente.", { position: "top-right", transition: "bounceIn", duration: 2800 });
       window.setTimeout(() => onClose(), 850);
     } catch (saveError) {
@@ -553,6 +591,32 @@ export function ProgramEditModal({
       showToast.error(message, { position: "top-right", transition: "slideInUp", duration: 3000 });
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleToggleProgramActive = async () => {
+    if (isCreatingProgram) return;
+
+    const nextIsActive = form.isActive !== "true";
+    const actionLabel = nextIsActive ? "reactivar" : "desactivar";
+    const confirmed = window.confirm(`¿Seguro que deseas ${actionLabel} este programa?`);
+    if (!confirmed) return;
+
+    setTogglingActive(true);
+    setError(null);
+    try {
+      await onSave(buildProgramPayload(nextIsActive));
+      setForm((prev) => ({ ...prev, isActive: nextIsActive ? "true" : "false" }));
+      showToast.success(
+        nextIsActive ? "Programa reactivado correctamente." : "Programa desactivado correctamente.",
+        { position: "top-right", transition: "bounceIn", duration: 2600 },
+      );
+    } catch (toggleError) {
+      const message = toggleError instanceof Error ? toggleError.message : "No se pudo actualizar el estado del programa.";
+      setError(message);
+      showToast.error(message, { position: "top-right", transition: "slideInUp", duration: 3000 });
+    } finally {
+      setTogglingActive(false);
     }
   };
 
@@ -595,6 +659,11 @@ export function ProgramEditModal({
         </div>
 
         <form onSubmit={handleSubmit} className={styles.form}>
+          {isProgramInactiveLocked && (
+            <p className={styles.lockNotice}>Programa desactivado: solo puedes reactivarlo desde el botón inferior.</p>
+          )}
+
+          <fieldset className={styles.fieldsetReset} disabled={isProgramInactiveLocked}>
           <section className={`${styles.section} ${styles.sectionBlue}`}>
             <h4>Informacion basica</h4>
             <div className={styles.grid}>
@@ -770,9 +839,13 @@ export function ProgramEditModal({
             <h4>Observaciones y responsable</h4>
             <div className={styles.grid}>
               <Field label="Coordinador del programa" value={form.programCoordinator} onChange={(value) => setField("programCoordinator", value)} />
+              <Field label="Correo del coordinador" type="email" value={form.programCoordinatorEmail} onChange={(value) => setField("programCoordinatorEmail", value)} />
+              <Field label="Titulo del coordinador" value={form.programCoordinatorTitle} onChange={(value) => setField("programCoordinatorTitle", value)} />
             </div>
             <TextareaField label="Lineamiento de acreditacion" value={form.accreditationGuideline} onChange={(value) => setField("accreditationGuideline", value)} />
             <TextareaField label="Observaciones generales" value={form.generalObservations} onChange={(value) => setField("generalObservations", value)} />
+            <TextareaField label="Observaciones alerta RRC" value={form.observacionesAlertaRrc} onChange={(value) => setField("observacionesAlertaRrc", value)} />
+            <TextareaField label="Observaciones alerta acreditados" value={form.observacionesAlertaAcreditados} onChange={(value) => setField("observacionesAlertaAcreditados", value)} />
           </section>
 
           <section className={`${styles.section} ${styles.sectionRose}`}>
@@ -822,21 +895,32 @@ export function ProgramEditModal({
               </>
             )}
           </section>
+          </fieldset>
 
           {error && <p className={styles.error}>{error}</p>}
 
           <div className={styles.actions}>
             {!isCreatingProgram && (
-              <button type="button" onClick={handleDeleteProgram} className={styles.danger} disabled={saving || deletingProgram}>
-                {deletingProgram ? "Eliminando..." : "Eliminar programa"}
-              </button>
+              <div className={styles.actionsLeft}>
+                <button
+                  type="button"
+                  onClick={handleToggleProgramActive}
+                  className={styles.warning}
+                  disabled={saving || togglingActive || deletingProgram}
+                >
+                  {togglingActive ? "Actualizando..." : form.isActive === "true" ? "Desactivar programa" : "Reactivar programa"}
+                </button>
+                <button type="button" onClick={handleDeleteProgram} className={styles.danger} disabled={saving || togglingActive || deletingProgram}>
+                  {deletingProgram ? "Eliminando..." : "Eliminar programa"}
+                </button>
+              </div>
             )}
 
             <div className={styles.actionsRight}>
-              <button type="button" onClick={onClose} className={styles.secondary} disabled={deletingProgram}>
+              <button type="button" onClick={onClose} className={styles.secondary} disabled={deletingProgram || togglingActive}>
                 Cancelar
               </button>
-              <button type="submit" className={styles.primary} disabled={saving || deletingProgram}>
+              <button type="submit" className={styles.primary} disabled={saving || togglingActive || deletingProgram || isProgramInactiveLocked}>
                 {saving ? "Guardando..." : isCreatingProgram ? "Crear programa" : "Guardar cambios"}
               </button>
             </div>

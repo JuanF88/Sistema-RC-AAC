@@ -25,16 +25,19 @@ export function EstadisticasGenerales({ programs }: Props) {
     const inProcess = programs.filter((p) => p.inAccreditationProcess).length;
     const activeRc = programs.filter((p) => p.hasCurrentRc === true).length;
     const expiredRc = programs.filter((p) => p.hasCurrentRc === false).length;
+    const totalAccreditableAndAccredited = programs.filter((p) => p.acreditable || p.accredited).length;
+    const accreditationPercentage = totalAccreditableAndAccredited > 0 
+      ? Math.round((accredited / totalAccreditableAndAccredited) * 100)
+      : 0;
 
-    const byFaculty: Record<string, { total: number; accredited: number; activeRc: number }> = {};
+    const byFaculty: Record<string, { total: number; accredited: number }> = {};
 
     for (const program of programs) {
       if (!byFaculty[program.faculty]) {
-        byFaculty[program.faculty] = { total: 0, accredited: 0, activeRc: 0 };
+        byFaculty[program.faculty] = { total: 0, accredited: 0 };
       }
       byFaculty[program.faculty].total += 1;
       if (program.accredited) byFaculty[program.faculty].accredited += 1;
-      if (program.hasCurrentRc === true) byFaculty[program.faculty].activeRc += 1;
     }
 
     const facultyData = Object.entries(byFaculty)
@@ -42,7 +45,6 @@ export function EstadisticasGenerales({ programs }: Props) {
         name: faculty,
         total: data.total,
         acreditados: data.accredited,
-        vigentes: data.activeRc,
       }))
       .sort((a, b) => b.total - a.total);
 
@@ -105,6 +107,8 @@ export function EstadisticasGenerales({ programs }: Props) {
       facultyData,
       accreditationData,
       rcHorizonData,
+      accreditedTotal: totalAccreditableAndAccredited,
+      accreditationPercentage,
     };
   }, [programs]);
 
@@ -197,7 +201,6 @@ export function EstadisticasGenerales({ programs }: Props) {
     series: [
       { name: "Total", data: stats.facultyData.map((f) => f.total) },
       { name: "Acreditados", data: stats.facultyData.map((f) => f.acreditados) },
-      { name: "RC Vigentes", data: stats.facultyData.map((f) => f.vigentes) },
     ],
   } as Highcharts.Options;
 
@@ -226,12 +229,12 @@ export function EstadisticasGenerales({ programs }: Props) {
             <strong className={styles.statValue}>{stats.accredited}</strong>
           </div>
           <div className={styles.statCard}>
-            <span className={styles.statLabel}>RC Vigentes</span>
-            <strong className={styles.statValue}>{stats.activeRc}</strong>
+            <span className={styles.statLabel}>Acreditables</span>
+            <strong className={styles.statValue}>{stats.acreditable}</strong>
           </div>
           <div className={styles.statCard}>
-            <span className={styles.statLabel}>RC Vencidos</span>
-            <strong className={styles.statValue}>{stats.expiredRc}</strong>
+            <span className={styles.statLabel}>% Acreditados/Acreditables</span>
+            <strong className={styles.statValue}>{stats.accreditationPercentage}%</strong>
           </div>
           <div className={styles.statCard}>
             <span className={styles.statLabel}>En Proceso AAC</span>

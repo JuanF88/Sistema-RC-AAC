@@ -31,6 +31,7 @@ function getAdminClient() {
 function mapPayloadToInsert(payload: ProgramRecord) {
   return {
     process_code: payload.processCode,
+    is_active: payload.isActive ?? true,
     faculty: payload.faculty,
     program: payload.program,
     degree: payload.degree || null,
@@ -87,6 +88,10 @@ function mapPayloadToInsert(payload: ProgramRecord) {
     accreditation_guideline: payload.accreditationGuideline || null,
     general_observations: payload.generalObservations || null,
     program_coordinator: payload.programCoordinator || null,
+    program_coordinator_email: payload.programCoordinatorEmail || null,
+    program_coordinator_title: payload.programCoordinatorTitle || null,
+    observaciones_alerta_rrc: payload.observacionesAlertaRrc || null,
+    observaciones_alerta_acreditados: payload.observacionesAlertaAcreditados || null,
     source: "supabase",
   };
 }

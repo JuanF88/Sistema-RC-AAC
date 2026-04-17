@@ -7,6 +7,9 @@ CREATE TABLE IF NOT EXISTS public.acreditacion_estados_programa (
   CONSTRAINT acreditacion_estados_programa_estado_check
     CHECK (
       estado IN (
+        'Acreditable',
+        'En proceso de Acreditacion',
+        'Acreditado 2026',
         'Renovaciones',
         'En proceso renovación',
         'Nuevos',

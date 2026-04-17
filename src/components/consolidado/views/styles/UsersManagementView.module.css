@@ -1,7 +1,7 @@
 .wrap {
   display: flex;
   flex-direction: column;
-  gap: 0.9rem;
+  gap: 1rem;
 }
 
 .headerRow {
@@ -15,8 +15,8 @@
 .title {
   margin: 0;
   font-size: 1rem;
-  color: #0f172a;
-  font-weight: 800;
+  color: #103766;
+  font-weight: 700;
 }
 
 .filters {
@@ -30,8 +30,8 @@
   background: #ffffff;
   color: #334155;
   border-radius: 999px;
-  padding: 0.34rem 0.62rem;
-  font-size: 0.76rem;
+  padding: 0.4rem 0.72rem;
+  font-size: 0.78rem;
   font-weight: 700;
   cursor: pointer;
 }
@@ -43,15 +43,16 @@
 }
 
 .formCard {
-  border: 1px solid rgba(148, 163, 184, 0.25);
-  border-radius: 0.95rem;
-  padding: 0.75rem;
-  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid #dce7f6;
+  border-radius: 12px;
+  padding: 16px;
+  background: #ffffff;
+  box-shadow: 0 4px 14px rgba(20, 45, 90, 0.06);
 }
 
 .formTitle {
-  margin: 0 0 0.55rem;
-  font-size: 0.84rem;
+  margin: 0 0 0.7rem;
+  font-size: 0.86rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: #475569;
@@ -66,12 +67,12 @@
 .input,
 .rowInput {
   width: 100%;
-  border: 1px solid rgba(148, 163, 184, 0.42);
-  border-radius: 0.56rem;
+  border: 1px solid #c8d6eb;
+  border-radius: 8px;
   background: #ffffff;
-  color: #0f172a;
-  font-size: 0.82rem;
-  padding: 0.42rem 0.52rem;
+  color: #133252;
+  font-size: 0.84rem;
+  padding: 0.56rem 0.65rem;
 }
 
 .passwordField {
@@ -112,13 +113,13 @@
 
 .createBtn,
 .saveBtn {
-  border: 1px solid #1d4ed8;
-  background: #dbeafe;
-  color: #1e3a8a;
-  border-radius: 0.56rem;
-  font-size: 0.76rem;
+  border: 1px solid #0f69d8;
+  background: #0f69d8;
+  color: #ffffff;
+  border-radius: 8px;
+  font-size: 0.78rem;
   font-weight: 700;
-  padding: 0.4rem 0.62rem;
+  padding: 0.5rem 0.8rem;
   cursor: pointer;
 }
 
@@ -131,10 +132,10 @@
   border: 1px solid rgba(220, 38, 38, 0.6);
   background: rgba(254, 226, 226, 0.92);
   color: #991b1b;
-  border-radius: 0.56rem;
-  font-size: 0.76rem;
+  border-radius: 8px;
+  font-size: 0.78rem;
   font-weight: 700;
-  padding: 0.4rem 0.62rem;
+  padding: 0.5rem 0.8rem;
   cursor: pointer;
 }
 
@@ -153,13 +154,13 @@
 .empty {
   margin: 0;
   color: #475569;
-  font-size: 0.88rem;
+  font-size: 0.84rem;
 }
 
 .tableWrap {
   overflow: auto;
-  border: 1px solid rgba(148, 163, 184, 0.2);
-  border-radius: 0.95rem;
+  border: 1px solid #dce7f6;
+  border-radius: 12px;
 }
 
 .table {
@@ -177,16 +178,22 @@
 
 .table th,
 .table td {
-  padding: 0.62rem 0.64rem;
+  padding: 0.7rem 0.72rem;
   border-bottom: 1px solid rgba(148, 163, 184, 0.22);
+  border-right: 1px solid rgba(148, 163, 184, 0.2);
   font-size: 0.82rem;
+}
+
+.table th:last-child,
+.table td:last-child {
+  border-right: 0;
 }
 
 .table th {
   color: #e2e8f0;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  font-size: 0.71rem;
+  font-size: 0.72rem;
   text-align: left;
 }
 

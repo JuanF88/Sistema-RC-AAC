@@ -63,9 +63,15 @@
 .historyTable th,
 .historyTable td {
   border-bottom: 1px solid rgba(148, 163, 184, 0.24);
+  border-right: 1px solid rgba(148, 163, 184, 0.2);
   padding: 0.6rem 0.64rem;
   font-size: 0.85rem;
   text-align: center;
+}
+
+.historyTable th:last-child,
+.historyTable td:last-child {
+  border-right: 0;
 }
 
 .historyTable tbody tr:nth-child(odd) {
@@ -230,6 +236,7 @@
   letter-spacing: 0.07em;
   text-transform: uppercase;
   border-bottom: 1px solid rgba(255, 255, 255, 0.18);
+  border-right: 1px solid rgba(255, 255, 255, 0.14);
   padding: 0.72rem 0.64rem;
   text-align: left;
   white-space: nowrap;
@@ -237,10 +244,16 @@
 
 .table td {
   border-bottom: 1px solid rgba(148, 163, 184, 0.24);
+  border-right: 1px solid rgba(148, 163, 184, 0.2);
   padding: 0.6rem 0.64rem;
   font-size: 0.85rem;
   color: #334155;
   vertical-align: top;
+}
+
+.table th:last-child,
+.table td:last-child {
+  border-right: 0;
 }
 
 .table tbody tr:nth-child(odd) {

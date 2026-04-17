@@ -67,7 +67,7 @@ export function EstadisticasAcreditacionProgramas({ programs }: Props) {
 
     const vigencyData = [
       { name: "AAC Vigente", y: activeAac, color: "#22c55e" },
-      { name: "AAC Vencida", y: expiredAac, color: "#ef4444" },
+      { name: "AAC Extendida", y: expiredAac, color: "#ef4444" },
       { name: "Sin Fecha AAC", y: noDateAac, color: "#94a3b8" },
     ].filter((item) => item.y > 0);
 
@@ -77,7 +77,7 @@ export function EstadisticasAcreditacionProgramas({ programs }: Props) {
       .slice(0, 12);
 
     const horizonData = [
-      { name: "Vencida", y: horizonBuckets.vencida, color: "#ef4444" },
+      { name: "Extendida", y: horizonBuckets.vencida, color: "#ef4444" },
       { name: "Vence <= 6 meses", y: horizonBuckets.vence6m, color: "#f59e0b" },
       { name: "Vence 6-12 meses", y: horizonBuckets.vence12m, color: "#facc15" },
       { name: "Vigente > 12 meses", y: horizonBuckets.mas12m, color: "#22c55e" },
@@ -207,7 +207,7 @@ export function EstadisticasAcreditacionProgramas({ programs }: Props) {
             <strong className={styles.statValue}>{stats.activeAac}</strong>
           </div>
           <div className={styles.statCard}>
-            <span className={styles.statLabel}>AAC Vencida</span>
+            <span className={styles.statLabel}>AAC Extendida</span>
             <strong className={styles.statValue}>{stats.expiredAac}</strong>
           </div>
           <div className={styles.statCard}>

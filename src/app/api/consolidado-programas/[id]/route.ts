@@ -35,6 +35,13 @@ function isValidUuid(value: string): boolean {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
 }
 
+function deriveAcreditacionEstado(payload: ProgramRecord): string | null {
+  if (payload.accredited) return "Acreditado 2026";
+  if (payload.acreditable && payload.inAccreditationProcess) return "En proceso de Acreditacion";
+  if (payload.acreditable) return "Acreditable";
+  return null;
+}
+
 export async function PATCH(request: Request, context: RouteContext) {
   try {
     const session = await getSessionFromRequest(request);
@@ -61,6 +68,7 @@ export async function PATCH(request: Request, context: RouteContext) {
     const updateData = {
       // Basic Program Information
       process_code: payload.processCode,
+      is_active: payload.isActive ?? true,
       faculty: payload.faculty,
       program: payload.program,
       degree: payload.degree || null,
@@ -133,6 +141,10 @@ export async function PATCH(request: Request, context: RouteContext) {
       accreditation_guideline: payload.accreditationGuideline || null,
       general_observations: payload.generalObservations || null,
       program_coordinator: payload.programCoordinator || null,
+      program_coordinator_email: payload.programCoordinatorEmail || null,
+      program_coordinator_title: payload.programCoordinatorTitle || null,
+      observaciones_alerta_rrc: payload.observacionesAlertaRrc || null,
+      observaciones_alerta_acreditados: payload.observacionesAlertaAcreditados || null,
     };
 
     const { data, error } = await client
@@ -144,6 +156,33 @@ export async function PATCH(request: Request, context: RouteContext) {
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 400 });
+    }
+
+    // Keep accreditation status table aligned with editable booleans from matrix/modal.
+    const nextEstado = deriveAcreditacionEstado(payload);
+    if (nextEstado) {
+      const { error: estadoError } = await client
+        .from("acreditacion_estados_programa")
+        .upsert(
+          {
+            program_id: id,
+            estado: nextEstado,
+          },
+          { onConflict: "program_id" },
+        );
+
+      if (estadoError) {
+        return NextResponse.json({ error: estadoError.message }, { status: 400 });
+      }
+    } else {
+      const { error: deleteEstadoError } = await client
+        .from("acreditacion_estados_programa")
+        .delete()
+        .eq("program_id", id);
+
+      if (deleteEstadoError) {
+        return NextResponse.json({ error: deleteEstadoError.message }, { status: 400 });
+      }
     }
 
     await registerChangeAudit({

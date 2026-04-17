@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 
 import styles from "./styles/FiltersBar.module.css";
 
@@ -8,21 +8,31 @@ type Props = {
   faculties: readonly string[];
   modality: string;
   level: string;
+  locationFilter: string[];
+  regionalizedFilter: string;
   acreditableFilter: string;
   accreditedFilter: string;
+  programStatusFilter: string;
   rcState: string;
   modalities: string[];
   levels: string[];
+  locations: string[];
   onSearch: (value: string) => void;
   onFacultyChange: (value: string) => void;
   onModalityChange: (value: string) => void;
   onLevelChange: (value: string) => void;
+  onLocationFilterChange: (value: string[]) => void;
+  onRegionalizedFilterChange: (value: string) => void;
   onAcreditableFilterChange: (value: string) => void;
   onAccreditedFilterChange: (value: string) => void;
+  onProgramStatusFilterChange: (value: string) => void;
   onRcStateChange: (value: string) => void;
   onCreateProgram: () => void;
   showModality?: boolean;
+  showLocationFilter?: boolean;
+  showRegionalizedFilter?: boolean;
   showAccreditationState?: boolean;
+  showProgramStatus?: boolean;
   showRcState?: boolean;
   showCreateProgram?: boolean;
   rightContent?: ReactNode;
@@ -35,35 +45,134 @@ export function FiltersBar({
   faculties,
   modality,
   level,
+  locationFilter,
+  regionalizedFilter,
   acreditableFilter,
   accreditedFilter,
+  programStatusFilter,
   rcState,
   modalities,
   levels,
+  locations,
   onSearch,
   onFacultyChange,
   onModalityChange,
   onLevelChange,
+  onLocationFilterChange,
+  onRegionalizedFilterChange,
   onAcreditableFilterChange,
   onAccreditedFilterChange,
+  onProgramStatusFilterChange,
   onRcStateChange,
   onCreateProgram,
   showModality = true,
+  showLocationFilter = true,
+  showRegionalizedFilter = true,
   showAccreditationState = true,
+  showProgramStatus = true,
   showRcState = true,
   showCreateProgram = true,
   rightContent,
   createDisabled = false,
 }: Props) {
+  const [showFilters, setShowFilters] = useState(false);
+
+  const locationSummary =
+    locationFilter.length === 0
+      ? "Lugar de desarrollo"
+      : locationFilter.length === locations.length
+        ? "Todos los lugares"
+        : `${locationFilter.length} seleccionados`;
+
+  const locationFilterRef = useRef<HTMLDetailsElement | null>(null);
+
+  useEffect(() => {
+    const handlePointerDown = (event: MouseEvent) => {
+      const details = locationFilterRef.current;
+      if (!details || !details.open) return;
+
+      const target = event.target;
+      if (!(target instanceof Node)) return;
+
+      if (!details.contains(target)) {
+        details.open = false;
+      }
+    };
+
+    document.addEventListener("mousedown", handlePointerDown);
+    return () => document.removeEventListener("mousedown", handlePointerDown);
+  }, []);
+
+  const handleToggleLocation = (value: string) => {
+    if (locationFilter.includes(value)) {
+      onLocationFilterChange(locationFilter.filter((item) => item !== value));
+      return;
+    }
+    onLocationFilterChange([...locationFilter, value]);
+  };
+
+  const activeFiltersCount = useMemo(() => {
+    let count = 0;
+    if (search.trim()) count += 1;
+    if (faculty !== "Todas") count += 1;
+    if (showModality && modality !== "Todas") count += 1;
+    if (level !== "Todos") count += 1;
+    if (showLocationFilter && locationFilter.length > 0) count += 1;
+    if (showRegionalizedFilter && regionalizedFilter !== "Todos") count += 1;
+    if (showProgramStatus && programStatusFilter !== "Todos") count += 1;
+    if (showAccreditationState && acreditableFilter !== "Todos") count += 1;
+    if (showAccreditationState && accreditedFilter !== "Todos") count += 1;
+    if (showRcState && rcState !== "Todos") count += 1;
+    return count;
+  }, [
+    search,
+    faculty,
+    showModality,
+    modality,
+    level,
+    showLocationFilter,
+    locationFilter,
+    showRegionalizedFilter,
+    regionalizedFilter,
+    showProgramStatus,
+    programStatusFilter,
+    showAccreditationState,
+    acreditableFilter,
+    accreditedFilter,
+    showRcState,
+    rcState,
+  ]);
+
   return (
     <div className={styles.row}>
-      <div className={styles.inputs}>
+      <div className={styles.primaryRow}>
         <input
           value={search}
           onChange={(event) => onSearch(event.target.value)}
-          className={styles.input}
+          className={`${styles.input} ${styles.searchInput}`}
           placeholder="Buscar por programa, codigo o SNIES"
         />
+        <button
+          type="button"
+          className={styles.toggleFiltersButton}
+          onClick={() => setShowFilters((value) => !value)}
+          aria-label={showFilters ? "Ocultar filtros" : "Mostrar filtros"}
+        >
+          <img src="/filtros.ico" alt="" className={styles.toggleIconImage} aria-hidden="true" />
+          <span>{showFilters ? "Ocultar filtros" : "Mostrar filtros"}</span>
+          {!showFilters && activeFiltersCount > 0 && <span className={styles.filtersBadge}>{activeFiltersCount}</span>}
+        </button>
+        <div className={styles.actions}>
+          {rightContent}
+          {showCreateProgram && (
+            <button type="button" className={styles.createButton} onClick={onCreateProgram} disabled={createDisabled}>
+              Nuevo programa
+            </button>
+          )}
+        </div>
+      </div>
+
+      {showFilters && <div className={styles.inputs}>
         <select value={faculty} onChange={(event) => onFacultyChange(event.target.value)} className={styles.select}>
           <option value="Todas">Todas las facultades</option>
           {faculties.map((name) => (
@@ -90,6 +199,47 @@ export function FiltersBar({
             </option>
           ))}
         </select>
+        {showLocationFilter && (
+          <details className={styles.multiFilter} ref={locationFilterRef}>
+            <summary className={styles.multiFilterTrigger}>{locationSummary}</summary>
+            <div className={styles.multiFilterPanel}>
+              <div className={styles.multiFilterActions}>
+                <button type="button" className={styles.multiActionBtn} onClick={() => onLocationFilterChange(locations)}>
+                  Seleccionar todos
+                </button>
+                <button type="button" className={styles.multiActionBtn} onClick={() => onLocationFilterChange([])}>
+                  Limpiar
+                </button>
+              </div>
+              <div className={styles.multiFilterList}>
+                {locations.map((name) => (
+                  <label key={name} className={styles.multiFilterItem}>
+                    <input
+                      type="checkbox"
+                      checked={locationFilter.includes(name)}
+                      onChange={() => handleToggleLocation(name)}
+                    />
+                    <span>{name}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          </details>
+        )}
+        {showRegionalizedFilter && (
+          <select value={regionalizedFilter} onChange={(event) => onRegionalizedFilterChange(event.target.value)} className={styles.select}>
+            <option value="Todos">Regionalización</option>
+            <option value="Si">Sí</option>
+            <option value="No">No</option>
+          </select>
+        )}
+        {showProgramStatus && (
+          <select value={programStatusFilter} onChange={(event) => onProgramStatusFilterChange(event.target.value)} className={styles.select}>
+            <option value="Activos">Programas activos</option>
+            <option value="Inactivos">Programas inactivos</option>
+            <option value="Todos">Todos los programas</option>
+          </select>
+        )}
         {showAccreditationState && (
           <select value={acreditableFilter} onChange={(event) => onAcreditableFilterChange(event.target.value)} className={styles.select}>
             <option value="Todos">Acreditable</option>
@@ -112,15 +262,7 @@ export function FiltersBar({
             <option value="sin-definir">Sin definir</option>
           </select>
         )}
-      </div>
-      <div className={styles.actions}>
-        {rightContent}
-        {showCreateProgram && (
-          <button type="button" className={styles.createButton} onClick={onCreateProgram} disabled={createDisabled}>
-            Nuevo programa
-          </button>
-        )}
-      </div>
+      </div>}
     </div>
   );
 }

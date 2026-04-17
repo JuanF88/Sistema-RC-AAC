@@ -7,6 +7,7 @@ import * as XLSX from "xlsx";
 export type ConsolidadoProgram = {
   id: string;
   documentCount: number;
+  isActive: boolean;
   
   // Basic Program Information
   processCode: string;
@@ -82,6 +83,10 @@ export type ConsolidadoProgram = {
   accreditationGuideline: string | null;
   generalObservations: string | null;
   programCoordinator: string | null;
+  programCoordinatorEmail: string | null;
+  programCoordinatorTitle: string | null;
+  observacionesAlertaRrc: string | null;
+  observacionesAlertaAcreditados: string | null;
   source: "supabase" | "excel";
 };
 
@@ -256,6 +261,11 @@ function mapSupabaseRow(raw: Record<string, unknown>): ConsolidadoProgram | null
 
   const acreditable = toYesNo(getFirst(raw, ["acreditable", "es_acreditable"]));
   const accredited = toYesNo(getFirst(raw, ["accredited", "acreditado", "esta_acreditado"]));
+  const isActiveRaw = getFirst(raw, ["is_active", "active", "activo"]);
+  const isActive =
+    isActiveRaw === null || isActiveRaw === undefined || String(isActiveRaw).trim() === ""
+      ? true
+      : toYesNo(isActiveRaw);
   const inAccreditationProcess =
     toYesNo(getFirst(raw, ["in_accreditation_process", "en_proceso_acreditacion"])) ||
     String(getFirst(raw, ["estado_aac", "estado_acreditacion"]) ?? "")
@@ -265,6 +275,7 @@ function mapSupabaseRow(raw: Record<string, unknown>): ConsolidadoProgram | null
   return {
     id: String(getFirst(raw, ["id", "program_id", "codigo_proceso", "snies", "codigo"]) ?? `${program}-${Date.now()}`),
     documentCount: 0,
+    isActive,
     processCode: String(getFirst(raw, ["process_code", "codigo_proceso", "codigo"]) ?? ""),
     faculty,
     program,
@@ -322,6 +333,10 @@ function mapSupabaseRow(raw: Record<string, unknown>): ConsolidadoProgram | null
     accreditationGuideline: String(getFirst(raw, ["accreditation_guideline", "lineamiento_acreditacion"]) ?? "") || null,
     generalObservations: String(getFirst(raw, ["general_observations", "observaciones_generales"]) ?? "") || null,
     programCoordinator: String(getFirst(raw, ["program_coordinator", "coordinador_programa"]) ?? "") || null,
+    programCoordinatorEmail: String(getFirst(raw, ["program_coordinator_email", "correo_coordinador", "coordinador_email"]) ?? "") || null,
+    programCoordinatorTitle: String(getFirst(raw, ["program_coordinator_title", "titulo_coordinador", "coordinador_titulo"]) ?? "") || null,
+    observacionesAlertaRrc: String(getFirst(raw, ["observaciones_alerta_rrc", "alerta_rrc_observaciones"]) ?? "") || null,
+    observacionesAlertaAcreditados: String(getFirst(raw, ["observaciones_alerta_acreditados", "alerta_acreditados_observaciones"]) ?? "") || null,
     source: "supabase",
   };
 }
@@ -398,6 +413,7 @@ function mapExcelRow(ws: XLSX.WorkSheet, row: number): ConsolidadoProgram | null
   return {
     id: `${processCode}-${String(val("G") ?? "")}`,
     documentCount: 0,
+    isActive: true,
     // Basic Program Information
     processCode,
     faculty,
@@ -472,6 +488,10 @@ function mapExcelRow(ws: XLSX.WorkSheet, row: number): ConsolidadoProgram | null
     accreditationGuideline: String(val("BE") ?? "").trim() || null,
     generalObservations: String(val("BF") ?? "").trim() || null,
     programCoordinator: String(val("BG") ?? "").trim() || null,
+    programCoordinatorEmail: String(val("BH") ?? "").trim() || null,
+    programCoordinatorTitle: null,
+    observacionesAlertaRrc: null,
+    observacionesAlertaAcreditados: null,
     source: "excel",
   };
 }

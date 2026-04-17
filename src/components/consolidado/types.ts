@@ -1,6 +1,6 @@
 import type { ConsolidadoProgram } from "@/lib/consolidado";
 
-export type ViewMode = "consolidado" | "alertas" | "registro-calificado" | "acreditacion-programas" | "visitas-pares" | "estadisticas" | "usuarios";
+export type ViewMode = "consolidado" | "alertas" | "registro-calificado" | "acreditacion-programas" | "visitas-pares" | "estadisticas" | "historial" | "usuarios";
 
 export type UserRole = "administrador" | "usuario" | "visualizador";
 

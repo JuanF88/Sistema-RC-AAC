@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState, useRef } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useState, useRef } from "react";
+import { showToast } from "nextjs-toast-notify";
 
 import type { ProgramRecord } from "../types";
 import { formatDate } from "../utils";
@@ -10,6 +11,7 @@ import styles from "./styles/ExpirationAlertsView.module.css";
 type Props = {
   rows: ProgramRecord[];
   onExportReady?: (action: (() => Promise<void>) | null) => void;
+  onProgramUpdate?: (program: ProgramRecord) => void;
 };
 
 type AlertMode = "rrc" | "acreditados";
@@ -70,11 +72,24 @@ function alertClass(level: AlertLevel): string {
   return styles.badgeNeutral;
 }
 
-export function ExpirationAlertsView({ rows, onExportReady }: Props) {
+export function ExpirationAlertsView({ rows, onExportReady, onProgramUpdate }: Props) {
   const [mode, setMode] = useState<AlertMode>("rrc");
+  const [programs, setPrograms] = useState(rows);
+  const [savingObservationId, setSavingObservationId] = useState<string | null>(null);
+  const textareaRefs = useRef<Record<string, HTMLTextAreaElement | null>>({});
+  const rafIds = useRef<Record<string, number>>({});
+
+  useEffect(() => {
+    setPrograms(rows);
+  }, [rows]);
+
+  const programsRef = useRef(rows);
+  useEffect(() => {
+    programsRef.current = programs;
+  }, [programs]);
 
   const rrcRows = useMemo(() => {
-    return [...rows]
+    return [...programs]
       .map((program) => {
         const rcAlert = evaluateAlert(program.rcEnd);
         const siacAlert = evaluateAlert(program.rcMineducacion);
@@ -85,30 +100,143 @@ export function ExpirationAlertsView({ rows, onExportReady }: Props) {
           rcAlert,
           siacEnd: program.rcMineducacion,
           siacAlert,
-          observations: program.generalObservations,
+          observations: program.observacionesAlertaRrc ?? "",
         };
       })
       .sort((a, b) => sortByClosestExpiration(a.rcEnd, b.rcEnd));
-  }, [rows]);
+  }, [programs]);
 
   const accreditedRows = useMemo(() => {
-    return [...rows]
+    return [...programs]
       .filter((program) => program.accredited)
       .map((program) => {
         const aacAlert = evaluateAlert(program.aacEnd);
-        const siacAlert = evaluateAlert(program.aacImprovementHalfway);
+        const siacAlert = evaluateAlert(program.aacCgcaiDelivery);
         return {
           id: program.id,
           program: program.program,
           aacEnd: program.aacEnd,
           aacAlert,
-          siacEnd: program.aacImprovementHalfway,
+          siacEnd: program.aacCgcaiDelivery,
           siacAlert,
-          observations: program.generalObservations,
+          observations: program.observacionesAlertaAcreditados ?? "",
         };
       })
       .sort((a, b) => sortByClosestExpiration(a.aacEnd, b.aacEnd));
-  }, [rows]);
+  }, [programs]);
+
+  const observationField = mode === "rrc" ? "observacionesAlertaRrc" : "observacionesAlertaAcreditados";
+  const observationHeader = mode === "rrc" ? "Observaciones alerta RRC" : "Observaciones alerta acreditados";
+
+  const adjustTextareaHeight = useCallback((element: HTMLTextAreaElement | null) => {
+    if (!element) return;
+    const programId = Object.keys(textareaRefs.current).find(
+      (key) => textareaRefs.current[key] === element,
+    );
+    if (!programId) return;
+
+    // Cancel previous RAF if pending
+    if (rafIds.current[programId]) {
+      cancelAnimationFrame(rafIds.current[programId]);
+    }
+
+    // Schedule measurement and adjustment with RAF
+    rafIds.current[programId] = requestAnimationFrame(() => {
+      element.style.height = "auto";
+      element.style.height = `${Math.max(element.scrollHeight, 52)}px`;
+      delete rafIds.current[programId];
+    });
+  }, []);
+
+  useLayoutEffect(() => {
+    const visibleRows = mode === "rrc" ? rrcRows : accreditedRows;
+    for (const row of visibleRows) {
+      adjustTextareaHeight(textareaRefs.current[row.id]);
+    }
+  }, [adjustTextareaHeight, accreditedRows, mode, rrcRows]);
+
+  const setTextareaRef = useCallback(
+    (programId: string) => (element: HTMLTextAreaElement | null) => {
+      textareaRefs.current[programId] = element;
+      if (element) {
+        // Schedule initial height adjustment
+        if (rafIds.current[programId]) {
+          cancelAnimationFrame(rafIds.current[programId]);
+        }
+        rafIds.current[programId] = requestAnimationFrame(() => {
+          element.style.height = "auto";
+          element.style.height = `${Math.max(element.scrollHeight, 52)}px`;
+          delete rafIds.current[programId];
+        });
+      }
+    },
+    [],
+  );
+
+  const handleObservationChange = useCallback((programId: string, value: string) => {
+    setPrograms((current) =>
+      current.map((program) =>
+        program.id === programId
+          ? ({ ...program, [observationField]: value } as ProgramRecord)
+          : program,
+      ),
+    );
+    
+    // Schedule height adjustment after state update
+    const textarea = textareaRefs.current[programId];
+    if (textarea && rafIds.current[programId]) {
+      cancelAnimationFrame(rafIds.current[programId]);
+    }
+    if (textarea) {
+      rafIds.current[programId] = requestAnimationFrame(() => {
+        textarea.style.height = "auto";
+        textarea.style.height = `${Math.max(textarea.scrollHeight, 52)}px`;
+        delete rafIds.current[programId];
+      });
+    }
+  }, [observationField]);
+
+  const handleObservationSave = useCallback(async (programId: string, nextValue: string) => {
+    const program = programsRef.current.find((item) => item.id === programId);
+    if (!program) return;
+
+    const payload = {
+      ...program,
+      [observationField]: nextValue,
+    } as ProgramRecord;
+
+    setSavingObservationId(programId);
+    try {
+      const response = await fetch(`/api/consolidado-programas/${programId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      const body = (await response.json()) as { error?: string };
+      if (!response.ok) {
+        throw new Error(body.error ?? "No se pudo guardar la observacion.");
+      }
+
+      setPrograms((current) => current.map((item) => (item.id === programId ? payload : item)));
+      onProgramUpdate?.(payload);
+
+      showToast.success("Observacion guardada.", {
+        position: "top-right",
+        transition: "bounceIn",
+        duration: 1800,
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "No se pudo guardar la observacion.";
+      showToast.error(message, {
+        position: "top-right",
+        transition: "slideInUp",
+        duration: 2800,
+      });
+    } finally {
+      setSavingObservationId(null);
+    }
+  }, [observationField]);
 
   // Keep reference to current data for export
   const dataRef = useRef({ rrcRows, accreditedRows, mode });
@@ -139,9 +267,9 @@ export function ExpirationAlertsView({ rows, onExportReady }: Props) {
             { key: "aacEnd", header: "Vencimiento AAC", width: 18, formatter: (v) => formatDate(v as string | null | undefined) || "-" },
             { key: "aacAlert", header: "Alerta AAC", width: 16 },
             { key: "aacDays", header: "Dias AAC", width: 12 },
-            { key: "siacEnd", header: "Vencimiento SIAC AAC", width: 22, formatter: (v) => formatDate(v as string | null | undefined) || "-" },
-            { key: "siacAlert", header: "Alerta SIAC AAC", width: 18 },
-            { key: "siacDays", header: "Dias SIAC AAC", width: 15 },
+            { key: "siacEnd", header: "Entrega al CGCAI", width: 22, formatter: (v) => formatDate(v as string | null | undefined) || "-" },
+            { key: "siacAlert", header: "Alerta CGCAI", width: 18 },
+            { key: "siacDays", header: "Dias CGCAI", width: 15 },
             { key: "observations", header: "Observaciones", width: 44 },
           ];
 
@@ -170,6 +298,7 @@ export function ExpirationAlertsView({ rows, onExportReady }: Props) {
 
     await exportToExcel(filename, `Alertas ${modeLabel}`, columns, exportData);
   }, []);
+
 
   useEffect(() => {
     if (!onExportReady) return;
@@ -208,7 +337,7 @@ export function ExpirationAlertsView({ rows, onExportReady }: Props) {
                 <th>Vencimiento SIAC RRC</th>
                 <th>Alerta SIAC RRC</th>
                 <th>Dias SIAC RRC</th>
-                <th>Observaciones</th>
+                <th>{observationHeader}</th>
               </tr>
             </thead>
             <tbody>
@@ -225,7 +354,18 @@ export function ExpirationAlertsView({ rows, onExportReady }: Props) {
                     <span className={`${styles.badge} ${alertClass(row.siacAlert.level)}`}>{row.siacAlert.label}</span>
                   </td>
                   <td>{row.siacAlert.days ?? "-"}</td>
-                  <td className={styles.observations}>{row.observations || "-"}</td>
+                  <td className={styles.observationsCell}>
+                    <textarea
+                      ref={setTextareaRef(row.id)}
+                      className={styles.observationInput}
+                      value={row.observations}
+                      onChange={(event) => handleObservationChange(row.id, event.target.value)}
+                      onBlur={(event) => void handleObservationSave(row.id, event.currentTarget.value)}
+                      placeholder={observationHeader}
+                      disabled={savingObservationId === row.id}
+                    />
+                    {savingObservationId === row.id && <span className={styles.saveHint}>Guardando...</span>}
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -240,10 +380,10 @@ export function ExpirationAlertsView({ rows, onExportReady }: Props) {
                 <th>Vencimiento AAC</th>
                 <th>Alerta AAC</th>
                 <th>Dias AAC</th>
-                <th>Vencimiento SIAC AAC</th>
-                <th>Alerta SIAC AAC</th>
-                <th>Dias SIAC AAC</th>
-                <th>Observaciones</th>
+                <th>Entrega al CGCAI</th>
+                <th>Alerta CGCAI</th>
+                <th>Dias CGCAI</th>
+                <th>{observationHeader}</th>
               </tr>
             </thead>
             <tbody>
@@ -260,7 +400,18 @@ export function ExpirationAlertsView({ rows, onExportReady }: Props) {
                     <span className={`${styles.badge} ${alertClass(row.siacAlert.level)}`}>{row.siacAlert.label}</span>
                   </td>
                   <td>{row.siacAlert.days ?? "-"}</td>
-                  <td className={styles.observations}>{row.observations || "-"}</td>
+                  <td className={styles.observationsCell}>
+                    <textarea
+                      ref={setTextareaRef(row.id)}
+                      className={styles.observationInput}
+                      value={row.observations}
+                      onChange={(event) => handleObservationChange(row.id, event.target.value)}
+                      onBlur={(event) => void handleObservationSave(row.id, event.currentTarget.value)}
+                      placeholder={observationHeader}
+                      disabled={savingObservationId === row.id}
+                    />
+                    {savingObservationId === row.id && <span className={styles.saveHint}>Guardando...</span>}
+                  </td>
                 </tr>
               ))}
             </tbody>

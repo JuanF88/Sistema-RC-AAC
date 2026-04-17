@@ -82,6 +82,7 @@ CREATE TABLE public.consolidado_programas (
   accreditation_guideline TEXT,
   general_observations TEXT,
   program_coordinator TEXT,
+  program_coordinator_email TEXT,
   source TEXT DEFAULT 'excel'
 );
 

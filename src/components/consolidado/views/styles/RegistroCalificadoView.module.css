@@ -111,15 +111,23 @@
   letter-spacing: 0.05em;
   color: #e2e8f0;
   background: transparent;
+  border-right: 1px solid rgba(255, 255, 255, 0.14);
 }
 
 .table tbody td,
 .table tfoot td {
   padding: 0.6rem 0.64rem;
   border-bottom: 1px solid rgba(226, 232, 240, 0.92);
+  border-right: 1px solid rgba(148, 163, 184, 0.2);
   color: #334155;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.table thead th:last-child,
+.table tbody td:last-child,
+.table tfoot td:last-child {
+  border-right: 0;
 }
 
 .table tbody tr:nth-child(odd) {

@@ -41,6 +41,7 @@
 .table th {
   white-space: nowrap;
   border-bottom: 1px solid rgba(255, 255, 255, 0.18);
+  border-right: 1px solid rgba(255, 255, 255, 0.14);
   padding: 0.72rem 0.64rem;
   text-align: left;
   font-size: 0.72rem;
@@ -51,8 +52,14 @@
 .table td {
   white-space: nowrap;
   border-bottom: 1px solid rgba(226, 232, 240, 0.92);
+  border-right: 1px solid rgba(148, 163, 184, 0.2);
   padding: 0.6rem 0.64rem;
   color: #334155;
+}
+
+.table th:last-child,
+.table td:last-child {
+  border-right: 0;
 }
 
 .table tbody tr {
@@ -77,6 +84,23 @@
 
 .table tbody tr.selectedRow td {
   background: rgba(253, 224, 71, 0.12);
+}
+
+.table tbody tr.inactiveRow {
+  background: rgba(254, 226, 226, 0.78);
+}
+
+.table tbody tr.inactiveRow:nth-child(odd),
+.table tbody tr.inactiveRow:nth-child(even) {
+  background: rgba(254, 226, 226, 0.78);
+}
+
+.table tbody tr.inactiveRow:hover {
+  background: rgba(252, 165, 165, 0.45);
+}
+
+.table tbody tr.inactiveRow td {
+  color: #7f1d1d;
 }
 
 .sortButton {
