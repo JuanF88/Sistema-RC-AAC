@@ -1,6 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import ExcelJS from "exceljs";
-import { getConsolidadoDashboard, type ProgramRecord } from "@/lib/consolidado";
+import { getConsolidadoDashboard, type ConsolidadoProgram } from "@/lib/consolidado";
 import { sendEmail } from "@/lib/email";
 import { buildProfessionalTemplateFromText } from "@/templates/templates.js";
 
@@ -8,14 +9,14 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
 interface HistorialRequest {
-  programs: ProgramRecord[];
+  programs: ConsolidadoProgram[];
   generatedAt: string;
 }
 
 type SnapshotTrigger = "manual" | "scheduled";
 
 type SnapshotRunOptions = {
-  programs?: ProgramRecord[];
+  programs?: ConsolidadoProgram[];
   generatedAt?: string;
   trigger?: SnapshotTrigger;
 };
@@ -40,6 +41,8 @@ type NotificationRecipientRow = {
   is_active: boolean;
 };
 
+type AdminClient = SupabaseClient;
+
 function sanitizeSheetName(name: string): string {
   return name.replace(/[\\/?*\[\]:]/g, " ").trim().slice(0, 31) || "Hoja";
 }
@@ -53,7 +56,7 @@ function formatDate(date: string | null | undefined): string {
   }
 }
 
-function normalizeLevel(program: ProgramRecord): LevelBucket | null {
+function normalizeLevel(program: ConsolidadoProgram): LevelBucket | null {
   const text = `${program.academicLevel ?? ""} ${program.level ?? ""}`.toLowerCase();
 
   if (text.includes("doctor")) return "doctorado";
@@ -92,7 +95,7 @@ function getCellBorder() {
   };
 }
 
-async function getActiveRecipientEmails(client: ReturnType<typeof createClient>): Promise<string[]> {
+async function getActiveRecipientEmails(client: AdminClient): Promise<string[]> {
   const { data, error } = await client
     .from("notifications_recipients")
     .select("email,is_active")
@@ -110,8 +113,8 @@ async function getActiveRecipientEmails(client: ReturnType<typeof createClient>)
 }
 
 async function createHistorialExcel(
-  programs: ProgramRecord[],
-  client: ReturnType<typeof createClient>,
+  programs: ConsolidadoProgram[],
+  client: AdminClient,
 ): Promise<ArrayBuffer> {
   const workbook = new ExcelJS.Workbook();
   workbook.creator = "Sistema RC AAC";
@@ -480,7 +483,7 @@ async function createHistorialExcel(
   return buffer;
 }
 
-async function resolvePrograms(options?: SnapshotRunOptions): Promise<{ programs: ProgramRecord[]; generatedAt: string }> {
+async function resolvePrograms(options?: SnapshotRunOptions): Promise<{ programs: ConsolidadoProgram[]; generatedAt: string }> {
   if (options?.programs && options.programs.length > 0) {
     return {
       programs: options.programs,
@@ -537,6 +540,7 @@ export async function runSnapshotExport(options?: SnapshotRunOptions) {
       const html = buildProfessionalTemplateFromText({
         subject: "Nueva instantánea de base de datos",
         intro: "Hola equipo,",
+        nombreCompleto: "Equipo CGCAI",
         processKeyValue: true,
         text: [
           `Archivo: ${filename}`,

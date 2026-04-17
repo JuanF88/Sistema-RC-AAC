@@ -323,7 +323,7 @@ type InputProps = {
   label: string;
   value: string;
   onChange: (value: string) => void;
-  type?: "text" | "date" | "number";
+  type?: "text" | "date" | "number" | "email";
   required?: boolean;
   step?: string;
 };
