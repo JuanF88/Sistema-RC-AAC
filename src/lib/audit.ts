@@ -52,7 +52,10 @@ export async function closeOtherActiveSessionsForUser(input: { username: string;
   const client = getAdminClient();
   const { error } = await client
     .from("auth_audit_sessions")
-    .update({ logout_at: new Date().toISOString() })
+    .update({
+      logout_at: new Date().toISOString(),
+      close_reason: "replaced",
+    })
     .eq("username", input.username)
     .is("logout_at", null)
     .neq("session_id", input.keepSessionId);
@@ -64,7 +67,10 @@ export async function registerLogoutAudit(sessionId: string): Promise<void> {
   const client = getAdminClient();
   const { error } = await client
     .from("auth_audit_sessions")
-    .update({ logout_at: new Date().toISOString() })
+    .update({
+      logout_at: new Date().toISOString(),
+      close_reason: "logout",
+    })
     .eq("session_id", sessionId);
 
   if (error) throw new Error(error.message);

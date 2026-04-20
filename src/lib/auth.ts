@@ -104,14 +104,24 @@ async function isSessionActiveInAudit(session: AuthSession): Promise<boolean> {
     const client = getAdminClient();
     const { data, error } = await client
       .from("auth_audit_sessions")
-      .select("session_id,logout_at,username")
+      .select("session_id,logout_at,close_reason,username")
       .eq("session_id", session.sid)
       .eq("username", session.username)
       .maybeSingle();
 
     if (error || !data) return false;
-    if (data.logout_at) return false;
-    return true;
+
+    // Sesiones reemplazadas por nuevo login siguen siendo válidas (solo se marcan como logout si fue cierre explícito)
+    if (data.logout_at && data.close_reason === "replaced") return true;
+
+    // Sesiones con logout explícito NO son válidas
+    if (data.logout_at && data.close_reason === "logout") return false;
+
+    // Sesiones sin cierre son válidas
+    if (!data.logout_at) return true;
+
+    // Sesiones con logout_at pero sin close_reason (datos antiguos) no son válidas
+    return false;
   } catch {
     // If audit storage cannot be reached, do not hard-lock users out.
     return true;
