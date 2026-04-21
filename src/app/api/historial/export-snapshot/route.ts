@@ -385,7 +385,7 @@ async function createHistorialExcel(
     { key: "tecn", header: "Tecnología" },
     { key: "pregrado", header: "Pregrado" },
     { key: "esp", header: "Especialización" },
-    { key: "espMedQuir", header: "Esp. Méd. y Quir." },
+    { key: "espMedQuir", header: "Esp. Méd. Quir." },
     { key: "maestria", header: "Maestrías" },
     { key: "doctorado", header: "Doctorado" },
     { key: "totalPregrado", header: "Total Pregrado" },

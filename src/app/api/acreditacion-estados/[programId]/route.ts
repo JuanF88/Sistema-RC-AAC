@@ -9,6 +9,9 @@ type RouteContext = {
 
 type UpdateEstadoPayload = {
   estado?: string;
+  informeCgcEnviado?: boolean;
+  enviadoMinisterio?: boolean;
+  acreditacionRecibida?: boolean;
 };
 
 const ESTADO_OPTIONS = [
@@ -42,6 +45,9 @@ export async function PUT(request: Request, context: RouteContext) {
     const { programId } = await context.params;
     const payload = (await request.json()) as UpdateEstadoPayload;
     const estado = payload.estado?.trim();
+    const informeCgcEnviado = payload.informeCgcEnviado === true;
+    const enviadoMinisterio = payload.enviadoMinisterio === true;
+    const acreditacionRecibida = payload.acreditacionRecibida === true;
 
     if (!programId) {
       return NextResponse.json({ error: "Se requiere programId." }, { status: 400 });
@@ -51,6 +57,14 @@ export async function PUT(request: Request, context: RouteContext) {
       return NextResponse.json({ error: "Estado invalido para acreditacion." }, { status: 400 });
     }
 
+    if (enviadoMinisterio && !informeCgcEnviado) {
+      return NextResponse.json({ error: "Para marcar envio al ministerio primero debe enviarse al CGC." }, { status: 400 });
+    }
+
+    if (acreditacionRecibida && !enviadoMinisterio) {
+      return NextResponse.json({ error: "Para marcar acreditacion recibida primero debe enviarse al ministerio." }, { status: 400 });
+    }
+
     const client = getAdminClient();
     const { data, error } = await client
       .from("acreditacion_estados_programa")
@@ -58,10 +72,13 @@ export async function PUT(request: Request, context: RouteContext) {
         {
           program_id: programId,
           estado,
+          informe_cgc_enviado: informeCgcEnviado,
+          enviado_ministerio: enviadoMinisterio,
+          acreditacion_recibida: acreditacionRecibida,
         },
         { onConflict: "program_id" },
       )
-      .select("program_id,estado")
+      .select("program_id,estado,informe_cgc_enviado,enviado_ministerio,acreditacion_recibida")
       .single();
 
     if (error) {
@@ -73,7 +90,7 @@ export async function PUT(request: Request, context: RouteContext) {
       username: session.username,
       action: "UPDATE",
       resource: "acreditacion_estados_programa",
-      details: { programId, estado },
+      details: { programId, estado, informeCgcEnviado, enviadoMinisterio, acreditacionRecibida },
     }).catch(() => undefined);
 
     return NextResponse.json({ ok: true, data });

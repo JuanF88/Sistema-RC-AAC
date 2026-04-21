@@ -116,14 +116,14 @@
   text-transform: uppercase;
   letter-spacing: 0.07em;
   color: #e2e8f0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.18);
-  border-right: 1px solid rgba(255, 255, 255, 0.14);
+  border-bottom: 1px solid rgba(0, 60, 139, 0.493);
+  border-right: 1px solid rgba(0, 60, 139, 0.493);
 }
 
 .table td {
   padding: 0.6rem 0.64rem;
-  border-bottom: 1px solid rgba(226, 232, 240, 0.92);
-  border-right: 1px solid rgba(148, 163, 184, 0.2);
+  border-bottom: 1px solid rgba(0, 60, 139, 0.493);
+  border-right: 1px solid rgba(0, 60, 139, 0.493);
   font-size: 0.85rem;
   line-height: 1.35;
   color: #334155;

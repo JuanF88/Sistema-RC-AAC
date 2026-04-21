@@ -2,6 +2,9 @@
 CREATE TABLE IF NOT EXISTS public.acreditacion_estados_programa (
   program_id TEXT PRIMARY KEY,
   estado TEXT NOT NULL,
+  informe_cgc_enviado BOOLEAN NOT NULL DEFAULT false,
+  enviado_ministerio BOOLEAN NOT NULL DEFAULT false,
+  acreditacion_recibida BOOLEAN NOT NULL DEFAULT false,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
   CONSTRAINT acreditacion_estados_programa_estado_check
@@ -16,6 +19,11 @@ CREATE TABLE IF NOT EXISTS public.acreditacion_estados_programa (
         'En proceso de AAC',
         'Acreditado a 2026'
       )
+    ),
+  CONSTRAINT acreditacion_estados_programa_secuencia_check
+    CHECK (
+      (NOT enviado_ministerio OR informe_cgc_enviado)
+      AND (NOT acreditacion_recibida OR enviado_ministerio)
     )
 );
 

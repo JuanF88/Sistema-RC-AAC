@@ -17,7 +17,7 @@ export async function GET() {
     const client = getAdminClient();
     const { data, error } = await client
       .from("acreditacion_estados_programa")
-      .select("program_id,estado")
+      .select("program_id,estado,informe_cgc_enviado,enviado_ministerio,acreditacion_recibida")
       .order("program_id", { ascending: true });
 
     if (error) {

@@ -19,7 +19,7 @@ const LEVEL_COLUMNS: Array<{ key: LevelBucket; label: string }> = [
   { key: "tecn", label: "Tecnología" },
   { key: "pregrado", label: "Pregrado" },
   { key: "esp", label: "Especialización" },
-  { key: "espMedQuir", label: "Esp. Méd. y Quir." },
+  { key: "espMedQuir", label: "Esp. Méd. Quir." },
   { key: "maestria", label: "Maestrías" },
   { key: "doctorado", label: "Doctorado" },
 ];
@@ -216,7 +216,7 @@ export function RegistroCalificadoView({ rows, groupingMode, onExportReady }: Pr
             ) : (
               <>
                 <col style={{ width: 260 }} />
-                <col style={{ width: 300 }} />
+                <col style={{ width: 2300 }} />
                 <col style={{ width: 160 }} />
               </>
             )}
