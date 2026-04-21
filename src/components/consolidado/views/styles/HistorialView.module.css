@@ -59,6 +59,160 @@
   cursor: not-allowed;
 }
 
+.tabBar {
+  display: inline-flex;
+  gap: 0.5rem;
+  padding: 0.35rem;
+  background: #ffffff;
+  border: 1px solid #dbe7f5;
+  border-radius: 999px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  width: fit-content;
+}
+
+.tabButton {
+  border: none;
+  background: transparent;
+  color: #4b5563;
+  font-weight: 700;
+  font-size: 0.9rem;
+  border-radius: 999px;
+  padding: 0.55rem 0.95rem;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.tabButtonActive {
+  background: linear-gradient(135deg, #3b82f6 0%, #0ea5e9 100%);
+  color: #ffffff;
+  box-shadow: 0 10px 20px rgba(59, 130, 246, 0.24);
+}
+
+.scheduleCard {
+  background: white;
+  border-radius: 1rem;
+  padding: 1.5rem 2rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e5eef9;
+}
+
+.scheduleCardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.scheduleCardBody {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.scheduleLabel {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #6b7280;
+  margin-bottom: 0.35rem;
+}
+
+.scheduleValue {
+  color: #1f2937;
+  font-size: 0.98rem;
+  font-weight: 700;
+  word-break: break-word;
+}
+
+.scheduleBadge {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 0.35rem 0.75rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.scheduleBadgeActive {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.scheduleBadgeDisabled {
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+.emailHistorySection {
+  display: grid;
+}
+
+.emailCountBadge {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 0.35rem 0.75rem;
+  background: #e7f0ff;
+  color: #0f3d78;
+  font-weight: 700;
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+
+.emailList {
+  display: grid;
+  gap: 1rem;
+}
+
+.emailCard {
+  border: 1px solid #dbe7f5;
+  border-radius: 0.9rem;
+  padding: 1rem 1.1rem;
+  background: linear-gradient(135deg, #ffffff 0%, #f8faff 100%);
+  display: grid;
+  gap: 0.9rem;
+}
+
+.emailCardHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.emailSubject {
+  margin: 0 0 0.35rem;
+  color: #1f2937;
+  font-size: 1rem;
+  font-weight: 800;
+}
+
+.emailMeta {
+  margin: 0;
+  color: #64748b;
+  font-size: 0.84rem;
+}
+
+.emailDetails {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.emailError {
+  margin: 0;
+  color: #b91c1c;
+  font-size: 0.88rem;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 0.7rem;
+  padding: 0.75rem 0.85rem;
+}
+
 .statsGrid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -232,4 +386,31 @@
 .infoBox li {
   margin-bottom: 0.5rem;
   font-size: 0.9rem;
+}
+
+@media (max-width: 900px) {
+  .tabBar {
+    width: 100%;
+    justify-content: stretch;
+    flex-wrap: wrap;
+  }
+
+  .tabButton {
+    flex: 1 1 0;
+  }
+
+  .scheduleCardBody,
+  .emailDetails {
+    grid-template-columns: 1fr;
+  }
+
+  .scheduleCardHeader,
+  .emailCardHeader {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .snapshotsList {
+    grid-template-columns: 1fr;
+  }
 }

@@ -68,9 +68,40 @@ function toNumber(value) {
   return null;
 }
 
+function normalizeDurationUnit(value) {
+  const normalized = String(value ?? "").trim().toLowerCase();
+  if (!normalized) return null;
+  if (normalized.includes("ano") || normalized.includes("años") || normalized.includes("anos") || normalized.includes("year")) {
+    return "Años";
+  }
+  if (normalized.includes("semestre")) {
+    return "Semestres";
+  }
+  return null;
+}
+
+function parseDuration(value) {
+  const duration = toNumber(value);
+  const durationUnit = normalizeDurationUnit(value) ?? (duration !== null ? "Semestres" : null);
+  return { duration, durationUnit };
+}
+
 function toYesNo(value) {
   const normalized = String(value ?? "").trim().toLowerCase();
   return normalized === "si" || normalized === "sí" || normalized === "yes" || normalized === "true";
+}
+
+function normalizeRegionalized(value) {
+  if (typeof value === "boolean") return value ? "Si" : "No";
+
+  const normalized = String(value ?? "").trim().toLowerCase();
+  if (!normalized) return "No";
+  if (normalized === "true" || normalized === "si" || normalized === "sí") return "Si";
+  if (normalized === "false" || normalized === "no") return "No";
+  if (normalized.includes("ampliacion") || normalized.includes("ampliación")) {
+    return "Ampliación de lugar de desarrollo";
+  }
+  return "No";
 }
 
 function addMonths(isoDate, months) {
@@ -103,6 +134,7 @@ function mapExcelRow(ws, row) {
   const aacDurationYears = toNumber(val("AW"));
   const aacEnd = toIsoDate(val("AZ")) ?? addMonths(aacStart, (aacDurationYears ?? 0) * 12);
   const aacImprovementHalfway = toIsoDate(val("BA")) ?? addMonths(aacStart, ((aacDurationYears ?? 0) * 12) / 2);
+  const parsedDuration = parseDuration(val("X"));
 
   return {
     // Basic Program Information
@@ -124,7 +156,7 @@ function mapExcelRow(ws, row) {
     // Location and Format
     location: String(val("N") ?? "").trim() || null,
     workday: String(val("O") ?? "").trim() || null,
-    regionalized: toYesNo(val("P")),
+    regionalized: normalizeRegionalized(val("P")),
     level: String(val("Q") ?? "").trim() || null,
     academic_level: String(val("R") ?? "").trim() || null,
     modality: String(val("S") ?? "").trim() || null,
@@ -134,7 +166,8 @@ function mapExcelRow(ws, row) {
     research_credits: toNumber(val("U")) || null,
     deepening_credits: toNumber(val("V")) || null,
     total_academic_credits: toNumber(val("W")) || null,
-    duration: toNumber(val("X")) || null,
+    duration: parsedDuration.duration,
+    duration_unit: parsedDuration.durationUnit,
 
     // Reforms
     reform_academic_council: String(val("Y") ?? "").trim() || null,

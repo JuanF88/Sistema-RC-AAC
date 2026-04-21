@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState, useRef } from "react";
 
 import type { ProgramRecord } from "../types";
 import { formatDate } from "../utils";
+import { formatDurationLabel } from "@/lib/duration";
 import { exportToExcel, type ExportColumn } from "@/lib/export";
 import styles from "./styles/ConsolidadoMatrixView.module.css";
 
@@ -58,6 +59,20 @@ type ExportMatrixColumn = {
   getValue: (program: ProgramRecord) => string | number | boolean | null | undefined;
 };
 
+function formatRegionalizedForExport(value: unknown): string {
+  if (typeof value === "boolean") return value ? "SI" : "NO";
+
+  const normalized = String(value ?? "").trim().toLowerCase();
+  if (!normalized) return "NO";
+  if (normalized === "true" || normalized === "si" || normalized === "sí") return "SI";
+  if (normalized === "false" || normalized === "no") return "NO";
+  if (normalized.includes("ampliacion") || normalized.includes("ampliación")) {
+    return "Ampliación de lugar de desarrollo";
+  }
+
+  return String(value);
+}
+
 const COLUMNS: ColumnDef[] = [
   { key: "processCode", label: "Código", width: 120, sortable: true, render: (program) => program.processCode },
   { key: "snies", label: "SNIES", width: 120, sortable: true, render: (program) => program.snies },
@@ -70,7 +85,7 @@ const COLUMNS: ColumnDef[] = [
   { key: "workday", label: "Jornada", width: 150, sortable: true, render: (program) => program.workday },
   { key: "location", label: "Lugar", width: 180, sortable: true, render: (program) => program.location },
   { key: "totalAcademicCredits", label: "Créditos", width: 120, sortable: true, render: (program) => program.totalAcademicCredits },
-  { key: "duration", label: "Duración", width: 110, sortable: true, render: (program) => program.duration },
+  { key: "duration", label: "Duración", width: 140, sortable: true, render: (program) => formatDurationLabel(program.duration, program.durationUnit) },
   { key: "rcStart", label: "Inicio RC", width: 140, sortable: true, render: (program) => formatDate(program.rcStart) },
   { key: "rcEnd", label: "Vencimiento RC", width: 150, sortable: true, render: (program) => formatDate(program.rcEnd) },
   { key: "rcSiga", label: "RC SIGA", width: 140, sortable: true, render: (program) => formatDate(program.rcSiga) },
@@ -100,15 +115,15 @@ const FULL_EXPORT_COLUMNS: ExportMatrixColumn[] = [
   { key: "agreementAdministrator", header: "Administrador\nde convenio", width: 22, getValue: (program) => program.agreementAdministrator },
   { key: "location", header: "Lugar de Desarrollo", width: 24, getValue: (program) => program.location },
   { key: "workday", header: "Jornada", width: 14, getValue: (program) => program.workday },
-  { key: "regionalized", header: "Regionalizado", width: 14, getValue: (program) => (program.regionalized ? "Si" : "No") },
-  { key: "academicLevel", header: "Nivel de formacion\nacademico", width: 22, getValue: (program) => program.academicLevel },
-  { key: "level", header: "Nivel\nacademico", width: 18, getValue: (program) => program.level },
+  { key: "regionalized", header: "Regionalizado", width: 24, getValue: (program) => formatRegionalizedForExport(program.regionalized) },
+  { key: "academicLevel", header: "Nivel de formación académico", width: 22, getValue: (program) => program.academicLevel },
+  { key: "level", header: "Nivel académico", width: 18, getValue: (program) => program.level },
   { key: "modality", header: "Modalidad", width: 16, getValue: (program) => program.modality },
   { key: "methodology", header: "Metodologia", width: 18, getValue: (program) => program.methodology },
   { key: "researchCredits", header: "Creditos\nInvestigacion", width: 16, getValue: (program) => program.researchCredits },
   { key: "deepeningCredits", header: "Creditos\nProfundizacion", width: 18, getValue: (program) => program.deepeningCredits },
   { key: "totalAcademicCredits", header: "Total Creditos\nAcademicos", width: 18, getValue: (program) => program.totalAcademicCredits },
-  { key: "duration", header: "Duracion", width: 12, getValue: (program) => program.duration },
+  { key: "duration", header: "Duracion", width: 16, getValue: (program) => formatDurationLabel(program.duration, program.durationUnit) },
   { key: "reformAcademicCouncil", header: "Reforma\nConsejo Academico", width: 20, getValue: (program) => program.reformAcademicCouncil },
   { key: "reformSuperiorCouncil", header: "Reforma\nConsejo Superior", width: 20, getValue: (program) => program.reformSuperiorCouncil },
   { key: "reformMineducacion", header: "Reforma\nMinEducacion", width: 20, getValue: (program) => program.reformMineducacion },

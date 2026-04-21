@@ -30,6 +30,8 @@ const FREQUENCY_LABELS: Record<SnapshotFrequency, string> = {
   monthly: "Mensual",
 };
 
+const BOGOTA_TIME_ZONE = "America/Bogota";
+
 function toTimeInput(hour: number, minute: number): string {
   return `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
 }
@@ -48,7 +50,11 @@ function formatDateTime(value: string | null): string {
   if (!value) return "-";
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "-";
-  return date.toLocaleString("es-CO");
+  return new Intl.DateTimeFormat("es-CO", {
+    dateStyle: "short",
+    timeStyle: "medium",
+    timeZone: BOGOTA_TIME_ZONE,
+  }).format(date);
 }
 
 export function AlertasConfigView() {
@@ -347,8 +353,9 @@ export function AlertasConfigView() {
             </div>
 
             <div className={styles.scheduleMeta}>
+              <span>Frecuencia: {FREQUENCY_LABELS[schedule.frequency]}</span>
               <span>Ultima ejecucion: {formatDateTime(schedule.last_run_at)}</span>
-              <span>Proxima ejecucion: {formatDateTime(schedule.next_run_at)}</span>
+              <span>Proxima ejecucion (hora Colombia): {formatDateTime(schedule.next_run_at)}</span>
             </div>
           </>
         )}

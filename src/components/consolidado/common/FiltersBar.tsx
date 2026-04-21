@@ -231,6 +231,7 @@ export function FiltersBar({
             <option value="Todos">Regionalización</option>
             <option value="Si">Sí</option>
             <option value="No">No</option>
+            <option value="Ampliación de lugar de desarrollo">Ampliación de lugar de desarrollo</option>
           </select>
         )}
         {showProgramStatus && (

@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { showToast } from "nextjs-toast-notify";
 
 import type { ProgramDocument, ProgramRecord } from "../types";
+import { DURATION_UNIT_OPTIONS, normalizeDurationUnit } from "@/lib/duration";
+import { METHODOLOGY_OPTIONS, normalizeMethodology } from "@/lib/methodology";
 import styles from "./styles/ProgramEditModal.module.css";
 
 type Props = {
@@ -39,7 +41,7 @@ type FormState = {
   agreementAdministrator: string;
   location: string;
   workday: string;
-  regionalized: "true" | "false";
+  regionalized: "Si" | "No" | "Ampliación de lugar de desarrollo";
   level: string;
   academicLevel: string;
   modality: string;
@@ -48,6 +50,7 @@ type FormState = {
   deepeningCredits: string;
   totalAcademicCredits: string;
   duration: string;
+  durationUnit: "" | "Semestres" | "Años";
   reformAcademicCouncil: string;
   reformSuperiorCouncil: string;
   reformMineducacion: string;
@@ -104,15 +107,16 @@ const EMPTY_FORM: FormState = {
   agreementAdministrator: "",
   location: "",
   workday: "",
-  regionalized: "false",
+  regionalized: "No",
   level: "",
   academicLevel: "",
   modality: "",
-  methodology: "",
+  methodology: "N/A",
   researchCredits: "",
   deepeningCredits: "",
   totalAcademicCredits: "",
   duration: "",
+  durationUnit: "Semestres",
   reformAcademicCouncil: "",
   reformSuperiorCouncil: "",
   reformMineducacion: "",
@@ -163,7 +167,7 @@ const ADMISSION_PERIODICITY_OPTIONS = [
   "Trimestral",
 ];
 
-const WORKDAY_OPTIONS = ["Diurna", "Nocturna", "Mixta"];
+const WORKDAY_OPTIONS = ["Diurna", "Nocturna", "Diurna/Nocturna"];
 
 const LEVEL_OPTIONS = [
   "Doctorado",
@@ -269,15 +273,16 @@ function mapProgramToForm(program: ProgramRecord | null): FormState {
     agreementAdministrator: text(program.agreementAdministrator),
     location: text(program.location),
     workday: text(program.workday),
-    regionalized: program.regionalized ? "true" : "false",
+    regionalized: program.regionalized,
     level: text(program.level),
     academicLevel: text(program.academicLevel),
     modality: text(program.modality),
-    methodology: text(program.methodology),
+    methodology: normalizeMethodology(program.methodology),
     researchCredits: program.researchCredits?.toString() ?? "",
     deepeningCredits: program.deepeningCredits?.toString() ?? "",
     totalAcademicCredits: program.totalAcademicCredits?.toString() ?? "",
     duration: program.duration?.toString() ?? "",
+    durationUnit: normalizeDurationUnit(program.durationUnit) ?? (program.duration !== null ? "Semestres" : ""),
     reformAcademicCouncil: text(program.reformAcademicCouncil),
     reformSuperiorCouncil: text(program.reformSuperiorCouncil),
     reformMineducacion: text(program.reformMineducacion),
@@ -462,15 +467,16 @@ export function ProgramEditModal({
     agreementAdministrator: toNullableText(form.agreementAdministrator),
     location: toNullableText(form.location),
     workday: toNullableText(form.workday),
-    regionalized: form.regionalized === "true",
+    regionalized: form.regionalized,
     level: toNullableText(form.level),
     academicLevel: toNullableText(form.academicLevel),
     modality: toNullableText(form.modality),
-    methodology: toNullableText(form.methodology),
+    methodology: normalizeMethodology(form.methodology),
     researchCredits: toNullableNumber(form.researchCredits),
     deepeningCredits: toNullableNumber(form.deepeningCredits),
     totalAcademicCredits: toNullableNumber(form.totalAcademicCredits),
     duration: toNullableNumber(form.duration),
+    durationUnit: form.duration.trim() ? normalizeDurationUnit(form.durationUnit) ?? "Semestres" : null,
     reformAcademicCouncil: toNullableText(form.reformAcademicCouncil),
     reformSuperiorCouncil: toNullableText(form.reformSuperiorCouncil),
     reformMineducacion: toNullableText(form.reformMineducacion),
@@ -699,7 +705,7 @@ export function ProgramEditModal({
               <Field label="Codigo convenio" value={form.agreementCode} onChange={(value) => setField("agreementCode", value)} />
               <Field label="IES convenio" value={form.agreementIes} onChange={(value) => setField("agreementIes", value)} />
               <Field label="Administrador convenio" value={form.agreementAdministrator} onChange={(value) => setField("agreementAdministrator", value)} />
-              <Field label="Lugar" value={form.location} onChange={(value) => setField("location", value)} />
+              <Field label="Lugar de desarrollo" value={form.location} onChange={(value) => setField("location", value)} />
               <SelectField
                 label="Jornada"
                 value={form.workday}
@@ -714,12 +720,13 @@ export function ProgramEditModal({
                 value={form.regionalized}
                 onChange={(value) => setField("regionalized", value)}
                 options={[
-                  { value: "false", label: "No" },
-                  { value: "true", label: "Si" },
+                  { value: "No", label: "No" },
+                  { value: "Si", label: "Si" },
+                  { value: "Ampliación de lugar de desarrollo", label: "Ampliación de lugar de desarrollo" },
                 ]}
               />
               <SelectField
-                label="Nivel de formacion"
+                label="Nivel de formación académico"
                 value={form.level}
                 onChange={(value) => setField("level", value)}
                 options={[
@@ -745,7 +752,12 @@ export function ProgramEditModal({
                   ...MODALITY_OPTIONS.map((option) => ({ value: option, label: option })),
                 ]}
               />
-              <Field label="Metodologia" value={form.methodology} onChange={(value) => setField("methodology", value)} />
+              <SelectField
+                label="Metodologia"
+                value={form.methodology}
+                onChange={(value) => setField("methodology", value)}
+                options={METHODOLOGY_OPTIONS.map((option) => ({ value: option, label: option }))}
+              />
             </div>
           </section>
 
@@ -755,7 +767,16 @@ export function ProgramEditModal({
               <Field label="Creditos investigacion" type="number" value={form.researchCredits} onChange={(value) => setField("researchCredits", value)} />
               <Field label="Creditos profundizacion" type="number" value={form.deepeningCredits} onChange={(value) => setField("deepeningCredits", value)} />
               <Field label="Total creditos academicos" type="number" value={form.totalAcademicCredits} onChange={(value) => setField("totalAcademicCredits", value)} />
-              <Field label="Duracion" type="number" value={form.duration} onChange={(value) => setField("duration", value)} />
+              <Field label="Duracion (valor)" type="number" value={form.duration} onChange={(value) => setField("duration", value)} />
+              <SelectField
+                label="Duracion (unidad)"
+                value={form.durationUnit}
+                onChange={(value) => setField("durationUnit", value)}
+                options={[
+                  { value: "", label: "Sin definir" },
+                  ...DURATION_UNIT_OPTIONS.map((option) => ({ value: option, label: option })),
+                ]}
+              />
               <Field label="Reforma consejo academico" value={form.reformAcademicCouncil} onChange={(value) => setField("reformAcademicCouncil", value)} />
               <Field label="Reforma consejo superior" value={form.reformSuperiorCouncil} onChange={(value) => setField("reformSuperiorCouncil", value)} />
               <Field label="Reforma Mineducacion" value={form.reformMineducacion} onChange={(value) => setField("reformMineducacion", value)} />

@@ -1,4 +1,5 @@
 import nodemailer from "nodemailer";
+import { createClient } from "@supabase/supabase-js";
 
 export type EmailAttachment = {
   filename: string;
@@ -14,7 +15,58 @@ export type EmailPayload = {
   cc?: string | string[];
   bcc?: string | string[];
   attachments?: EmailAttachment[];
+  audit?: {
+    source?: string;
+    actorUsername?: string;
+  };
 };
+
+type EmailAuditStatus = "sent" | "failed";
+
+function getAdminClient() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!supabaseUrl || !serviceRoleKey) {
+    throw new Error("Missing Supabase environment variables for email audit logging.");
+  }
+
+  return createClient(supabaseUrl, serviceRoleKey, { auth: { persistSession: false } });
+}
+
+function normalizeRecipients(value: string | string[] | undefined): string[] {
+  if (!value) return [];
+  return (Array.isArray(value) ? value : [value]).map((item) => item.trim()).filter((item) => item.length > 0);
+}
+
+async function recordEmailAudit(input: {
+  payload: EmailPayload;
+  status: EmailAuditStatus;
+  errorMessage?: string | null;
+}): Promise<void> {
+  try {
+    const client = getAdminClient();
+    const { error } = await client.from("notifications_email_audit").insert({
+      status: input.status,
+      source: input.payload.audit?.source?.trim() || null,
+      actor_username: input.payload.audit?.actorUsername?.trim() || null,
+      subject: input.payload.subject.trim(),
+      recipients: normalizeRecipients(input.payload.to),
+      cc_recipients: normalizeRecipients(input.payload.cc),
+      bcc_recipients: normalizeRecipients(input.payload.bcc),
+      has_attachments: Boolean(input.payload.attachments?.length),
+      attachment_names: input.payload.attachments?.map((attachment) => attachment.filename).filter((value): value is string => Boolean(value)) ?? [],
+      sent_at: input.status === "sent" ? new Date().toISOString() : null,
+      error_message: input.errorMessage ?? null,
+    });
+
+    if (error) {
+      console.error("Email audit insert error:", error.message);
+    }
+  } catch (error) {
+    console.error("Email audit failure:", error instanceof Error ? error.message : error);
+  }
+}
 
 function parseBoolean(value: string | undefined, fallback = false): boolean {
   if (!value) return fallback;
@@ -87,14 +139,25 @@ export async function sendEmail(payload: EmailPayload): Promise<void> {
     throw new Error("El correo debe incluir al menos text o html.");
   }
 
-  await transporter.sendMail({
-    from,
-    to: payload.to,
-    cc: payload.cc,
-    bcc: payload.bcc,
-    subject: payload.subject,
-    text: text || undefined,
-    html: html || undefined,
-    attachments: payload.attachments,
-  });
+  try {
+    await transporter.sendMail({
+      from,
+      to: payload.to,
+      cc: payload.cc,
+      bcc: payload.bcc,
+      subject: payload.subject,
+      text: text || undefined,
+      html: html || undefined,
+      attachments: payload.attachments,
+    });
+
+    await recordEmailAudit({ payload, status: "sent" });
+  } catch (error) {
+    await recordEmailAudit({
+      payload,
+      status: "failed",
+      errorMessage: error instanceof Error ? error.message : "Unknown send error",
+    });
+    throw error;
+  }
 }

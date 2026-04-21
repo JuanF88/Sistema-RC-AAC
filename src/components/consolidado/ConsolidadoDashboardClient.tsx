@@ -66,7 +66,7 @@ function createEmptyProgramDraft(): ProgramRecord {
     agreementAdministrator: null,
     location: null,
     workday: null,
-    regionalized: false,
+    regionalized: "No",
     level: null,
     academicLevel: null,
     modality: null,
@@ -75,6 +75,7 @@ function createEmptyProgramDraft(): ProgramRecord {
     deepeningCredits: null,
     totalAcademicCredits: null,
     duration: null,
+    durationUnit: null,
     reformAcademicCouncil: null,
     reformSuperiorCouncil: null,
     reformMineducacion: null,
@@ -306,8 +307,9 @@ export function ConsolidadoDashboardClient({ data, currentUser, currentRole }: P
 
       const byRegionalized =
         regionalizedFilter === "Todos" ||
-        (regionalizedFilter === "Si" && program.regionalized) ||
-        (regionalizedFilter === "No" && !program.regionalized);
+        (regionalizedFilter === "Si" && program.regionalized === "Si") ||
+        (regionalizedFilter === "No" && program.regionalized === "No") ||
+        (regionalizedFilter === "Ampliación de lugar de desarrollo" && program.regionalized === "Ampliación de lugar de desarrollo");
       if (!byRegionalized) return false;
 
       const byAcreditable =
@@ -773,12 +775,14 @@ export function ConsolidadoDashboardClient({ data, currentUser, currentRole }: P
               <ExpirationAlertsView rows={activePrograms} onExportReady={handleRegisterExportAction} onProgramUpdate={handleProgramUpdate} />
             </section>
           )}
+
+          {view !== "estadisticas" && view !== "historial" && floatingExportState.action && (
+            <div className={styles.tableExportFooter}>
+              <ExportButton onExport={floatingExportState.action} label="Descargar" />
+            </div>
+          )}
         </main>
       </div>
-
-      {view !== "estadisticas" && view !== "historial" && floatingExportState.action && (
-        <ExportButton onExport={floatingExportState.action} floating label="Descargar" />
-      )}
 
       <ProgramEditModal
         open={modalOpen}

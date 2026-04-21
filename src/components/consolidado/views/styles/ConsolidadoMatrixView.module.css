@@ -16,7 +16,6 @@
   justify-content: flex-end;
   align-items: center;
 }
-
 .scroller {
   max-height: 65vh;
   overflow: auto;
@@ -40,7 +39,7 @@
 
 .table th {
   white-space: nowrap;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.18);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.18);
   border-right: 1px solid rgba(255, 255, 255, 0.14);
   padding: 0.72rem 0.64rem;
   text-align: left;
@@ -51,8 +50,8 @@
 
 .table td {
   white-space: nowrap;
-  border-bottom: 1px solid rgba(226, 232, 240, 0.92);
-  border-right: 1px solid rgba(148, 163, 184, 0.2);
+  border-bottom: 1px solid rgba(0, 60, 139, 0.493);
+  border-right:1px solid rgba(0, 60, 139, 0.493);
   padding: 0.6rem 0.64rem;
   color: #334155;
 }

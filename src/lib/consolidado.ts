@@ -3,8 +3,11 @@ import path from "node:path";
 
 import { createClient } from "@supabase/supabase-js";
 import * as XLSX from "xlsx";
+import { parseDurationFromValue } from "@/lib/duration";
+import { normalizeMethodology } from "@/lib/methodology";
 
 export type ConsolidadoProgram = {
+  regionalized: "Si" | "No" | "Ampliación de lugar de desarrollo";
   id: string;
   documentCount: number;
   isActive: boolean;
@@ -28,7 +31,6 @@ export type ConsolidadoProgram = {
   // Location and Format
   location: string | null;
   workday: string | null;
-  regionalized: boolean;
   level: string | null;
   academicLevel: string | null;
   modality: string | null;
@@ -39,6 +41,7 @@ export type ConsolidadoProgram = {
   deepeningCredits: number | null;
   totalAcademicCredits: number | null;
   duration: number | null;
+  durationUnit: "Semestres" | "Años" | null;
 
   // Reforms
   reformAcademicCouncil: string | null;
@@ -185,6 +188,34 @@ function toYesNo(value: unknown): boolean {
   return normalized === "si" || normalized === "sí" || normalized === "yes" || normalized === "true";
 }
 
+function normalizeRegionalized(value: unknown): "Si" | "No" | "Ampliación de lugar de desarrollo" {
+  if (typeof value === "boolean") {
+    return value ? "Si" : "No";
+  }
+
+  const normalized = String(value ?? "").trim().toLowerCase();
+  if (!normalized) return "No";
+
+  if (
+    normalized.includes("ampliacion") ||
+    normalized.includes("ampliación") ||
+    normalized.includes("ampliacion de lugar") ||
+    normalized.includes("ampliación de lugar")
+  ) {
+    return "Ampliación de lugar de desarrollo";
+  }
+
+  if (normalized === "si" || normalized === "sí" || normalized === "yes" || normalized === "true") {
+    return "Si";
+  }
+
+  if (normalized === "no" || normalized === "false") {
+    return "No";
+  }
+
+  return "No";
+}
+
 function isFuture(isoDate: string | null): boolean | null {
   if (!isoDate) return null;
   const date = new Date(isoDate);
@@ -272,6 +303,11 @@ function mapSupabaseRow(raw: Record<string, unknown>): ConsolidadoProgram | null
       .toLowerCase()
       .includes("proceso");
 
+  const parsedDuration = parseDurationFromValue(getFirst(raw, ["duration", "duracion"]));
+  const parsedDurationUnit = parseDurationFromValue(
+    getFirst(raw, ["duration_unit", "duracion_unidad", "unidad_duracion"]),
+  ).durationUnit;
+
   return {
     id: String(getFirst(raw, ["id", "program_id", "codigo_proceso", "snies", "codigo"]) ?? `${program}-${Date.now()}`),
     documentCount: 0,
@@ -290,15 +326,16 @@ function mapSupabaseRow(raw: Record<string, unknown>): ConsolidadoProgram | null
     agreementAdministrator: String(getFirst(raw, ["agreement_administrator", "administrador_convenio"]) ?? "") || null,
     location: String(getFirst(raw, ["location", "lugar_desarrollo", "sede"]) ?? "") || null,
     workday: String(getFirst(raw, ["workday", "jornada"]) ?? "") || null,
-    regionalized: toYesNo(getFirst(raw, ["regionalized", "regionalizado"])),
+    regionalized: normalizeRegionalized(getFirst(raw, ["regionalized", "regionalizado"])),
     level: String(getFirst(raw, ["level", "nivel_academico", "nivel"]) ?? "") || null,
     academicLevel: String(getFirst(raw, ["academic_level", "nivel_formacion_academico"]) ?? "") || null,
     modality: String(getFirst(raw, ["modality", "modalidad"]) ?? "") || null,
-    methodology: String(getFirst(raw, ["methodology", "metodologia"]) ?? "") || null,
+    methodology: normalizeMethodology(getFirst(raw, ["methodology", "metodologia"])),
     researchCredits: toNumber(getFirst(raw, ["research_credits", "creditos_investigacion"])) || null,
     deepeningCredits: toNumber(getFirst(raw, ["deepening_credits", "creditos_profundizacion"])) || null,
     totalAcademicCredits: toNumber(getFirst(raw, ["total_academic_credits", "total_creditos_academicos"])) || null,
-    duration: toNumber(getFirst(raw, ["duration", "duracion"])) || null,
+    duration: parsedDuration.duration,
+    durationUnit: parsedDurationUnit ?? parsedDuration.durationUnit,
     reformAcademicCouncil: String(getFirst(raw, ["reform_academic_council", "reforma_consejo_academico"]) ?? "") || null,
     reformSuperiorCouncil: String(getFirst(raw, ["reform_superior_council", "reforma_consejo_superior"]) ?? "") || null,
     reformMineducacion: String(getFirst(raw, ["reform_mineducacion", "reforma_mineducacion"]) ?? "") || null,
@@ -409,6 +446,7 @@ function mapExcelRow(ws: XLSX.WorkSheet, row: number): ConsolidadoProgram | null
   const aacDurationYears = toNumber(val("AW"));
   const aacEnd = toIsoDate(val("AZ")) ?? addMonths(aacStart, (aacDurationYears ?? 0) * 12);
   const aacImprovementHalfway = toIsoDate(val("BA")) ?? addMonths(aacStart, ((aacDurationYears ?? 0) * 12) / 2);
+  const parsedDuration = parseDurationFromValue(val("X"));
 
   return {
     id: `${processCode}-${String(val("G") ?? "")}`,
@@ -433,17 +471,18 @@ function mapExcelRow(ws: XLSX.WorkSheet, row: number): ConsolidadoProgram | null
     // Location and Format
     location: String(val("N") ?? "").trim() || null,
     workday: String(val("O") ?? "").trim() || null,
-    regionalized: toYesNo(val("P")),
+    regionalized: normalizeRegionalized(val("P")),
     level: String(val("Q") ?? "").trim() || null,
     academicLevel: String(val("R") ?? "").trim() || null,
     modality: String(val("S") ?? "").trim() || null,
-    methodology: String(val("T") ?? "").trim() || null,
+    methodology: normalizeMethodology(val("T")),
 
     // Academic Credits
     researchCredits: toNumber(val("U")) || null,
     deepeningCredits: toNumber(val("V")) || null,
     totalAcademicCredits: toNumber(val("W")) || null,
-    duration: toNumber(val("X")) || null,
+    duration: parsedDuration.duration,
+    durationUnit: parsedDuration.durationUnit,
 
     // Reforms
     reformAcademicCouncil: String(val("Y") ?? "").trim() || null,

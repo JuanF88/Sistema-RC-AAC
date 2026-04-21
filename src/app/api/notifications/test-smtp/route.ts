@@ -29,6 +29,10 @@ export async function POST(request: Request) {
         subject: "Prueba SMTP - Sistema RC AAC",
         text: `Prueba SMTP exitosa. Fecha: ${now}`,
         html: `<p>Prueba SMTP exitosa.</p><p><strong>Fecha:</strong> ${now}</p>`,
+        audit: {
+          source: "smtp-test",
+          actorUsername: session.username,
+        },
       });
     }
 

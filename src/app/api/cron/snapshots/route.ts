@@ -11,6 +11,7 @@ type SnapshotSettingsRow = {
   frequency: SnapshotFrequency;
   hour: number;
   minute: number;
+  last_run_at: string | null;
   next_run_at: string | null;
 };
 
@@ -35,7 +36,13 @@ function getAdminClient() {
   return createClient(supabaseUrl, serviceRoleKey, { auth: { persistSession: false } });
 }
 
-function buildNextRunAt(frequency: SnapshotFrequency, hour: number, minute: number, baseDate = new Date()): string {
+function buildNextRunAt(
+  frequency: SnapshotFrequency,
+  hour: number,
+  minute: number,
+  baseDate = new Date(),
+  useAnchorDate = false,
+): string {
   const intervalDays = FREQUENCY_TO_DAYS[frequency];
   const nowBogotaShifted = new Date(baseDate.getTime() + BOGOTA_OFFSET_MS);
 
@@ -44,7 +51,9 @@ function buildNextRunAt(frequency: SnapshotFrequency, hour: number, minute: numb
   const day = nowBogotaShifted.getUTCDate();
 
   const targetBogotaShifted = new Date(Date.UTC(year, month, day, hour, minute, 0, 0));
-  if (targetBogotaShifted.getTime() <= nowBogotaShifted.getTime()) {
+  if (useAnchorDate) {
+    targetBogotaShifted.setUTCDate(targetBogotaShifted.getUTCDate() + intervalDays);
+  } else if (targetBogotaShifted.getTime() <= nowBogotaShifted.getTime()) {
     targetBogotaShifted.setUTCDate(targetBogotaShifted.getUTCDate() + intervalDays);
   }
 
@@ -73,7 +82,7 @@ export async function GET(request: Request) {
     const client = getAdminClient();
     const { data, error } = await client
       .from("notifications_snapshot_settings")
-      .select("id,enabled,frequency,hour,minute,next_run_at")
+      .select("id,enabled,frequency,hour,minute,last_run_at,next_run_at")
       .eq("id", "default")
       .maybeSingle();
 
@@ -87,6 +96,7 @@ export async function GET(request: Request) {
       frequency: "biweekly",
       hour: 8,
       minute: 0,
+      last_run_at: null,
       next_run_at: null,
     }) as SnapshotSettingsRow;
 
@@ -94,7 +104,11 @@ export async function GET(request: Request) {
       return NextResponse.json({ ok: true, skipped: true, reason: "disabled" });
     }
 
-    const nextRunAt = settings.next_run_at ? new Date(settings.next_run_at) : null;
+    const expectedNextRunAt = settings.last_run_at
+      ? buildNextRunAt(settings.frequency, settings.hour, settings.minute, new Date(settings.last_run_at), true)
+      : null;
+    const nextRunAtValue = expectedNextRunAt ?? settings.next_run_at;
+    const nextRunAt = nextRunAtValue ? new Date(nextRunAtValue) : null;
     const now = new Date();
 
     if (!nextRunAt || Number.isNaN(nextRunAt.getTime())) {
@@ -107,18 +121,34 @@ export async function GET(request: Request) {
           frequency: settings.frequency,
           hour: settings.hour,
           minute: settings.minute,
+          last_run_at: settings.last_run_at,
           next_run_at: recomputed,
         }, { onConflict: "id" });
 
       return NextResponse.json({ ok: true, skipped: true, reason: "next_run_initialized", nextRunAt: recomputed });
     }
 
+    if (expectedNextRunAt && settings.next_run_at !== expectedNextRunAt) {
+      const { error: repairError } = await client
+        .from("notifications_snapshot_settings")
+        .update({
+          next_run_at: expectedNextRunAt,
+        })
+        .eq("id", "default");
+
+      if (repairError) {
+        return NextResponse.json({ ok: true, warning: repairError.message, nextRunAt: expectedNextRunAt });
+      }
+
+      return NextResponse.json({ ok: true, skipped: true, reason: "schedule_repaired", nextRunAt: expectedNextRunAt });
+    }
+
     if (now.getTime() < nextRunAt.getTime()) {
-      return NextResponse.json({ ok: true, skipped: true, reason: "not_due", nextRunAt: settings.next_run_at });
+      return NextResponse.json({ ok: true, skipped: true, reason: "not_due", nextRunAt: nextRunAtValue });
     }
 
     const exportResult = await runSnapshotExport({ trigger: "scheduled" });
-    const computedNextRunAt = buildNextRunAt(settings.frequency, settings.hour, settings.minute, now);
+    const computedNextRunAt = buildNextRunAt(settings.frequency, settings.hour, settings.minute, now, true);
 
     const { error: updateError } = await client
       .from("notifications_snapshot_settings")

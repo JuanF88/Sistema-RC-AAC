@@ -62,7 +62,13 @@ export async function POST(request: Request) {
     for (let index = 0; index < normalizedMessages.length; index += 1) {
       const message = normalizedMessages[index];
       try {
-        await sendEmail(message);
+        await sendEmail({
+          ...message,
+          audit: {
+            source: "manual-notification",
+            actorUsername: session.username,
+          },
+        });
         sent += 1;
       } catch (error) {
         const messageText = error instanceof Error ? error.message : "Unknown send error";

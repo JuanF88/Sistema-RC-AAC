@@ -43,7 +43,13 @@ function getAdminClient() {
   return createClient(supabaseUrl, serviceRoleKey, { auth: { persistSession: false } });
 }
 
-function buildNextRunAt(frequency: SnapshotFrequency, hour: number, minute: number, baseDate = new Date()): string {
+function buildNextRunAt(
+  frequency: SnapshotFrequency,
+  hour: number,
+  minute: number,
+  baseDate = new Date(),
+  useAnchorDate = false,
+): string {
   const intervalDays = FREQUENCY_TO_DAYS[frequency];
   const nowBogotaShifted = new Date(baseDate.getTime() + BOGOTA_OFFSET_MS);
 
@@ -52,7 +58,9 @@ function buildNextRunAt(frequency: SnapshotFrequency, hour: number, minute: numb
   const day = nowBogotaShifted.getUTCDate();
 
   const targetBogotaShifted = new Date(Date.UTC(year, month, day, hour, minute, 0, 0));
-  if (targetBogotaShifted.getTime() <= nowBogotaShifted.getTime()) {
+  if (useAnchorDate) {
+    targetBogotaShifted.setUTCDate(targetBogotaShifted.getUTCDate() + intervalDays);
+  } else if (targetBogotaShifted.getTime() <= nowBogotaShifted.getTime()) {
     targetBogotaShifted.setUTCDate(targetBogotaShifted.getUTCDate() + intervalDays);
   }
 
@@ -90,6 +98,38 @@ export async function GET(request: Request) {
     }
 
     const settings = normalizeSettingsRow(data as SnapshotSettingsRow | null);
+    const expectedFromLastRun = settings.last_run_at
+      ? buildNextRunAt(settings.frequency, settings.hour, settings.minute, new Date(settings.last_run_at), true)
+      : null;
+
+    const needsRebuild =
+      settings.enabled &&
+      (!data?.next_run_at || Number.isNaN(new Date(data.next_run_at).getTime()) || (expectedFromLastRun && data.next_run_at !== expectedFromLastRun));
+
+    if (needsRebuild) {
+      const nextRunAt = expectedFromLastRun ?? buildNextRunAt(settings.frequency, settings.hour, settings.minute);
+      const { data: updated, error: updateError } = await client
+        .from("notifications_snapshot_settings")
+        .upsert(
+          {
+            id: "default",
+            enabled: settings.enabled,
+            frequency: settings.frequency,
+            hour: settings.hour,
+            minute: settings.minute,
+            next_run_at: nextRunAt,
+          },
+          { onConflict: "id" },
+        )
+        .select("id,enabled,frequency,hour,minute,last_run_at,next_run_at")
+        .single();
+
+      if (updateError) {
+        return NextResponse.json({ error: updateError.message }, { status: 400 });
+      }
+
+      return NextResponse.json({ data: updated });
+    }
 
     if (!data) {
       const nextRunAt = settings.enabled
@@ -163,8 +203,9 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ error: "Hora o minutos fuera de rango." }, { status: 400 });
     }
 
+    const anchorDate = base.last_run_at ? new Date(base.last_run_at) : new Date();
     const nextRunAt = next.enabled
-      ? buildNextRunAt(next.frequency, next.hour, next.minute)
+      ? buildNextRunAt(next.frequency, next.hour, next.minute, anchorDate, Boolean(base.last_run_at))
       : null;
 
     const { data, error } = await client

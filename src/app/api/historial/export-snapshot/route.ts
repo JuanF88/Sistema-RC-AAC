@@ -2,6 +2,7 @@ import { createClient } from "@supabase/supabase-js";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import ExcelJS from "exceljs";
 import { getConsolidadoDashboard, type ConsolidadoProgram } from "@/lib/consolidado";
+import { formatDurationLabel } from "@/lib/duration";
 import { sendEmail } from "@/lib/email";
 import { buildProfessionalTemplateFromText } from "@/templates/templates.js";
 
@@ -43,6 +44,8 @@ type NotificationRecipientRow = {
 
 type AdminClient = SupabaseClient;
 
+const BOGOTA_TIME_ZONE = "America/Bogota";
+
 function sanitizeSheetName(name: string): string {
   return name.replace(/[\\/?*\[\]:]/g, " ").trim().slice(0, 31) || "Hoja";
 }
@@ -54,6 +57,31 @@ function formatDate(date: string | null | undefined): string {
   } catch {
     return date;
   }
+}
+
+function formatBogotaDateTime(value: string): string {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+
+  return new Intl.DateTimeFormat("es-CO", {
+    dateStyle: "short",
+    timeStyle: "medium",
+    timeZone: BOGOTA_TIME_ZONE,
+  }).format(date);
+}
+
+function formatRegionalizedForExport(value: unknown): string {
+  if (typeof value === "boolean") return value ? "SI" : "NO";
+
+  const normalized = String(value ?? "").trim().toLowerCase();
+  if (!normalized) return "NO";
+  if (normalized === "true" || normalized === "si" || normalized === "sí") return "SI";
+  if (normalized === "false" || normalized === "no") return "NO";
+  if (normalized.includes("ampliacion") || normalized.includes("ampliación")) {
+    return "Ampliación de lugar de desarrollo";
+  }
+
+  return String(value);
 }
 
 function normalizeLevel(program: ConsolidadoProgram): LevelBucket | null {
@@ -235,7 +263,7 @@ async function createHistorialExcel(
       agreementAdministrator: program.agreementAdministrator,
       location: program.location || "-",
       workday: program.workday,
-      regionalized: program.regionalized ? "Sí" : "No",
+      regionalized: formatRegionalizedForExport(program.regionalized),
       academicLevel: program.academicLevel,
       level: program.level,
       modality: program.modality,
@@ -243,7 +271,7 @@ async function createHistorialExcel(
       researchCredits: program.researchCredits,
       deepeningCredits: program.deepeningCredits,
       totalAcademicCredits: program.totalAcademicCredits,
-      duration: program.duration,
+      duration: formatDurationLabel(program.duration, program.durationUnit),
       reformAcademicCouncil: program.reformAcademicCouncil,
       reformSuperiorCouncil: program.reformSuperiorCouncil,
       reformMineducacion: program.reformMineducacion,
@@ -528,7 +556,7 @@ export async function runSnapshotExport(options?: SnapshotRunOptions) {
 
   if (recipients.length > 0) {
     try {
-      const formattedGeneratedAt = new Date(generatedAt).toLocaleString("es-CO");
+      const formattedGeneratedAt = formatBogotaDateTime(generatedAt);
       const subject = `Nueva instantánea BD generada - ${formattedGeneratedAt}`;
       const plainText = [
         "Se ha generado una nueva instantánea de la base de datos.",
@@ -557,6 +585,9 @@ export async function runSnapshotExport(options?: SnapshotRunOptions) {
         subject,
         text: plainText,
         html,
+        audit: {
+          source: `snapshot-${options?.trigger ?? "manual"}`,
+        },
         attachments: [
           {
             filename,

@@ -50,6 +50,13 @@
   padding: 1rem;
 }
 
+.tableExportFooter {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 0.35rem;
+  margin-bottom: 0.35rem;
+}
+
 .switchWrap {
   display: flex;
   align-items: center;

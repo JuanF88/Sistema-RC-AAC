@@ -1,3 +1,5 @@
+"use client";
+
 import ExcelJS from "exceljs";
 
 type ExportRow = Record<string, unknown>;
@@ -17,9 +19,20 @@ export interface ExportSheet {
 
 type ExcelCellValue = string | number;
 
+function formatBooleanForExcel(value: boolean | string): string {
+  if (typeof value === "string") {
+    const normalized = value.trim().toLowerCase();
+    if (normalized === "true") return "SI";
+    if (normalized === "false") return "NO";
+  }
+
+  return value ? "SI" : "NO";
+}
+
 function estimateTextWidth(value: unknown): number {
   const text = String(value ?? "");
   if (!text) return 0;
+
   return text
     .split(/\r?\n/)
     .reduce((max, line) => Math.max(max, line.trim().length), 0);
@@ -42,7 +55,12 @@ function triggerDownload(buffer: ArrayBuffer, filename: string): void {
   URL.revokeObjectURL(link.href);
 }
 
-function writeSheet(workbook: ExcelJS.Workbook, sheetTitle: string, columns: ExportColumn[], data: ExportRow[]): void {
+function writeSheet(
+  workbook: ExcelJS.Workbook,
+  sheetTitle: string,
+  columns: ExportColumn[],
+  data: ExportRow[]
+): void {
   const worksheet = workbook.addWorksheet(sanitizeSheetName(sheetTitle), {
     views: [{ state: "frozen", ySplit: 1 }],
   });
@@ -76,6 +94,7 @@ function writeSheet(workbook: ExcelJS.Workbook, sheetTitle: string, columns: Exp
 
   data.forEach((rowData, index) => {
     const rowValues: Record<string, ExcelCellValue> = {};
+
     columns.forEach((column) => {
       const rawValue = rowData[column.key];
       const formatted = column.formatter ? column.formatter(rawValue, rowData) : rawValue;
@@ -83,6 +102,11 @@ function writeSheet(workbook: ExcelJS.Workbook, sheetTitle: string, columns: Exp
       let cellValue: ExcelCellValue;
       if (formatted === null || formatted === undefined || formatted === "") {
         cellValue = "-";
+      } else if (typeof formatted === "boolean") {
+        cellValue = formatBooleanForExcel(formatted);
+      } else if (typeof formatted === "string") {
+        const normalized = formatted.trim().toLowerCase();
+        cellValue = normalized === "true" || normalized === "false" ? formatBooleanForExcel(formatted) : formatted;
       } else if (typeof formatted === "number" && Number.isFinite(formatted)) {
         cellValue = formatted;
       } else {
@@ -121,7 +145,6 @@ function writeSheet(workbook: ExcelJS.Workbook, sheetTitle: string, columns: Exp
   columns.forEach((column, index) => {
     const minWidth = column.width ?? 12;
     const fittedWidth = contentWidths.get(column.key) ?? minWidth;
-    // Cap width to keep the workbook readable when a cell has very long text.
     worksheet.getColumn(index + 1).width = Math.min(70, Math.max(minWidth, fittedWidth));
   });
 }
@@ -144,42 +167,35 @@ export async function exportToExcel(
   triggerDownload(buffer, filename);
 }
 
-/**
- * Función para formatear fechas
- */
 export function formatDate(date: string | null | undefined): string {
-  if (!date) return '';
+  if (!date) return "";
+
   try {
-    return new Date(date).toLocaleDateString('es-CO', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
+    return new Date(date).toLocaleDateString("es-CO", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
     });
   } catch {
     return date;
   }
 }
 
-/**
- * Función para formatear estado RC
- */
 export function formatRCStatus(rcEnd: string | null | undefined): string {
-  if (!rcEnd) return 'Sin definir';
+  if (!rcEnd) return "Sin definir";
+
   const endDate = new Date(rcEnd);
   const today = new Date();
-  return endDate < today ? 'Vencido' : 'Vigente';
+  return endDate < today ? "Vencido" : "Vigente";
 }
 
-/**
- * Función para formatear estado Acreditación
- */
 export function formatAccreditationStatus(
   accredited: boolean | undefined,
   acreditable: boolean | undefined,
   inProcess: boolean | undefined
 ): string {
-  if (accredited) return 'Acreditado';
-  if (inProcess) return 'En proceso AAC';
-  if (acreditable) return 'Acreditable';
-  return 'Sin Acreditación';
+  if (accredited) return "Acreditado";
+  if (inProcess) return "En proceso AAC";
+  if (acreditable) return "Acreditable";
+  return "Sin Acreditación";
 }

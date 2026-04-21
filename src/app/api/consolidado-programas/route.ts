@@ -4,6 +4,8 @@ import { createClient } from "@supabase/supabase-js";
 import type { ProgramRecord } from "@/components/consolidado/types";
 import { registerChangeAudit } from "@/lib/audit";
 import { getSessionFromRequest } from "@/lib/auth";
+import { normalizeDurationUnit } from "@/lib/duration";
+import { normalizeMethodology } from "@/lib/methodology";
 
 const FACULTY_OPTIONS = new Set([
   "Facultad de Artes",
@@ -28,6 +30,17 @@ function getAdminClient() {
   return createClient(supabaseUrl, serviceRoleKey, { auth: { persistSession: false } });
 }
 
+function normalizeRegionalized(value: unknown): "Si" | "No" | "Ampliación de lugar de desarrollo" {
+  if (typeof value === "boolean") return value ? "Si" : "No";
+
+  const normalized = String(value ?? "").trim().toLowerCase();
+  if (!normalized) return "No";
+  if (normalized === "true" || normalized === "si" || normalized === "sí") return "Si";
+  if (normalized === "false" || normalized === "no") return "No";
+  if (normalized.includes("ampliacion") || normalized.includes("ampliación")) return "Ampliación de lugar de desarrollo";
+  return "No";
+}
+
 function mapPayloadToInsert(payload: ProgramRecord) {
   return {
     process_code: payload.processCode,
@@ -45,15 +58,16 @@ function mapPayloadToInsert(payload: ProgramRecord) {
     agreement_administrator: payload.agreementAdministrator || null,
     location: payload.location || null,
     workday: payload.workday || null,
-    regionalized: payload.regionalized || false,
+    regionalized: normalizeRegionalized(payload.regionalized),
     level: payload.level || null,
     academic_level: payload.academicLevel || null,
     modality: payload.modality || null,
-    methodology: payload.methodology || null,
+    methodology: normalizeMethodology(payload.methodology),
     research_credits: payload.researchCredits || null,
     deepening_credits: payload.deepeningCredits || null,
     total_academic_credits: payload.totalAcademicCredits || null,
     duration: payload.duration || null,
+    duration_unit: payload.duration ? normalizeDurationUnit(payload.durationUnit) ?? "Semestres" : null,
     reform_academic_council: payload.reformAcademicCouncil || null,
     reform_superior_council: payload.reformSuperiorCouncil || null,
     reform_mineducacion: payload.reformMineducacion || null,
