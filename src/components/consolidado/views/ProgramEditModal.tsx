@@ -196,6 +196,27 @@ function toNullableText(value: string): string | null {
   return clean ? clean : null;
 }
 
+function parseCoordinatorEmails(value: string): string[] {
+  return value
+    .split(/[;,\n]+/)
+    .map((email) => email.trim())
+    .filter(Boolean);
+}
+
+function isValidEmail(email: string): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
+function findInvalidCoordinatorEmails(value: string): string[] {
+  return parseCoordinatorEmails(value).filter((email) => !isValidEmail(email));
+}
+
+function toNullableCoordinatorEmails(value: string): string | null {
+  const emails = parseCoordinatorEmails(value);
+  if (emails.length === 0) return null;
+  return emails.join("; ");
+}
+
 function toNullableNumber(value: string): number | null {
   const clean = value.trim();
   if (!clean) return null;
@@ -511,7 +532,7 @@ export function ProgramEditModal({
     accreditationGuideline: toNullableText(form.accreditationGuideline),
     generalObservations: toNullableText(form.generalObservations),
     programCoordinator: toNullableText(form.programCoordinator),
-    programCoordinatorEmail: toNullableText(form.programCoordinatorEmail),
+    programCoordinatorEmail: toNullableCoordinatorEmails(form.programCoordinatorEmail),
     programCoordinatorTitle: toNullableText(form.programCoordinatorTitle),
     observacionesAlertaRrc: toNullableText(form.observacionesAlertaRrc),
     observacionesAlertaAcreditados: toNullableText(form.observacionesAlertaAcreditados),
@@ -584,6 +605,15 @@ export function ProgramEditModal({
       showToast.warning(message, { position: "top-right", transition: "slideInUp", duration: 2800 });
       return;
     }
+
+    const invalidCoordinatorEmails = findInvalidCoordinatorEmails(form.programCoordinatorEmail);
+    if (invalidCoordinatorEmails.length > 0) {
+      const message = `Hay correos invalidos en coordinador: ${invalidCoordinatorEmails.join(", ")}`;
+      setError(message);
+      showToast.error(message, { position: "top-right", transition: "slideInUp", duration: 3200 });
+      return;
+    }
+
     setSaving(true);
     setError(null);
 
@@ -860,9 +890,14 @@ export function ProgramEditModal({
             <h4>Observaciones y responsable</h4>
             <div className={styles.grid}>
               <Field label="Coordinador del programa" value={form.programCoordinator} onChange={(value) => setField("programCoordinator", value)} />
-              <Field label="Correo del coordinador" type="email" value={form.programCoordinatorEmail} onChange={(value) => setField("programCoordinatorEmail", value)} />
+              <Field
+                label="Correo(s) del coordinador (separados por ; o ,)"
+                value={form.programCoordinatorEmail}
+                onChange={(value) => setField("programCoordinatorEmail", value)}
+              />
               <Field label="Titulo del coordinador" value={form.programCoordinatorTitle} onChange={(value) => setField("programCoordinatorTitle", value)} />
             </div>
+            <p className={styles.fieldNote}>Ejemplo: coord1@udla.edu.co; coord2@udla.edu.co</p>
             <TextareaField label="Lineamiento de acreditacion" value={form.accreditationGuideline} onChange={(value) => setField("accreditationGuideline", value)} />
             <TextareaField label="Observaciones generales" value={form.generalObservations} onChange={(value) => setField("generalObservations", value)} />
             <TextareaField label="Observaciones alerta RRC" value={form.observacionesAlertaRrc} onChange={(value) => setField("observacionesAlertaRrc", value)} />

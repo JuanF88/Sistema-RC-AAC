@@ -229,6 +229,12 @@
   gap: 0.25rem;
 }
 
+.fieldNote {
+  margin: 0.45rem 0 0;
+  font-size: 0.75rem;
+  color: #475569;
+}
+
 .textareaField textarea {
   min-height: 84px;
   resize: vertical;

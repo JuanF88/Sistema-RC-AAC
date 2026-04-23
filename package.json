@@ -8,7 +8,9 @@
     "start": "next start",
     "lint": "eslint",
     "sync:consolidado": "node --env-file=.env.local scripts/sync-consolidado-to-supabase.mjs",
-    "sync:visitas-pares": "node --env-file=.env.local scripts/sync-visitas-pares-to-supabase.mjs"
+    "sync:visitas-pares": "node --env-file=.env.local scripts/sync-visitas-pares-to-supabase.mjs",
+    "sync:coordinadores": "node --env-file=.env.local scripts/sync-coordinadores-to-supabase.mjs \"Base de Datos - Coordinadores.xlsx\"",
+    "sync:coordinadores:apply": "node --env-file=.env.local scripts/sync-coordinadores-to-supabase.mjs \"Base de Datos - Coordinadores.xlsx\" --apply"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.103.0",
