@@ -29,6 +29,7 @@ type SortKey =
   | "location"
   | "totalAcademicCredits"
   | "duration"
+  | "rcResolution"
   | "rcStart"
   | "rcEnd"
   | "rcSiga"
@@ -36,6 +37,7 @@ type SortKey =
   | "acreditable"
   | "accredited"
   | "inAccreditationProcess"
+  | "aacResolution"
   | "aacStart"
   | "aacEnd"
   | "aacImprovementHalfway"
@@ -86,6 +88,7 @@ const COLUMNS: ColumnDef[] = [
   { key: "location", label: "Lugar", width: 180, sortable: true, render: (program) => program.location },
   { key: "totalAcademicCredits", label: "Créditos", width: 120, sortable: true, render: (program) => program.totalAcademicCredits },
   { key: "duration", label: "Duración", width: 140, sortable: true, render: (program) => formatDurationLabel(program.duration, program.durationUnit) },
+  { key: "rcResolution", label: "Resolución\nR.C.", width: 160, sortable: true, render: (program) => program.rcResolution },
   { key: "rcStart", label: "Inicio RC", width: 140, sortable: true, render: (program) => formatDate(program.rcStart) },
   { key: "rcEnd", label: "Vencimiento RC", width: 150, sortable: true, render: (program) => formatDate(program.rcEnd) },
   { key: "rcSiga", label: "RC SIGA", width: 140, sortable: true, render: (program) => formatDate(program.rcSiga) },
@@ -93,6 +96,7 @@ const COLUMNS: ColumnDef[] = [
   { key: "acreditable", label: "Acreditable", width: 120, sortable: true, render: (program) => (program.acreditable ? "Sí" : "") },
   { key: "accredited", label: "Acreditado", width: 110, sortable: true, render: (program) => (program.accredited ? "Sí" : "") },
   { key: "inAccreditationProcess", label: "Proceso AAC", width: 130, sortable: true, render: (program) => (program.inAccreditationProcess ? "Sí" : "") },
+  { key: "aacResolution", label: "Resolución\nAcreditación A.C.", width: 180, sortable: true, render: (program) => program.aacResolution },
   { key: "aacStart", label: "Inicio AAC", width: 140, sortable: true, render: (program) => formatDate(program.aacStart) },
   { key: "aacEnd", label: "Vencimiento AAC", width: 150, sortable: true, render: (program) => formatDate(program.aacEnd) },
   { key: "aacImprovementHalfway", label: "Mitad Vigencia AAC", width: 170, sortable: true, render: (program) => formatDate(program.aacImprovementHalfway) },
