@@ -141,7 +141,7 @@ export function ConsolidadoDashboardClient({ data, currentUser, currentRole }: P
   const [settingsSection, setSettingsSection] = useState<"users" | "alerts">(
     currentRole === "administrador" ? "users" : "alerts",
   );
-  const [menuOpen, setMenuOpen] = useState(true);
+  const [menuOpen, setMenuOpen] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(data.programs[0]?.id ?? null);
   const [modalOpen, setModalOpen] = useState(false);
   const [isCreatingProgram, setIsCreatingProgram] = useState(false);
@@ -407,7 +407,6 @@ export function ConsolidadoDashboardClient({ data, currentUser, currentRole }: P
   const prevViewRef = useRef<ViewMode | null>(null);
   useEffect(() => {
     if (prevViewRef.current !== null && prevViewRef.current !== view) {
-      setFloatingExportState({ action: null });
       resetFiltersToDefault();
     }
     prevViewRef.current = view;

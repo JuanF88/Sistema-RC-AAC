@@ -1,5 +1,7 @@
 "use client";
 
+import Image from "next/image";
+
 import { formatDate } from "../utils";
 import styles from "./styles/DashboardHeader.module.css";
 import type { UserRole } from "../types";
@@ -21,10 +23,16 @@ export function DashboardHeader({ source, generatedAt, currentUser, currentRole 
 
   return (
     <section className={styles.header}>
-      <div className={styles.topBar}>
-        <p className={styles.kicker}>Universidad del Cauca</p>
+      <div className={styles.brandRow}>
+        <div className={styles.brandText}>
+          <p className={styles.kicker}>Universidad del Cauca</p>
+          <h1 className={styles.title}>Consolidado de Registro Calificado y Acreditacion</h1>
+        </div>
+        <div className={styles.logoPair}>
+          <Image src="/LogoPagina.png" alt="Logo pagina" width={128} height={128} className={styles.logo} priority />
+          <Image src="/unicauca.png" alt="Logo Universidad del Cauca" width={128} height={128} className={`${styles.logo} ${styles.logoUnicauca}`} priority />
+        </div>
       </div>
-      <h1 className={styles.title}>Consolidado de Registro Calificado y Acreditacion</h1>
       <p className={styles.meta}>
         Fuente activa: <strong>{source.toUpperCase()}</strong> · Actualizado {formatDate(generatedAt)}
       </p>

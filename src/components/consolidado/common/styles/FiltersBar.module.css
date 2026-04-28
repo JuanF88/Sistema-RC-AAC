@@ -21,9 +21,9 @@
 
 .toggleFiltersButton {
   position: relative;
-  border: 1px solid rgba(148, 163, 184, 0.28);
-  background: rgba(255, 255, 255, 0.88);
-  color: #1e293b;
+  border: 1px solid rgba(254, 150, 94, 0.24);
+  background: rgba(255, 248, 243, 0.9);
+  color: #7c2d12;
   border-radius: 999px;
   padding: 0.4rem 0.7rem;
   font-size: 0.77rem;
@@ -35,7 +35,8 @@
 }
 
 .toggleFiltersButton:hover {
-  border-color: rgba(37, 99, 235, 0.42);
+  border-color: rgba(252, 111, 91, 0.48);
+  box-shadow: 0 10px 26px -18px rgba(252, 111, 91, 0.55);
 }
 
 .toggleIconImage {
@@ -53,7 +54,7 @@
   min-width: 1.02rem;
   height: 1.02rem;
   border-radius: 999px;
-  background: #dc2626;
+  background: #fc6f5b;
   color: #ffffff;
   font-size: 0.66rem;
   font-weight: 800;
@@ -68,10 +69,10 @@
   grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
   gap: 0.55rem;
   width: 100%;
-  border: 1px solid rgba(148, 163, 184, 0.18);
+  border: 1px solid rgba(254, 150, 94, 0.18);
   border-radius: 0.95rem;
   padding: 0.58rem;
-  background: rgba(248, 250, 252, 0.72);
+  background: rgba(255, 248, 243, 0.78);
 }
 
 .actions {
@@ -87,8 +88,8 @@
 .input,
 .select {
   border-radius: 0.9rem;
-  border: 1px solid rgba(148, 163, 184, 0.22);
-  background: rgba(255, 255, 255, 0.82);
+  border: 1px solid rgba(254, 150, 94, 0.22);
+  background: rgba(255, 255, 255, 0.86);
   padding: 0.52rem 0.84rem;
   font-size: 0.8rem;
   min-height: 2.35rem;
@@ -105,8 +106,8 @@
 .multiFilterTrigger {
   list-style: none;
   border-radius: 0.9rem;
-  border: 1px solid rgba(148, 163, 184, 0.22);
-  background: rgba(255, 255, 255, 0.82);
+  border: 1px solid rgba(254, 150, 94, 0.22);
+  background: rgba(255, 255, 255, 0.86);
   padding: 0.52rem 0.84rem;
   font-size: 0.8rem;
   min-height: 2.35rem;
@@ -126,15 +127,15 @@
 
 .multiFilterTrigger::after {
   content: "▾";
-  color: #475569;
+  color: #a8553a;
   font-size: 0.78rem;
 }
 
 .multiFilter[open] .multiFilterTrigger,
 .multiFilterTrigger:hover {
-  border-color: rgba(37, 99, 235, 0.52);
+  border-color: rgba(252, 111, 91, 0.52);
   background: #ffffff;
-  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.12);
+  box-shadow: 0 0 0 4px rgba(252, 111, 91, 0.12);
   transform: translateY(-1px);
 }
 
@@ -146,24 +147,24 @@
   width: min(440px, 92vw);
   max-height: 300px;
   overflow: hidden;
-  border: 1px solid rgba(148, 163, 184, 0.24);
+  border: 1px solid rgba(254, 150, 94, 0.24);
   border-radius: 0.9rem;
   background: #ffffff;
-  box-shadow: 0 18px 34px -20px rgba(15, 23, 42, 0.5);
+  box-shadow: 0 18px 34px -20px rgba(92, 35, 21, 0.5);
 }
 
 .multiFilterActions {
   display: flex;
   gap: 0.45rem;
   padding: 0.55rem;
-  border-bottom: 1px solid rgba(226, 232, 240, 0.9);
-  background: rgba(248, 250, 252, 0.95);
+  border-bottom: 1px solid rgba(254, 206, 174, 0.72);
+  background: rgba(255, 248, 243, 0.95);
 }
 
 .multiActionBtn {
-  border: 1px solid rgba(37, 99, 235, 0.24);
-  background: rgba(239, 246, 255, 0.95);
-  color: #1d4ed8;
+  border: 1px solid rgba(254, 150, 94, 0.24);
+  background: rgba(255, 232, 220, 0.92);
+  color: #c2410c;
   border-radius: 999px;
   padding: 0.3rem 0.66rem;
   font-size: 0.74rem;
@@ -172,7 +173,7 @@
 }
 
 .multiActionBtn:hover {
-  background: rgba(219, 234, 254, 0.98);
+  background: rgba(254, 206, 174, 0.98);
 }
 
 .multiFilterList {
@@ -188,15 +189,15 @@
   padding: 0.36rem 0.4rem;
   border-radius: 0.5rem;
   font-size: 0.82rem;
-  color: #1e293b;
+  color: #5b2a1d;
 }
 
 .multiFilterItem:hover {
-  background: rgba(239, 246, 255, 0.9);
+  background: rgba(254, 206, 174, 0.2);
 }
 
 .multiFilterItem input {
-  accent-color: #2563eb;
+  accent-color: #fc6f5b;
 }
 
 .inputs > * {
@@ -204,34 +205,34 @@
 }
 
 .input::placeholder {
-  color: #94a3b8;
+  color: #b47b62;
 }
 
 .input:focus,
 .select:focus {
-  border-color: rgba(37, 99, 235, 0.52);
+  border-color: rgba(252, 111, 91, 0.52);
   background: #ffffff;
-  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.12);
+  box-shadow: 0 0 0 4px rgba(252, 111, 91, 0.12);
   transform: translateY(-1px);
 }
 
 .createButton {
-  border: 1px solid rgba(37, 99, 235, 0.24);
-  background: linear-gradient(135deg, #2563eb 0%, #0ea5e9 100%);
-  color: #ffffff;
+  border: 1px solid rgba(252, 111, 91, 0.24);
+  background: linear-gradient(135deg, #fc6f5b 0%, #fe965e 100%);
+  color: #fffaf7;
   border-radius: 999px;
   padding: 0.52rem 0.82rem;
   font-size: 0.78rem;
   font-weight: 800;
   cursor: pointer;
-  box-shadow: 0 14px 28px -18px rgba(37, 99, 235, 0.8);
+  box-shadow: 0 14px 28px -18px rgba(252, 111, 91, 0.78);
   transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease, opacity 0.2s ease;
 }
 
 .createButton:hover:not(:disabled) {
   transform: translateY(-1px);
   filter: brightness(1.03);
-  box-shadow: 0 16px 34px -18px rgba(37, 99, 235, 0.9);
+  box-shadow: 0 16px 34px -18px rgba(252, 111, 91, 0.88);
 }
 
 .createButton:disabled {

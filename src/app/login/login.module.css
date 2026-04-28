@@ -4,12 +4,41 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 1.2rem 1rem;
+  padding: 1.4rem 1rem;
   background:
-    radial-gradient(circle at 10% 12%, rgba(14, 165, 233, 0.28), transparent 30%),
-    radial-gradient(circle at 88% 82%, rgba(29, 78, 216, 0.24), transparent 34%),
-    linear-gradient(150deg, #f8fbff 0%, #eaf2ff 44%, #e2efff 100%);
+    radial-gradient(circle at 20% 18%, rgba(255, 182, 134, 0.432), transparent 32%),
+    radial-gradient(circle at 84% 22%, rgba(255, 156, 43, 0.22), transparent 30%),
+    radial-gradient(circle at 78% 82%, rgba(255, 115, 0, 0.048), transparent 34%),
+    linear-gradient(140deg, #ffd9c3 0%, #ffd9c3 42%, #ffd9c3 74%, #ffd9c3 100%);
   overflow: hidden;
+}
+
+.modelLayer {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  opacity: 0.17;
+}
+
+.modelCanvas {
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  transform: scale(1.02);
+  transition: opacity 900ms ease, transform 1100ms ease;
+}
+
+.modelCanvasVisible {
+  opacity: 1;
+  transform: scale(1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .modelCanvas {
+    transition: none;
+    transform: none;
+  }
 }
 
 .gridOverlay {
@@ -17,103 +46,135 @@
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(to right, rgba(15, 23, 42, 0.06) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(15, 23, 42, 0.06) 1px, transparent 1px);
-  background-size: 28px 28px;
-  mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.68), transparent 86%);
+    linear-gradient(to right, rgba(26, 34, 56, 0.07) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(26, 34, 56, 0.07) 1px, transparent 1px);
+  background-size: 34px 34px;
+  mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.62), transparent 92%);
+  z-index: 1;
 }
 
 .orbOne,
 .orbTwo {
-  pointer-events: none;
-  position: absolute;
-  border-radius: 999px;
-  filter: blur(2px);
+  display: none;
 }
 
-.orbOne {
-  width: 280px;
-  height: 280px;
-  left: -90px;
-  top: -70px;
-  background: radial-gradient(circle, rgba(37, 99, 235, 0.28), rgba(56, 189, 248, 0.06) 70%, transparent 74%);
-}
-
-.orbTwo {
-  width: 330px;
-  height: 330px;
-  right: -120px;
-  bottom: -110px;
-  background: radial-gradient(circle, rgba(14, 165, 233, 0.22), rgba(37, 99, 235, 0.06) 70%, transparent 75%);
-}
-
-.card {
+.loginStack {
   position: relative;
-  z-index: 1;
-  width: min(460px, 100%);
-  border-radius: 1.35rem;
-  border: 1px solid rgba(148, 163, 184, 0.24);
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(255, 255, 255, 0.9)),
-    linear-gradient(135deg, rgba(14, 165, 233, 0.05), rgba(37, 99, 235, 0.08));
-  box-shadow: 0 26px 72px -40px rgba(15, 23, 42, 0.56);
-  backdrop-filter: blur(8px);
-  padding: 1.2rem;
-  animation: loginRise 420ms ease-out;
-}
-
-.card::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  padding: 1px;
-  background: linear-gradient(135deg, rgba(14, 165, 233, 0.35), rgba(37, 99, 235, 0.24), transparent 65%);
-  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  pointer-events: none;
+  z-index: 2;
+  width: min(1080px, 100%);
+  display: grid;
+  gap: 0.9rem;
+  justify-items: center;
 }
 
 .form {
+  width: 80%;
+  height: 100%;
   display: grid;
-  gap: 0.88rem;
+  grid-template-columns: minmax(280px, 1fr) minmax(320px, 1.05fr);
+  align-items: center;
+  gap: clamp(1.2rem, 4vw, 3.4rem);
+  padding: clamp(0.9rem, 2vw, 1.4rem);
+  border-radius: 1.4rem;
+  backdrop-filter: blur(8px);
+  background:
+    linear-gradient(120deg, rgba(255, 255, 255, 0.72), rgba(254, 206, 174, 0.46)),
+    linear-gradient(310deg, rgba(252, 111, 91, 0.12), rgba(163, 163, 163, 0.12));
+  box-shadow: 0 26px 64px -40px rgba(92, 35, 21, 0.5);
+  border: 1px solid rgba(26, 34, 56, 0.16);
+  animation: loginRise 480ms ease-out;
+}
+
+.form > * {
+  position: relative;
 }
 
 .brandBlock {
-  display: flex;
-  justify-content: center;
-  margin-bottom: 0.1rem;
+  position: relative;
+  display: grid;
+  justify-items: start;
+  gap: 0.8rem;
+}
+
+.brandBlock::before {
+  content: "";
+  position: absolute;
+  inset: -2rem auto auto -2rem;
+  width: clamp(280px, 34vw, 420px);
+  height: clamp(280px, 34vw, 420px);
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.8), rgba(254, 206, 174, 0.3) 52%, transparent 72%);
+  filter: blur(2px);
+  z-index: -1;
 }
 
 .brandLogo {
-  width: 92px;
-  height: 92px;
+  width: clamp(260px, 34vw, 380px);
+  height: clamp(260px, 34vw, 380px);
   object-fit: contain;
-  filter: drop-shadow(0 10px 16px rgba(15, 23, 42, 0.18));
+  
+  /* 1. Mejora el renderizado de píxeles */
+  image-rendering: -webkit-optimize-contrast; /* Para Chrome/Safari */
+  image-rendering: crisp-edges;               /* Para Firefox */
+  
+  /* 2. Evita el desenfoque por transformaciones */
+  transform: translateZ(0);
+  will-change: transform; 
+
+  /* 3. Asegura que el navegador use la máxima calidad al escalar */
+  image-rendering: auto; 
+}
+.brandCopy {
+  display: grid;
+  justify-items: start;
+  gap: 0.42rem;
+  text-align: left;
+}
+
+.brandEyebrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  padding: 0.28rem 0.72rem;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #1a2238;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(26, 34, 56, 0.18);
 }
 
 .title {
   margin: 0;
-  font-size: clamp(1.25rem, 4vw, 1.58rem);
-  font-weight: 800;
-  line-height: 1.14;
-  color: #091426;
-  text-align: center;
+  font-family: var(--font-title), sans-serif;
+  font-size: clamp(1.7rem, 4vw, 2.25rem);
+  font-weight: 700;
+  line-height: 1.02;
+  color: #1a2238;
+  text-align: left;
 }
 
 .subtitle {
   margin: 0;
-  font-size: 0.9rem;
-  color: #3f4f67;
-  max-width: 34ch;
+  font-size: 0.95rem;
+  line-height: 1.45;
+  color: rgba(26, 34, 56, 0.84);
+  max-width: 44ch;
+}
+
+.fieldsShell {
+  display: grid;
+  gap: 0.92rem;
+  padding-left: clamp(0rem, 2vw, 1.2rem);
+  border-left: 1px solid rgba(26, 34, 56, 0.24);
 }
 
 .label {
   display: grid;
   gap: 0.38rem;
-  color: #1c2c44;
+  color: #1a2238;
   font-size: 0.78rem;
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -121,14 +182,15 @@
 }
 
 .input {
-  border: 1px solid rgba(148, 163, 184, 0.38);
-  border-radius: 0.72rem;
-  padding: 0.66rem 0.74rem;
-  font-size: 0.92rem;
+  border: 1px solid rgba(175, 0, 58, 0.26);
+  border-radius: 999px;
+  padding: 0.78rem 0.82rem;
+  font-size: 0.95rem;
   font-weight: 600;
-  color: #0f172a;
-  background: rgba(255, 255, 255, 0.96);
-  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+  color: #1a2238;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.75);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease, background 0.2s ease;
 }
 
 .passwordField {
@@ -161,8 +223,8 @@
 }
 
 .eyeButton:hover {
-  background: rgba(37, 99, 235, 0.14);
-  color: #1e3a8a;
+  background: rgba(26, 34, 56, 0.12);
+  color: #1a2238;
 }
 
 .eyeIcon {
@@ -172,39 +234,44 @@
 
 .input:focus {
   outline: none;
-  border-color: #2563eb;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.18);
+  border-color: #fc6f5b;
+  box-shadow: 0 0 0 4px rgba(252, 111, 91, 0.2);
   transform: translateY(-1px);
+  background: #fffdfb;
 }
 
 .error {
   margin: 0;
-  color: #991b1b;
+  grid-column: 2 / 3;
+  color: #7c2d12;
   font-weight: 800;
   font-size: 0.84rem;
-  background: rgba(254, 226, 226, 0.8);
-  border: 1px solid rgba(248, 113, 113, 0.3);
-  border-radius: 0.62rem;
-  padding: 0.5rem 0.58rem;
+  background: rgba(255, 255, 255, 0.82);
+  border: 1px solid rgba(252, 111, 91, 0.26);
+  border-radius: 0.82rem;
+  padding: 0.62rem 0.68rem;
 }
 
 .submit {
-  border: 1px solid #1d4ed8;
-  border-radius: 0.78rem;
-  padding: 0.7rem 0.88rem;
-  font-size: 0.92rem;
+  justify-self: center;
+  margin-top: 20px;
+  min-width: min(320px, 100%);
+  border: 1px solid rgba(26, 34, 56, 0.24);
+  border-radius: 999px;
+  padding: 0.82rem 0.98rem;
+  font-size: 0.95rem;
   font-weight: 800;
-  color: #eff6ff;
-  background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 45%, #0284c7 100%);
-  box-shadow: 0 18px 30px -22px rgba(29, 78, 216, 0.95);
+  color: #fffdfb;
+  background: linear-gradient(120deg, #fc6f5b 0%, #fe965e 58%, #fc6f5b 100%);
+  box-shadow: 0 20px 34px -22px rgba(92, 35, 21, 0.62);
   cursor: pointer;
   transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
 }
 
 .submit:hover:not(:disabled) {
   transform: translateY(-1px);
-  filter: brightness(1.03);
-  box-shadow: 0 22px 36px -24px rgba(29, 78, 216, 0.95);
+  filter: saturate(1.04) brightness(1.04);
+  box-shadow: 0 24px 40px -24px rgba(92, 35, 21, 0.7);
 }
 
 .submit:disabled {
@@ -212,13 +279,66 @@
   cursor: not-allowed;
 }
 
+.copyright {
+  margin: 0;
+  text-align: center;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: rgba(26, 34, 56, 0.74);
+  text-transform: uppercase;
+}
+.copy{
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background-color: #fe965e;
+    text-align: center;
+}
 @keyframes loginRise {
   from {
     opacity: 0;
-    transform: translateY(12px) scale(0.98);
+    transform: translateY(16px) scale(0.97);
   }
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
+  }
+}
+
+@media (max-width: 560px) {
+  .form {
+    grid-template-columns: 1fr;
+    gap: 1.2rem;
+    padding: 0.65rem;
+  }
+
+  .brandLogo {
+    width: 210px;
+    height: 210px;
+  }
+
+  .fieldsShell {
+    padding-left: 0;
+    border-left: 0;
+  }
+
+  .brandBlock,
+  .brandCopy {
+    justify-items: center;
+    text-align: center;
+  }
+
+  .title {
+    font-size: clamp(1.45rem, 7vw, 1.9rem);
+    text-align: center;
+  }
+
+  .error,
+  .submit {
+    grid-column: 1;
+    justify-self: stretch;
+    min-width: 0;
   }
 }

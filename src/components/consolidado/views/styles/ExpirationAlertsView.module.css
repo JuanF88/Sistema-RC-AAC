@@ -6,9 +6,9 @@
 }
 
 .recipientsPanel {
-  border: 1px solid rgba(148, 163, 184, 0.22);
+  border: 1px solid rgba(254, 150, 94, 0.22);
   border-radius: 0.9rem;
-  background: rgba(248, 250, 252, 0.7);
+  background: rgba(255, 250, 247, 0.82);
   padding: 0.9rem;
   display: flex;
   flex-direction: column;
@@ -25,19 +25,19 @@
 .recipientsTitle {
   margin: 0;
   font-size: 0.94rem;
-  color: #0f172a;
+  color: #5b2a1d;
 }
 
 .recipientsHint {
   margin: 0;
-  color: #475569;
+  color: #7c4a36;
   font-size: 0.8rem;
 }
 
 .refreshRecipientsButton {
-  border: 1px solid rgba(37, 99, 235, 0.26);
-  background: rgba(239, 246, 255, 0.9);
-  color: #1d4ed8;
+  border: 1px solid rgba(254, 150, 94, 0.26);
+  background: rgba(255, 238, 227, 0.9);
+  color: #c2410c;
   border-radius: 999px;
   padding: 0.34rem 0.72rem;
   font-size: 0.75rem;
@@ -53,15 +53,15 @@
 
 .recipientInput {
   border-radius: 0.65rem;
-  border: 1px solid rgba(148, 163, 184, 0.28);
+  border: 1px solid rgba(254, 150, 94, 0.28);
   padding: 0.45rem 0.6rem;
   font-size: 0.8rem;
-  color: #0f172a;
+  color: #5b2a1d;
 }
 
 .addRecipientButton {
-  border: 1px solid rgba(5, 150, 105, 0.34);
-  background: linear-gradient(135deg, #059669, #10b981);
+  border: 1px solid #fc6f5b;
+  background: linear-gradient(135deg, #fc6f5b, #fe965e);
   color: #ffffff;
   border-radius: 0.65rem;
   padding: 0.45rem 0.85rem;
@@ -79,14 +79,14 @@
 .recipientsEmpty {
   margin: 0;
   font-size: 0.8rem;
-  color: #64748b;
+  color: #7c4a36;
 }
 
 .recipientItem {
-  border: 1px solid rgba(148, 163, 184, 0.22);
+  border: 1px solid rgba(254, 150, 94, 0.22);
   border-radius: 0.72rem;
   padding: 0.48rem 0.6rem;
-  background: rgba(255, 255, 255, 0.92);
+  background: rgba(255, 250, 247, 0.92);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -101,12 +101,12 @@
 
 .recipientInfo strong {
   font-size: 0.8rem;
-  color: #0f172a;
+  color: #5b2a1d;
 }
 
 .recipientInfo span {
   font-size: 0.77rem;
-  color: #475569;
+  color: #7c4a36;
   word-break: break-all;
 }
 
@@ -126,21 +126,21 @@
 }
 
 .activateButton {
-  border: 1px solid rgba(5, 150, 105, 0.34);
-  background: rgba(236, 253, 245, 0.92);
-  color: #047857;
+  border: 1px solid rgba(254, 150, 94, 0.34);
+  background: rgba(255, 244, 237, 0.92);
+  color: #7c2d12;
 }
 
 .deactivateButton {
-  border: 1px solid rgba(217, 119, 6, 0.32);
-  background: rgba(254, 243, 199, 0.92);
-  color: #b45309;
+  border: 1px solid rgba(252, 111, 91, 0.28);
+  background: rgba(254, 206, 174, 0.92);
+  color: #7c2d12;
 }
 
 .deleteRecipientButton {
-  border: 1px solid rgba(220, 38, 38, 0.3);
-  background: rgba(254, 226, 226, 0.9);
-  color: #b91c1c;
+  border: 1px solid rgba(252, 111, 91, 0.3);
+  background: rgba(255, 238, 227, 0.9);
+  color: #7c2d12;
 }
 
 .header {
@@ -156,9 +156,9 @@
 }
 
 .switchButton {
-  border: 1px solid rgba(148, 163, 184, 0.28);
-  background: rgba(255, 255, 255, 0.78);
-  color: #1e293b;
+  border: 1px solid rgba(254, 150, 94, 0.28);
+  background: rgba(255, 250, 247, 0.86);
+  color: #7c4a36;
   border-radius: 999px;
   padding: 0.48rem 0.9rem;
   font-size: 0.84rem;
@@ -169,19 +169,19 @@
 
 .switchButton:hover {
   transform: translateY(-1px);
-  border-color: rgba(37, 99, 235, 0.36);
+  border-color: rgba(252, 111, 91, 0.36);
 }
 
 .switchButtonActive {
-  background: linear-gradient(135deg, #2563eb, #0ea5e9);
+  background: linear-gradient(135deg, #fc6f5b, #fe965e);
   color: #ffffff;
-  border-color: rgba(37, 99, 235, 0.52);
-  box-shadow: 0 14px 28px -18px rgba(37, 99, 235, 0.8);
+  border-color: rgba(252, 111, 91, 0.52);
+  box-shadow: 0 14px 28px -18px rgba(252, 111, 91, 0.8);
 }
 
 .mailButton {
-  border: 1px solid rgba(5, 150, 105, 0.34);
-  background: linear-gradient(135deg, #059669, #10b981);
+  border: 1px solid #fc6f5b;
+  background: linear-gradient(135deg, #fc6f5b, #fe965e);
   color: #ffffff;
   border-radius: 999px;
   padding: 0.48rem 0.9rem;
@@ -193,7 +193,7 @@
 
 .mailButton:hover {
   transform: translateY(-1px);
-  box-shadow: 0 14px 28px -18px rgba(5, 150, 105, 0.8);
+  box-shadow: 0 14px 28px -18px rgba(252, 111, 91, 0.8);
 }
 
 .mailButton:disabled {
@@ -224,7 +224,7 @@
   position: sticky;
   top: 0;
   z-index: 1;
-  background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 48%, #0ea5e9 100%);
+  background: linear-gradient(135deg, #eb633d 0%, #fc6f5b 48%, #fe965e 100%);
 }
 
 .table thead th {
@@ -235,17 +235,17 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: #e2e8f0;
+  color: #fffaf7;
   background: transparent;
-  border-right: 1px solid rgba(0, 60, 139, 0.493);
+  border-right: 1px solid rgba(122, 55, 34, 0.34);
   white-space: nowrap;
 }
 
 .table td {
   padding: 0.55rem 0.72rem;
-  border-bottom: 1px solid rgba(0, 60, 139, 0.493);
-  border-right: 1px solid rgba(0, 60, 139, 0.493);
-  color: #334155;
+  border-bottom: 1px solid rgba(122, 55, 34, 0.34);
+  border-right: 1px solid rgba(122, 55, 34, 0.34);
+  color: #5b2a1d;
   white-space: normal;
   overflow-wrap: anywhere;
 }
@@ -260,12 +260,12 @@
 }
 
 .table tbody tr:nth-child(even) {
-  background: rgba(239, 246, 255, 0.72);
+  background: rgba(255, 244, 237, 0.72);
 }
 
 .programCell {
   font-weight: 700;
-  color: #0f172a;
+  color: #5b2a1d;
 }
 
 .observationsCell {
@@ -279,9 +279,9 @@
   min-height: 2.8rem;
   resize: none;
   border-radius: 0.7rem;
-  border: 1px solid rgba(148, 163, 184, 0.24);
+  border: 1px solid rgba(254, 150, 94, 0.24);
   background: rgba(255, 255, 255, 0.9);
-  color: #0f172a;
+  color: #5b2a1d;
   padding: 0.35rem 0.55rem;
   font: inherit;
   font-size: 0.78rem;
@@ -292,15 +292,15 @@
 }
 
 .observationInput:focus {
-  border-color: rgba(37, 99, 235, 0.52);
-  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.12);
+  border-color: #fc6f5b;
+  box-shadow: 0 0 0 4px rgba(252, 111, 91, 0.12);
 }
 
 .saveHint {
   display: inline-block;
   margin-top: 0.25rem;
   font-size: 0.72rem;
-  color: #64748b;
+  color: #7c4a36;
 }
 
 .badge {
@@ -316,27 +316,27 @@
 }
 
 .badgeDanger {
-  color: #991b1b;
-  background: #fee2e2;
-  border-color: #fca5a5;
+  color: #7c2d12;
+  background: #feceae;
+  border-color: #fe965e;
 }
 
 .badgeWarning {
-  color: #92400e;
-  background: #fef3c7;
-  border-color: #fcd34d;
+  color: #7c2d12;
+  background: #ffe4d5;
+  border-color: #fe965e;
 }
 
 .badgeOk {
-  color: #166534;
-  background: #dcfce7;
-  border-color: #86efac;
+  color: #7c2d12;
+  background: #fff1e8;
+  border-color: #fe965e;
 }
 
 .badgeNeutral {
-  color: #334155;
-  background: #e2e8f0;
-  border-color: #cbd5e1;
+  color: #7c4a36;
+  background: #fff7f2;
+  border-color: rgba(254, 150, 94, 0.22);
 }
 
 @media (max-height: 820px) {

@@ -94,8 +94,8 @@ export function SidebarMenu({ menuOpen, view, items, currentUser, currentRole, c
     <aside className={`${styles.sidebar} ${menuOpen ? styles.sidebarOpen : styles.sidebarClosed}`}>
       <div className={styles.topRow}>
         <div className={`${styles.brandWrap} ${menuOpen ? styles.brandVisible : styles.brandHidden}`}>
-          <Image src="/programa.png" alt="SIAC Unicauca" width={26} height={26} className={styles.brandIcon} priority />
-          <p className={styles.brand}>SIAC Unicauca</p>
+          <Image src="/luna.png" alt="ÓRBITA Unicauca" width={26} height={26} className={styles.brandIcon} priority />
+          <p className={styles.brand}>ÓRBITA Unicauca</p>
         </div>
         <button type="button" onClick={onToggle} className={styles.menuToggle} aria-label="Abrir o cerrar menu">
           <span />

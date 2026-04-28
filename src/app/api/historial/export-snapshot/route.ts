@@ -145,7 +145,7 @@ async function createHistorialExcel(
   client: AdminClient,
 ): Promise<ArrayBuffer> {
   const workbook = new ExcelJS.Workbook();
-  workbook.creator = "Sistema RC AAC";
+  workbook.creator = "Sistema Órbita";
   workbook.created = new Date();
 
   const docsByProgram = new Map<string, ConsolidadoDocumentoRow[]>();

@@ -26,7 +26,7 @@ export async function POST(request: Request) {
       const now = new Date().toLocaleString("es-CO");
       await sendEmail({
         to: targetEmail,
-        subject: "Prueba SMTP - Sistema RC AAC",
+        subject: "Prueba SMTP - Sistema Órbita",
         text: `Prueba SMTP exitosa. Fecha: ${now}`,
         html: `<p>Prueba SMTP exitosa.</p><p><strong>Fecha:</strong> ${now}</p>`,
         audit: {

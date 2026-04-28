@@ -1,8 +1,14 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f3f7ff;
-  --foreground: #12203a;
+  --theme-peach: #feceae;
+  --theme-coral: #fc6f5b;
+  --theme-orange: #fe965e;
+  --background: #fff6ef;
+  --foreground: #5b2a1d;
+  --theme-surface: rgba(255, 248, 243, 0.9);
+  --theme-border: rgba(254, 150, 94, 0.22);
+  --theme-gradient: linear-gradient(135deg, var(--theme-coral) 0%, var(--theme-orange) 52%, var(--theme-peach) 100%);
 }
 
 @theme inline {
@@ -14,7 +20,10 @@
 
 body {
   min-height: 100vh;
-  background: #f3f7ff;
+  background:
+    radial-gradient(circle at top left, rgba(252, 111, 91, 0.12), transparent 28%),
+    radial-gradient(circle at bottom right, rgba(254, 150, 94, 0.1), transparent 24%),
+    var(--background);
   color: var(--foreground);
   font-family: var(--font-title), "Segoe UI", sans-serif;
   text-rendering: optimizeLegibility;
@@ -22,8 +31,8 @@ body {
 }
 
 ::selection {
-  background: rgba(37, 99, 235, 0.2);
-  color: #0f172a;
+  background: rgba(252, 111, 91, 0.22);
+  color: #4b1f14;
 }
 
 * {
@@ -39,7 +48,7 @@ body::-webkit-scrollbar {
 }
 
 body::-webkit-scrollbar-track {
-  background: rgba(15, 23, 42, 0.05);
+  background: rgba(92, 35, 21, 0.06);
 }
 
 

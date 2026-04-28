@@ -255,6 +255,7 @@ function addMonthsToIsoDate(isoDate: string, months: number): string | null {
   return formatIsoDate(baseDate);
 }
 
+
 function calculateRcDerivedDates(rcStart: string, rcDurationYears: string) {
   const cleanStart = rcStart.trim();
   const years = Number(rcDurationYears.trim());
@@ -273,6 +274,31 @@ function calculateRcDerivedDates(rcStart: string, rcDurationYears: string) {
   if (!rcSiga || !rcMineducacion) return null;
 
   return { rcEnd, rcSiga, rcMineducacion };
+}
+
+// --- AAC auto-calculation logic ---
+function calculateAacDerivedDates(aacStart: string, aacDurationYears: string) {
+  const cleanStart = aacStart.trim();
+  const years = Number(aacDurationYears.trim());
+
+  if (!cleanStart || !Number.isFinite(years) || years <= 0) {
+    return null;
+  }
+
+  const durationInMonths = Math.round(years * 12);
+  const aacEnd = addMonthsToIsoDate(cleanStart, durationInMonths);
+  if (!aacEnd) return null;
+
+  // Entrega CGCAI: 14 meses antes del vencimiento
+  const aacCgcaiDelivery = addMonthsToIsoDate(aacEnd, -14);
+  // Radicación Mineducacion: 12 meses antes del vencimiento
+  const aacMineducacionFiling = addMonthsToIsoDate(aacEnd, -12);
+  // Mitad vigencia AAC: mitad de la duración
+  const aacImprovementHalfway = addMonthsToIsoDate(cleanStart, durationInMonths / 2);
+
+  if (!aacCgcaiDelivery || !aacMineducacionFiling || !aacImprovementHalfway) return null;
+
+  return { aacEnd, aacCgcaiDelivery, aacMineducacionFiling, aacImprovementHalfway };
 }
 
 function mapProgramToForm(program: ProgramRecord | null): FormState {
@@ -439,6 +465,8 @@ export function ProgramEditModal({
     }
   }, [open, program]);
 
+
+  // Auto-calculate RC dates
   useEffect(() => {
     if (!open) return;
 
@@ -462,6 +490,33 @@ export function ProgramEditModal({
       };
     });
   }, [open, form.rcStart, form.rcDurationYears]);
+
+  // Auto-calculate AAC dates
+  useEffect(() => {
+    if (!open) return;
+
+    setForm((previous) => {
+      const computed = calculateAacDerivedDates(previous.aacStart, previous.aacDurationYears);
+      if (!computed) return previous;
+
+      if (
+        previous.aacEnd === computed.aacEnd &&
+        previous.aacCgcaiDelivery === computed.aacCgcaiDelivery &&
+        previous.aacMineducacionFiling === computed.aacMineducacionFiling &&
+        previous.aacImprovementHalfway === computed.aacImprovementHalfway
+      ) {
+        return previous;
+      }
+
+      return {
+        ...previous,
+        aacEnd: computed.aacEnd,
+        aacCgcaiDelivery: computed.aacCgcaiDelivery,
+        aacMineducacionFiling: computed.aacMineducacionFiling,
+        aacImprovementHalfway: computed.aacImprovementHalfway,
+      };
+    });
+  }, [open, form.aacStart, form.aacDurationYears]);
 
   if (!open || !program) return null;
 

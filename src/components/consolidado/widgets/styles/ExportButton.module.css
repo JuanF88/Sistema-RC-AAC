@@ -16,27 +16,27 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.5rem 1rem;
-  background: linear-gradient(135deg, #16a34a, #22c55e);
-  color: white;
+  background: linear-gradient(135deg, #fc6f5b, #fe965e);
+  color: #fffaf7;
   border: none;
   border-radius: 0.6rem;
   font-size: 0.85rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: 0 4px 12px rgba(22, 163, 74, 0.28);
+  box-shadow: 0 4px 12px rgba(252, 111, 91, 0.28);
 }
 
 .floating .exportButton {
   min-height: 3.2rem;
   padding: 0.75rem 1.05rem;
   border-radius: 999px;
-  box-shadow: 0 14px 34px -14px rgba(22, 163, 74, 0.85);
+  box-shadow: 0 14px 34px -14px rgba(252, 111, 91, 0.85);
 }
 
 .exportButton:hover:not(.disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(22, 163, 74, 0.4);
+  box-shadow: 0 6px 16px rgba(252, 111, 91, 0.4);
 }
 
 .exportButton:active:not(.disabled) {

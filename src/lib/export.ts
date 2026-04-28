@@ -157,7 +157,7 @@ export async function exportToExcel(
   additionalSheets: ExportSheet[] = []
 ): Promise<void> {
   const workbook = new ExcelJS.Workbook();
-  workbook.creator = "Sistema RC AAC";
+  workbook.creator = "Sistema Órbita";
   workbook.created = new Date();
 
   writeSheet(workbook, sheetTitle, columns, data);

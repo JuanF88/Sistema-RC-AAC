@@ -5,12 +5,12 @@
   top: 0;
   height: 100vh;
   flex-shrink: 0;
-  border-right: 1px solid rgba(148, 163, 184, 0.2);
+  border-right: 1px solid rgba(254, 150, 94, 0.18);
   background:
-    radial-gradient(circle at top, rgba(96, 165, 250, 0.22), transparent 42%),
-    linear-gradient(180deg, rgba(10, 17, 35, 0.96) 0%, rgba(15, 23, 42, 0.98) 100%);
-  color: #eff6ff;
-  box-shadow: 16px 0 40px rgba(15, 23, 42, 0.26);
+    radial-gradient(circle at top, rgba(254, 206, 174, 0.2), transparent 42%),
+    linear-gradient(180deg, rgba(179, 69, 39, 0.96) 0%, rgba(92, 35, 21, 0.98) 100%);
+  color: #fffaf7;
+  box-shadow: 16px 0 40px rgba(92, 35, 21, 0.26);
   transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
   overflow: hidden;
   display: flex;
@@ -52,9 +52,7 @@
 }
 
 .brandIcon {
-  border-radius: 0.45rem;
   object-fit: cover;
-  box-shadow: 0 6px 14px rgba(15, 23, 42, 0.35);
   flex-shrink: 0;
 }
 
@@ -62,7 +60,7 @@
   font-size: 0.78rem;
   letter-spacing: 0.08em;
   font-weight: 800;
-  color: rgba(226, 232, 240, 0.88);
+  color: rgba(255, 250, 247, 0.9);
   text-transform: none;
   white-space: nowrap;
 }
@@ -79,8 +77,8 @@
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
-  border: 1px solid rgba(148, 163, 184, 0.22);
-  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(254, 206, 174, 0.28);
+  background: rgba(255, 244, 237, 0.08);
   padding: 0.55rem;
   border-radius: 0.8rem;
   cursor: pointer;
@@ -89,8 +87,8 @@
 }
 
 .menuToggle:hover {
-  background: rgba(255, 255, 255, 0.14);
-  border-color: rgba(147, 197, 253, 0.35);
+  background: rgba(254, 206, 174, 0.16);
+  border-color: rgba(254, 150, 94, 0.3);
   transform: translateY(-1px);
   
 }
@@ -98,7 +96,7 @@
 .menuToggle span {
   width: 1rem;
   height: 2px;
-  background: #dbeafe;
+  background: #feceae;
   transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -118,19 +116,19 @@
 }
 
 .nav::-webkit-scrollbar-thumb {
-  background: rgba(147, 197, 253, 0.3);
+  background: rgba(254, 206, 174, 0.3);
   border-radius: 0.25rem;
 }
 
 .nav::-webkit-scrollbar-thumb:hover {
-  background: rgba(147, 197, 253, 0.5);
+  background: rgba(252, 111, 91, 0.5);
 }
 
 .navItem {
   width: 100%;
   border: 1px solid transparent;
   background: transparent;
-  color: rgba(226, 232, 240, 0.92);
+  color: rgba(255, 250, 247, 0.92);
   border-radius: 1rem;
   text-align: left;
   padding: 0.8rem 0.8rem;
@@ -145,13 +143,13 @@
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18);
   transform: translateX(2px);
   border: 1px solid transparent;
-  border-color: white;
+  border-color: rgba(254, 206, 174, 0.5);
 }
 
 .navItemActive {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(226, 232, 240, 0.86));
-  color: #0f172a;
-  box-shadow: 0 20px 32px -22px rgba(15, 23, 42, 0.55);
+  background: linear-gradient(135deg, rgba(255, 244, 237, 0.96), rgba(254, 206, 174, 0.88));
+  color: #7c2d12;
+  box-shadow: 0 20px 32px -22px rgba(92, 35, 21, 0.55);
 }
 
 .menuIcon {
@@ -161,7 +159,7 @@
   width: 1.7rem;
   height: 1.7rem;
   flex-shrink: 0;
-  color: rgba(186, 230, 253, 0.95);
+  color: rgba(254, 206, 174, 0.95);
   transition: color 0.3s ease, transform 0.3s ease;
 }
 
@@ -171,7 +169,7 @@
 }
 
 .navItemActive .menuIcon {
-  color: #1d4ed8;
+  color: #fc6f5b;
   transform: scale(1.02);
 }
 
@@ -205,7 +203,7 @@
 .subtitle {
   display: block;
   font-size: 0.74rem;
-  color: rgba(191, 219, 254, 0.86);
+  color: rgba(254, 206, 174, 0.9);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -213,11 +211,11 @@
 }
 
 .subtitleActive {
-  color: #475569;
+  color: #8a3c2b;
 }
 
 .footer {
-  border-top: 1px solid rgba(148, 163, 184, 0.2);
+  border-top: 1px solid rgba(254, 150, 94, 0.18);
   padding: 0.65rem 0.72rem 0.8rem;
   display: flex;
   flex-direction: column;
@@ -233,8 +231,8 @@
 .settingsButton {
   width: 2.4rem;
   height: 2.4rem;
-  border: 1px solid rgba(147, 197, 253, 0.35);
-  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(254, 206, 174, 0.35);
+  background: rgba(255, 244, 237, 0.08);
   border-radius: 0.7rem;
   display: inline-flex;
   align-items: center;
@@ -244,20 +242,20 @@
 }
 
 .settingsButton:hover {
-  background: rgba(191, 219, 254, 0.2);
-  border-color: rgba(191, 219, 254, 0.6);
+  background: rgba(254, 206, 174, 0.2);
+  border-color: rgba(254, 150, 94, 0.55);
   transform: translateY(-1px);
 }
 
 .settingsButtonActive {
-  background: rgba(37, 99, 235, 0.4);
-  border-color: rgba(191, 219, 254, 0.8);
+  background: rgba(252, 111, 91, 0.42);
+  border-color: rgba(254, 206, 174, 0.8);
 }
 
 .settingsIcon {
   font-size: 1.1rem;
   line-height: 1;
-  color: #e2e8f0;
+  color: #fffaf7;
 }
 
 .footerUser {
@@ -271,7 +269,7 @@
 .footerUserName {
   font-size: 0.76rem;
   font-weight: 700;
-  color: #e2e8f0;
+  color: #fffaf7;
   text-align: center;
   white-space: nowrap;
   overflow: hidden;
@@ -280,7 +278,7 @@
 
 .footerUserRole {
   font-size: 0.7rem;
-  color: #93c5fd;
+  color: #feceae;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   font-weight: 700;
@@ -289,9 +287,9 @@
 
 .logoutButton {
   width: 100%;
-  border: 1px solid rgba(248, 113, 113, 0.35);
-  background: rgba(127, 29, 29, 0.15);
-  color: #fee2e2;
+  border: 1px solid rgba(254, 150, 94, 0.28);
+  background: rgba(254, 206, 174, 0.14);
+  color: #fffaf7;
   border-radius: 0.9rem;
   text-align: left;
   padding: 0.72rem 0.8rem;
@@ -302,7 +300,7 @@
 }
 
 .logoutButton:hover {
-  background: rgba(220, 38, 38, 0.22);
-  border-color: rgba(248, 113, 113, 0.62);
+  background: rgba(252, 111, 91, 0.24);
+  border-color: rgba(254, 150, 94, 0.6);
   transform: translateX(2px);
 }

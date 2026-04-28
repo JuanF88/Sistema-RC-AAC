@@ -3,7 +3,7 @@
   flex-direction: column;
   gap: 2rem;
   padding: 2rem;
-  background-color: #f9fafb;
+  background-color: #fff7f2;
   min-height: 100%;
 }
 
@@ -12,7 +12,7 @@
   justify-content: space-between;
   align-items: center;
   gap: 2rem;
-  background: white;
+  background: #fffaf7;
   border-radius: 1rem;
   padding: 2rem;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
@@ -25,33 +25,33 @@
 .title {
   font-size: 1.75rem;
   font-weight: 800;
-  color: #1f2937;
+  color: #5b2a1d;
   margin: 0 0 0.5rem 0;
 }
 
 .subtitle {
   font-size: 0.95rem;
-  color: #6b7280;
+  color: #7c4a36;
   margin: 0;
 }
 
 .exportButton {
   padding: 0.75rem 1.5rem;
-  background: linear-gradient(135deg, #3b82f6 0%, #0ea5e9 100%);
-  color: white;
+  background: linear-gradient(135deg, #fc6f5b 0%, #fe965e 100%);
+  color: #fffaf7;
   border: none;
   border-radius: 0.75rem;
   font-weight: 700;
   font-size: 0.95rem;
   cursor: pointer;
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+  box-shadow: 0 4px 12px rgba(252, 111, 91, 0.3);
   transition: all 0.3s ease;
   white-space: nowrap;
 }
 
 .exportButton:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4);
+  box-shadow: 0 6px 16px rgba(252, 111, 91, 0.4);
 }
 
 .exportButton:disabled {
@@ -63,8 +63,8 @@
   display: inline-flex;
   gap: 0.5rem;
   padding: 0.35rem;
-  background: #ffffff;
-  border: 1px solid #dbe7f5;
+  background: #fffaf7;
+  border: 1px solid rgba(254, 150, 94, 0.18);
   border-radius: 999px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
   width: fit-content;
@@ -73,7 +73,7 @@
 .tabButton {
   border: none;
   background: transparent;
-  color: #4b5563;
+  color: #7c4a36;
   font-weight: 700;
   font-size: 0.9rem;
   border-radius: 999px;
@@ -83,17 +83,17 @@
 }
 
 .tabButtonActive {
-  background: linear-gradient(135deg, #3b82f6 0%, #0ea5e9 100%);
+  background: linear-gradient(135deg, #fc6f5b 0%, #fe965e 100%);
   color: #ffffff;
-  box-shadow: 0 10px 20px rgba(59, 130, 246, 0.24);
+  box-shadow: 0 10px 20px rgba(252, 111, 91, 0.24);
 }
 
 .scheduleCard {
-  background: white;
+  background: #fffaf7;
   border-radius: 1rem;
   padding: 1.5rem 2rem;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  border: 1px solid #e5eef9;
+  border: 1px solid rgba(254, 150, 94, 0.18);
 }
 
 .scheduleCardHeader {
@@ -116,12 +116,12 @@
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: #6b7280;
+  color: #7c4a36;
   margin-bottom: 0.35rem;
 }
 
 .scheduleValue {
-  color: #1f2937;
+  color: #5b2a1d;
   font-size: 0.98rem;
   font-weight: 700;
   word-break: break-word;
@@ -138,13 +138,13 @@
 }
 
 .scheduleBadgeActive {
-  background: #dcfce7;
-  color: #166534;
+  background: #feceae;
+  color: #7c2d12;
 }
 
 .scheduleBadgeDisabled {
-  background: #f3f4f6;
-  color: #6b7280;
+  background: #fff1e8;
+  color: #7c4a36;
 }
 
 .emailHistorySection {
@@ -156,8 +156,8 @@
   align-items: center;
   border-radius: 999px;
   padding: 0.35rem 0.75rem;
-  background: #e7f0ff;
-  color: #0f3d78;
+  background: #feceae;
+  color: #7c2d12;
   font-weight: 700;
   font-size: 0.8rem;
   white-space: nowrap;
@@ -169,10 +169,10 @@
 }
 
 .emailCard {
-  border: 1px solid #dbe7f5;
+  border: 1px solid rgba(254, 150, 94, 0.18);
   border-radius: 0.9rem;
   padding: 1rem 1.1rem;
-  background: linear-gradient(135deg, #ffffff 0%, #f8faff 100%);
+  background: linear-gradient(135deg, #fffaf7 0%, #fff1e8 100%);
   display: grid;
   gap: 0.9rem;
 }
@@ -186,14 +186,14 @@
 
 .emailSubject {
   margin: 0 0 0.35rem;
-  color: #1f2937;
+  color: #5b2a1d;
   font-size: 1rem;
   font-weight: 800;
 }
 
 .emailMeta {
   margin: 0;
-  color: #64748b;
+  color: #7c4a36;
   font-size: 0.84rem;
 }
 
@@ -224,10 +224,10 @@
   flex-direction: column;
   gap: 0.5rem;
   padding: 1.75rem;
-  background: linear-gradient(135deg, #ffffff 0%, #f8faff 100%);
-  border: none;
+  background: linear-gradient(135deg, #fffaf7 0%, #fff1e8 100%);
+  border: 1px solid rgba(254, 150, 94, 0.18);
   border-radius: 0.75rem;
-  box-shadow: 0 4px 16px rgba(59, 130, 246, 0.12), 0 2px 8px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 16px rgba(252, 111, 91, 0.12), 0 2px 8px rgba(0, 0, 0, 0.08);
   transition: all 0.3s ease;
   position: relative;
   overflow: hidden;
@@ -240,17 +240,17 @@
   left: 0;
   right: 0;
   height: 3px;
-  background: linear-gradient(90deg, #3b82f6 0%, #0ea5e9 100%);
+  background: linear-gradient(90deg, #fc6f5b 0%, #fe965e 100%);
 }
 
 .statCard:hover {
-  box-shadow: 0 8px 24px rgba(59, 130, 246, 0.2), 0 4px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 8px 24px rgba(252, 111, 91, 0.2), 0 4px 12px rgba(0, 0, 0, 0.1);
   transform: translateY(-3px);
 }
 
 .statLabel {
   font-size: 0.8rem;
-  color: #6b7280;
+  color: #7c4a36;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -259,11 +259,11 @@
 .statValue {
   font-size: 1.75rem;
   font-weight: 800;
-  color: #2563eb;
+  color: #c2410c;
 }
 
 .snapshotsSection {
-  background: white;
+  background: #fffaf7;
   border-radius: 1rem;
   padding: 2rem;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
@@ -272,13 +272,13 @@
 .sectionTitle {
   font-size: 1.25rem;
   font-weight: 700;
-  color: #1f2937;
+  color: #5b2a1d;
   margin: 0 0 1.5rem 0;
 }
 
 .emptyState {
   text-align: center;
-  color: #9ca3af;
+  color: #7c4a36;
   font-size: 0.95rem;
   padding: 2rem;
   background: #f9fafb;
@@ -315,15 +315,15 @@
   align-items: center;
   gap: 1rem;
   padding: 1.25rem;
-  background: linear-gradient(135deg, #f0f9ff 0%, #f9faff 100%);
-  border: 1px solid #dbeafe;
+  background: linear-gradient(135deg, #fffaf7 0%, #fff1e8 100%);
+  border: 1px solid rgba(254, 150, 94, 0.18);
   border-radius: 0.75rem;
   transition: all 0.2s ease;
 }
 
 .snapshotCard:hover {
-  border-color: #3b82f6;
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+  border-color: #fc6f5b;
+  box-shadow: 0 4px 12px rgba(252, 111, 91, 0.15);
 }
 
 .snapshotInfo {
@@ -334,21 +334,21 @@
 .snapshotName {
   font-size: 0.95rem;
   font-weight: 600;
-  color: #1f2937;
+  color: #5b2a1d;
   margin: 0 0 0.5rem 0;
   word-break: break-word;
 }
 
 .snapshotDate {
   font-size: 0.85rem;
-  color: #9ca3af;
+  color: #7c4a36;
   margin: 0;
 }
 
 .downloadLink {
   padding: 0.5rem 1rem;
-  background-color: #3b82f6;
-  color: white;
+  background-color: #fc6f5b;
+  color: #fffaf7;
   text-decoration: none;
   border-radius: 0.5rem;
   font-weight: 600;
@@ -359,16 +359,16 @@
 }
 
 .downloadLink:hover {
-  background-color: #2563eb;
+  background-color: #fe965e;
   transform: translateY(-1px);
 }
 
 .infoBox {
-  background: linear-gradient(135deg, #eff6ff 0%, #f0f9ff 100%);
-  border: 1px solid #bfdbfe;
+  background: linear-gradient(135deg, #fff4ed 0%, #feceae 100%);
+  border: 1px solid rgba(254, 150, 94, 0.28);
   border-radius: 0.75rem;
   padding: 1.5rem;
-  color: #1e40af;
+  color: #7c2d12;
 }
 
 .infoBox h4 {

@@ -13,6 +13,8 @@
     "sync:coordinadores:apply": "node --env-file=.env.local scripts/sync-coordinadores-to-supabase.mjs \"Base de Datos - Coordinadores.xlsx\" --apply"
   },
   "dependencies": {
+    "@react-three/drei": "^10.7.7",
+    "@react-three/fiber": "^9.6.0",
     "@supabase/supabase-js": "^2.103.0",
     "@types/nodemailer": "^8.0.0",
     "exceljs": "^4.4.0",
@@ -25,6 +27,7 @@
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "recharts": "^3.8.1",
+    "three": "^0.184.0",
     "xlsx": "^0.18.5"
   },
   "devDependencies": {

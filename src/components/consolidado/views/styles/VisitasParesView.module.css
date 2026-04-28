@@ -44,10 +44,10 @@
 
 .field input,
 .field select {
-  border: 1px solid rgba(148, 163, 184, 0.35);
+  border: 1px solid rgba(254, 150, 94, 0.35);
   border-radius: 0.55rem;
   background: #ffffff;
-  color: #0f172a;
+  color: #5b2a1d;
   font-size: 0.84rem;
   padding: 0.5rem 0.6rem;
 }
@@ -55,8 +55,8 @@
 .field input:focus,
 .field select:focus {
   outline: none;
-  border-color: #2563eb;
-  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+  border-color: #fc6f5b;
+  box-shadow: 0 0 0 2px rgba(252, 111, 91, 0.15);
 }
 
 .actionsRow {
@@ -67,8 +67,8 @@
 }
 
 .saveBtn {
-  border: 1px solid #1d4ed8;
-  background: linear-gradient(135deg, #2563eb, #0ea5e9);
+  border: 1px solid #fc6f5b;
+  background: linear-gradient(135deg, #fc6f5b, #fe965e);
   color: #ffffff;
   border-radius: 0.6rem;
   padding: 0.45rem 0.8rem;
@@ -84,7 +84,7 @@
 
 .message {
   font-size: 0.8rem;
-  color: #0f766e;
+  color: #a8553a;
   font-weight: 600;
 }
 
@@ -92,7 +92,7 @@
   overflow: auto;
   max-height: 62vh;
   border-radius: 1rem;
-  border: 1px solid rgba(148, 163, 184, 0.22);
+  border: 1px solid rgba(254, 150, 94, 0.22);
 }
 
 .table {
@@ -106,7 +106,7 @@
   position: sticky;
   top: 0;
   z-index: 2;
-  background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 46%, #0ea5e9 100%);
+  background: linear-gradient(135deg, #eb633d 0%, #fc6f5b 46%, #fe965e 100%);
 }
 
 .table th {
@@ -115,18 +115,18 @@
   font-size: 0.72rem;
   text-transform: uppercase;
   letter-spacing: 0.07em;
-  color: #e2e8f0;
-  border-bottom: 1px solid rgba(0, 60, 139, 0.493);
-  border-right: 1px solid rgba(0, 60, 139, 0.493);
+  color: #fffaf7;
+  border-bottom: 1px solid rgba(122, 55, 34, 0.34);
+  border-right: 1px solid rgba(122, 55, 34, 0.34);
 }
 
 .table td {
   padding: 0.6rem 0.64rem;
-  border-bottom: 1px solid rgba(0, 60, 139, 0.493);
-  border-right: 1px solid rgba(0, 60, 139, 0.493);
+  border-bottom: 1px solid rgba(122, 55, 34, 0.34);
+  border-right: 1px solid rgba(122, 55, 34, 0.34);
   font-size: 0.85rem;
   line-height: 1.35;
-  color: #334155;
+  color: #5b2a1d;
 }
 
 .table th:last-child,
@@ -139,11 +139,11 @@
 }
 
 .table tbody tr:nth-child(even) {
-  background: rgba(239, 246, 255, 0.72);
+  background: rgba(255, 244, 237, 0.72);
 }
 
 .table tbody tr:hover {
-  background: rgba(224, 242, 254, 0.9);
+  background: rgba(254, 206, 174, 0.24);
 }
 
 .programCell {
