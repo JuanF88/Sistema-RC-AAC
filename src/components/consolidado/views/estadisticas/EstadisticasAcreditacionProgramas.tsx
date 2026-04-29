@@ -66,9 +66,9 @@ export function EstadisticasAcreditacionProgramas({ programs }: Props) {
     }
 
     const vigencyData = [
-      { name: "AAC Vigente", y: activeAac, color: "#22c55e" },
-      { name: "AAC Extendida", y: expiredAac, color: "#ef4444" },
-      { name: "Sin Fecha AAC", y: noDateAac, color: "#94a3b8" },
+      { name: "AAC Vigente", y: activeAac, color: "#ffb978" },
+      { name: "AAC Extendida", y: expiredAac, color: "#ff7637" },
+      { name: "Sin Fecha AAC", y: noDateAac, color: "#ff4545bd" },
     ].filter((item) => item.y > 0);
 
     const facultyData = Object.entries(byFaculty)
@@ -150,7 +150,7 @@ export function EstadisticasAcreditacionProgramas({ programs }: Props) {
     yAxis: { title: { text: "Cantidad de Programas" } },
     tooltip: { shared: false },
     plotOptions: { column: { dataLabels: { enabled: true } } },
-    series: [{ name: "Acreditados", type: "column", data: stats.facultyData.map((item) => item.y), color: "#3b82f6" }],
+    series: [{ name: "Acreditados", type: "column", data: stats.facultyData.map((item) => item.y), color: "#f6953b" }],
   } as Highcharts.Options;
 
   const horizonChartOptions = {

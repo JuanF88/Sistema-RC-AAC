@@ -148,6 +148,7 @@ export function EstadisticasRegistroCalificado({ programs }: Props) {
   const levelDistributionOptions = {
     credits: { enabled: false },
     chart: { type: "pie", style: { fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif" } },
+    colors: ["#fc6f5b", "#fe965e", "#feceae", "#f59e0b", "#c2410c", "#7c4a36"],
     title: { text: "Distribución por Tipo de Nivel", style: { fontSize: "16px", fontWeight: "bold" } },
     tooltip: { pointFormat: "<b>{point.name}</b>: {point.y} ({point.percentage:.1f}%)" },
     plotOptions: { pie: { allowPointSelect: true, cursor: "pointer", dataLabels: { enabled: true, format: "{point.name}: {point.y}" } } },
@@ -157,6 +158,7 @@ export function EstadisticasRegistroCalificado({ programs }: Props) {
   const pregradoPosgradoOptions = {
     credits: { enabled: false },
     chart: { type: "column", style: { fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif" } },
+    colors: ["#fc6f5b", "#fe965e"],
     title: { text: "Pregrado vs Posgrado", style: { fontSize: "16px", fontWeight: "bold" } },
     xAxis: { categories: stats.pregradoPosgradoData.map((d) => d.name), title: { text: "" } },
     yAxis: { title: { text: "Cantidad de Programas" } },
@@ -186,6 +188,7 @@ export function EstadisticasRegistroCalificado({ programs }: Props) {
   const facultyDistributionOptions = {
     credits: { enabled: false },
     chart: { type: "column", style: { fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif" } },
+    colors: ["#fc6f5b", "#fe965e"],
     title: { text: "Distribución por Facultad", style: { fontSize: "16px", fontWeight: "bold" } },
     xAxis: { categories: stats.facultyData.map((f) => f.name), title: { text: "Facultad" } },
     yAxis: { title: { text: "Cantidad de Programas" } },
