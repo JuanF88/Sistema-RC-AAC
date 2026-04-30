@@ -242,7 +242,7 @@ async function createHistorialExcel(
   // Style header
   bdSheet.getRow(1).eachCell((cell) => {
     cell.font = { bold: true, color: { argb: "FFFFFFFF" }, size: 10 };
-    cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF2563EB" } };
+    cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFA21F" } };
     cell.alignment = { vertical: "middle", horizontal: "center", wrapText: true };
     cell.border = getCellBorder();
   });
@@ -334,7 +334,7 @@ async function createHistorialExcel(
   documentsSheet.columns = documentsColumns;
   documentsSheet.getRow(1).eachCell((cell) => {
     cell.font = { bold: true, color: { argb: "FFFFFFFF" }, size: 10 };
-    cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF2563EB" } };
+    cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFA21F" } };
     cell.alignment = { vertical: "middle", horizontal: "center", wrapText: true };
     cell.border = getCellBorder();
   });
@@ -358,7 +358,7 @@ async function createHistorialExcel(
           hyperlink: doc.url.trim(),
         };
         row.getCell("documentLink").font = {
-          color: { argb: "FF2563EB" },
+          color: { argb: "FFA21F" },
           underline: true,
         };
       }
@@ -396,7 +396,7 @@ async function createHistorialExcel(
   registroSheet.columns = registroColumns.map((col) => ({ key: col.key, header: col.header, width: 18 }));
   registroSheet.getRow(1).eachCell((cell) => {
     cell.font = { bold: true, color: { argb: "FFFFFFFF" }, size: 10 };
-    cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF2563EB" } };
+    cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFA21F" } };
     cell.alignment = { vertical: "middle", horizontal: "center", wrapText: true };
     cell.border = getCellBorder();
   });
@@ -444,7 +444,7 @@ async function createHistorialExcel(
   acreditacionSheet.columns = acreditacionColumns.map((col) => ({ key: col.key, header: col.header, width: 18 }));
   acreditacionSheet.getRow(1).eachCell((cell) => {
     cell.font = { bold: true, color: { argb: "FFFFFFFF" }, size: 10 };
-    cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF2563EB" } };
+    cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFA21F" } };
     cell.alignment = { vertical: "middle", horizontal: "center", wrapText: true };
     cell.border = getCellBorder();
   });
@@ -485,7 +485,7 @@ async function createHistorialExcel(
   rcSheet.columns = rcColumns.map((col) => ({ key: col.key, header: col.header, width: 18 }));
   rcSheet.getRow(1).eachCell((cell) => {
     cell.font = { bold: true, color: { argb: "FFFFFFFF" }, size: 10 };
-    cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF2563EB" } };
+    cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF9F22" } };
     cell.alignment = { vertical: "middle", horizontal: "center", wrapText: true };
     cell.border = getCellBorder();
   });
