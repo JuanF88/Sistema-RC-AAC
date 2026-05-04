@@ -296,7 +296,27 @@ export function AcreditacionProgramasView({ rows, groupingMode, onExportReady, o
   const [savingEstadoId, setSavingEstadoId] = useState<string | null>(null);
   const [savingProcessId, setSavingProcessId] = useState<string | null>(null);
   const [historicalRows, setHistoricalRows] = useState<HistoricalGoalRow[]>(HISTORICAL_GOALS);
-  const derivedHistoricalRows = useMemo(() => buildDerivedHistoricalRows(historicalRows), [historicalRows]);
+  const lastGroupingRef = useRef<AcreditacionGroupingMode | null>(null);
+  const liveAccreditedCount = useMemo(() => rows.filter((program) => program.accredited).length, [rows]);
+  const liveAccreditableCount = useMemo(() => rows.filter((program) => program.acreditable).length, [rows]);
+  const hydratedHistoricalRows = useMemo(
+    () =>
+      historicalRows.map((row) => {
+        if (/corte\s+a\s+2026/i.test(row.label)) {
+          return {
+            ...row,
+            acreditados: String(liveAccreditedCount),
+            acreditables: String(liveAccreditableCount),
+          };
+        }
+        return row;
+      }),
+    [historicalRows, liveAccreditedCount, liveAccreditableCount],
+  );
+  const derivedHistoricalRows = useMemo(
+    () => buildDerivedHistoricalRows(hydratedHistoricalRows),
+    [hydratedHistoricalRows],
+  );
 
   const resolveProgramSteps = useCallback(
     (program: ProgramRecord) => {
@@ -310,25 +330,16 @@ export function AcreditacionProgramasView({ rows, groupingMode, onExportReady, o
 
   const resolveProgramSegment = useCallback(
     (program: ProgramRecord): AcreditacionSegment | null => {
-      const explicitSteps = stepsByProgramId[program.id];
-      const selectedEstado = explicitSteps ? deriveEstadoFromSteps(explicitSteps) : estadoByProgramId[program.id];
-
-      // Hard rule: programs that are neither accreditable nor accredited
-      // must not appear in accreditation segments.
+      // La verdad para los conteos se toma del flag `accredited`.
       if (!program.acreditable && !program.accredited) {
         return null;
-      }
-
-      // Explicit estado selection has priority over boolean flags from payload.
-      if (selectedEstado) {
-        return selectedEstado === "Acreditado 2026" ? "acreditados" : "acreditables";
       }
 
       if (program.accredited) return "acreditados";
       if (program.acreditable) return "acreditables";
       return null;
     },
-    [estadoByProgramId, stepsByProgramId],
+    [],
   );
 
   const acreditadosRows = useMemo(
@@ -455,7 +466,6 @@ export function AcreditacionProgramasView({ rows, groupingMode, onExportReady, o
   }
 
   useEffect(() => {
-    if (groupingMode === "historicos") return;
     void loadEstados();
   }, [groupingMode, rows]);
 
@@ -669,12 +679,16 @@ export function AcreditacionProgramasView({ rows, groupingMode, onExportReady, o
   }
 
   useEffect(() => {
-    void loadHistoricalRows();
-  }, []);
+    const wasHistoricos = lastGroupingRef.current === "historicos";
+    if (groupingMode === "historicos" && !wasHistoricos) {
+      void loadHistoricalRows();
+    }
+    lastGroupingRef.current = groupingMode;
+  });
 
   const historicalKpis = useMemo(() => {
     const targetPrograms = 49;
-    const currentAccredited = acreditadosRows.length;
+    const currentAccredited = rows.filter((program) => program.accredited).length;
     const compliance = targetPrograms > 0 ? Math.round((currentAccredited / targetPrograms) * 100) : 0;
     const gap = Math.max(targetPrograms - currentAccredited, 0);
 
