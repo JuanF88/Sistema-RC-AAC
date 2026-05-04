@@ -26,7 +26,7 @@ export function DashboardHeader({ source, generatedAt, currentUser, currentRole 
       <div className={styles.brandRow}>
         <div className={styles.brandText}>
           <p className={styles.kicker}>Universidad del Cauca</p>
-          <h1 className={styles.title}>Consolidado de Registro Calificado y Acreditacion</h1>
+          <h1 className={styles.title}>Consolidado de Registro Calificado y Acreditación</h1>
         </div>
         <div className={styles.logoPair}>
           <Image src="/LogoPagina.png" alt="Logo pagina" width={128} height={128} className={styles.logo} priority />
