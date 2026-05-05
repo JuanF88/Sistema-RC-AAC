@@ -8,9 +8,11 @@ import styles from "./login.module.css";
 
 type ModelProps = {
   speed?: number;
+  position?: [number, number, number];
+  scale?: number;
 };
 
-function RotatingModel({ speed = 0.25 }: ModelProps) {
+function RotatingModel({ speed = 0.25, position = [-3.65, -1.1, -0.15], scale = 2.15 }: ModelProps) {
   const groupRef = useRef<Group>(null);
   const { scene } = useGLTF("/result.glb");
 
@@ -23,7 +25,7 @@ function RotatingModel({ speed = 0.25 }: ModelProps) {
   });
 
   return (
-    <group ref={groupRef} position={[-3.65, -1.1, -0.15]} scale={2.15}>
+    <group ref={groupRef} position={position} scale={scale}>
       <Center>
         <primitive object={clonedScene} />
       </Center>
@@ -31,7 +33,13 @@ function RotatingModel({ speed = 0.25 }: ModelProps) {
   );
 }
 
-export function LoginModelBackground() {
+type BackgroundProps = {
+  modelPosition?: [number, number, number];
+  modelScale?: number;
+  speed?: number;
+};
+
+export function LoginModelBackground({ modelPosition, modelScale, speed }: BackgroundProps) {
   const { active, progress } = useProgress();
   const [isVisible, setIsVisible] = useState(false);
 
@@ -57,7 +65,7 @@ export function LoginModelBackground() {
         <directionalLight position={[2.5, 3.2, 2]} intensity={2.2} />
         <directionalLight position={[-3, -1.4, -2]} intensity={1.2} />
         <Suspense fallback={null}>
-          <RotatingModel />
+          <RotatingModel speed={speed} position={modelPosition} scale={modelScale} />
         </Suspense>
       </Canvas>
     </div>

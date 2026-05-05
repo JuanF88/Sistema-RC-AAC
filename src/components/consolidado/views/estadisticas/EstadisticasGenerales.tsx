@@ -216,7 +216,6 @@ export function EstadisticasGenerales({ programs }: Props) {
       </div>
 
       <div ref={containerRef} className={styles.estadisticasContent}>
-        <h2 className={styles.sectionTitle}>Estadísticas Generales</h2>
 
         <div className={styles.statsGrid}>
           <div className={styles.statCard}>

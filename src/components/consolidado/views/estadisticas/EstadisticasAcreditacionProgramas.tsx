@@ -191,7 +191,6 @@ export function EstadisticasAcreditacionProgramas({ programs }: Props) {
       </div>
 
       <div ref={containerRef} className={styles.estadisticasContent}>
-        <h2 className={styles.sectionTitle}>Acreditación de Programas - Análisis</h2>
 
         <div className={styles.statsGrid}>
           <div className={styles.statCard}>

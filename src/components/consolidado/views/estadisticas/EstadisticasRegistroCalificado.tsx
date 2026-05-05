@@ -168,7 +168,8 @@ export function EstadisticasRegistroCalificado({ programs }: Props) {
       formatter: function (this: any) {
         const point = this.point as Highcharts.Point & { options?: { percentage?: string } };
         const percentage = point.options?.percentage ?? "0.0";
-        return `<b>${point.name ?? this.x}</b><br/>Porcentaje: ${percentage}%`;
+        const count = typeof this.y === "number" ? this.y : 0;
+        return `<b>${point.name ?? this.x}</b><br/>Programas: ${count}<br/>Porcentaje: ${percentage}%`;
       },
     },
     plotOptions: {
@@ -177,7 +178,9 @@ export function EstadisticasRegistroCalificado({ programs }: Props) {
           enabled: true,
           formatter: function (this: any) {
             const pointOptions = this.point.options as { percentage?: string } | undefined;
-            return `${pointOptions?.percentage ?? "0.0"}%`;
+            const percentage = pointOptions?.percentage ?? "0.0";
+            const count = typeof this.y === "number" ? this.y : 0;
+            return `${count} (${percentage}%)`;
           },
         },
       },
@@ -209,7 +212,6 @@ export function EstadisticasRegistroCalificado({ programs }: Props) {
       </div>
 
       <div ref={containerRef} className={styles.estadisticasContent}>
-        <h2 className={styles.sectionTitle}>Registro Calificado - Análisis</h2>
 
         <div className={styles.chartsRow}>
           <div className={styles.chartCard} id="chart-level-distribution">
