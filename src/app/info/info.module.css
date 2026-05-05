@@ -1,0 +1,98 @@
+.page {
+  min-height: 100dvh;
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 18% 18%, rgba(255, 182, 134, 0.35), transparent 32%),
+    radial-gradient(circle at 82% 16%, rgba(255, 156, 43, 0.2), transparent 30%),
+    radial-gradient(circle at 72% 86%, rgba(255, 115, 0, 0.06), transparent 34%),
+    linear-gradient(140deg, #ffd9c3 0%, #ffe6d5 48%, #ffd9c3 100%);
+}
+
+.modelLayer {
+  opacity: 0.38;
+}
+
+.content {
+  position: relative;
+  z-index: 2;
+  min-height: 100dvh;
+  padding: 1.5rem;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  gap: 1rem;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 1rem 1.25rem;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.18);
+  border: 1px solid rgba(254, 150, 94, 0.25);
+  box-shadow: 0 18px 32px -26px rgba(92, 35, 21, 0.45);
+}
+
+.headerLogos {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.headerLogo {
+  width: 56px;
+  height: 56px;
+  object-fit: contain;
+}
+
+.headerText {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.headerKicker {
+  margin: 0;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: rgba(92, 35, 21, 0.8);
+  font-weight: 700;
+}
+
+.headerTitle {
+  margin: 0;
+  font-size: clamp(1.6rem, 2vw, 2.2rem);
+  color: #5b2a1d;
+}
+
+.headerSubtitle {
+  margin: 0;
+  color: #7c4a36;
+  font-size: 0.95rem;
+}
+
+.panel {
+  flex: 1;
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 24px 40px -32px rgba(92, 35, 21, 0.45);
+  background-color: rgba(255, 247, 242, 0.72);
+}
+
+@media (max-width: 900px) {
+  .content {
+    padding: 1rem;
+  }
+
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 600px) {
+  .content {
+    padding: 0.75rem;
+  }
+}
