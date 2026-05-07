@@ -31,10 +31,17 @@ export default function RootLayout({
 }>) {
   return (
     <html
-      lang="en"
+      lang="es"
       className={`${titleFont.variable} ${monoFont.variable} h-full antialiased`}
+      translate="no"
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <head>
+        <meta name="google" content="notranslate" />
+        <meta httpEquiv="Content-Language" content="es" />
+      </head>
+      <body className="min-h-full flex flex-col" translate="no">
+        {children}
+      </body>
     </html>
   );
 }
