@@ -30,6 +30,7 @@ export function InfoPublicClient({ programs, source, generatedAt }: Props) {
           generatedAt={generatedAt}
           currentUser="Publico"
           currentRole="visualizador"
+          variant="public"
         />
         <div className={styles.panel}>
           <EstadisticasView programs={programs} subTab={subTab} onSubTabChange={setSubTab} />

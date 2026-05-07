@@ -13,6 +13,35 @@
   padding: 1.55rem 1.6rem;
 }
 
+.headerPublic .brandRow {
+  flex-wrap: wrap;
+  gap: 0.9rem;
+}
+
+.headerPublic .logoPair {
+  position: static;
+  transform: none;
+  margin-left: auto;
+}
+
+.headerPublic .brandText {
+  padding-right: 0;
+}
+
+.headerPublic .meta {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+@media (max-width: 700px) {
+  .headerPublic .logoPair {
+    width: 100%;
+    justify-content: flex-start;
+    margin-left: 0;
+  }
+}
+
 .header::before,
 .header::after {
   content: none;

@@ -11,6 +11,7 @@ type Props = {
   generatedAt: string;
   currentUser: string;
   currentRole: UserRole;
+  variant?: "public";
 };
 
 const ROLE_LABELS: Record<UserRole, string> = {
@@ -19,10 +20,11 @@ const ROLE_LABELS: Record<UserRole, string> = {
   visualizador: "Visualizador",
 };
 
-export function DashboardHeader({ source, generatedAt, currentUser, currentRole }: Props) {
+export function DashboardHeader({ source, generatedAt, currentUser, currentRole, variant }: Props) {
+  const headerClassName = variant === "public" ? `${styles.header} ${styles.headerPublic}` : styles.header;
 
   return (
-    <section className={styles.header}>
+    <section className={headerClassName}>
       <div className={styles.brandRow}>
         <div className={styles.brandText}>
           <p className={styles.kicker}>Universidad del Cauca</p>
