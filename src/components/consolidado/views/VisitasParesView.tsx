@@ -31,10 +31,19 @@ type NewVisitaForm = {
 
 const MODALITY_OPTIONS = ["Presencial", "Virtual", "Hibrida"] as const;
 
+function parseLocalDate(value: string): Date | null {
+  if (!value) return null;
+  const parts = value.split("-").map((item) => Number(item));
+  if (parts.length !== 3 || parts.some((item) => !Number.isFinite(item))) return null;
+  const [year, month, day] = parts;
+  if (!year || !month || !day) return null;
+  return new Date(year, month - 1, day);
+}
+
 function formatDate(value: string) {
   if (!value) return "-";
-  const dt = new Date(value);
-  if (Number.isNaN(dt.getTime())) return "-";
+  const dt = parseLocalDate(value);
+  if (!dt || Number.isNaN(dt.getTime())) return "-";
   return dt.toLocaleDateString("es-CO");
 }
 
@@ -120,7 +129,9 @@ export function VisitasParesView({ programs, onExportReady }: Props) {
       return;
     }
 
-    if (new Date(form.endDate).getTime() < new Date(form.startDate).getTime()) {
+    const startDate = parseLocalDate(form.startDate);
+    const endDate = parseLocalDate(form.endDate);
+    if (startDate && endDate && endDate.getTime() < startDate.getTime()) {
       const msg = "La fecha final no puede ser anterior a la fecha de inicio.";
       setMessage(msg);
       showToast.warning(msg, { position: "top-right", transition: "slideInUp", duration: 2800 });

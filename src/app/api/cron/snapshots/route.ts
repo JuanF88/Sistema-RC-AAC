@@ -76,11 +76,9 @@ function isAuthorizedCronRequest(request: Request): boolean {
 export async function GET(request: Request) {
   try {
     if (!isAuthorizedCronRequest(request)) {
-      console.warn("[cron][snapshots] unauthorized");
       return NextResponse.json({ error: "Unauthorized cron invocation." }, { status: 401 });
     }
 
-    console.log("[cron][snapshots] authorized");
     const client = getAdminClient();
     const { data, error } = await client
       .from("notifications_snapshot_settings")
@@ -89,7 +87,6 @@ export async function GET(request: Request) {
       .maybeSingle();
 
     if (error) {
-      console.error("[cron][snapshots] settings_error", error.message);
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
 
@@ -104,7 +101,6 @@ export async function GET(request: Request) {
     }) as SnapshotSettingsRow;
 
     if (!settings.enabled) {
-      console.log("[cron][snapshots] skipped", { reason: "disabled" });
       return NextResponse.json({ ok: true, skipped: true, reason: "disabled" });
     }
 
@@ -116,7 +112,6 @@ export async function GET(request: Request) {
     const now = new Date();
 
     if (!nextRunAt || Number.isNaN(nextRunAt.getTime())) {
-      console.log("[cron][snapshots] next_run_invalid", { nextRunAt: nextRunAtValue });
       const recomputed = buildNextRunAt(settings.frequency, settings.hour, settings.minute, now);
       await client
         .from("notifications_snapshot_settings")
@@ -130,15 +125,10 @@ export async function GET(request: Request) {
           next_run_at: recomputed,
         }, { onConflict: "id" });
 
-      console.log("[cron][snapshots] next_run_initialized", { nextRunAt: recomputed });
       return NextResponse.json({ ok: true, skipped: true, reason: "next_run_initialized", nextRunAt: recomputed });
     }
 
     if (expectedNextRunAt && settings.next_run_at !== expectedNextRunAt) {
-      console.log("[cron][snapshots] schedule_mismatch", {
-        stored: settings.next_run_at,
-        expected: expectedNextRunAt,
-      });
       const { error: repairError } = await client
         .from("notifications_snapshot_settings")
         .update({
@@ -150,16 +140,13 @@ export async function GET(request: Request) {
         return NextResponse.json({ ok: true, warning: repairError.message, nextRunAt: expectedNextRunAt });
       }
 
-      console.log("[cron][snapshots] schedule_repaired", { nextRunAt: expectedNextRunAt });
       return NextResponse.json({ ok: true, skipped: true, reason: "schedule_repaired", nextRunAt: expectedNextRunAt });
     }
 
     if (now.getTime() < nextRunAt.getTime()) {
-      console.log("[cron][snapshots] skipped", { reason: "not_due", nextRunAt: nextRunAtValue });
       return NextResponse.json({ ok: true, skipped: true, reason: "not_due", nextRunAt: nextRunAtValue });
     }
 
-    console.log("[cron][snapshots] running_export", { trigger: "scheduled" });
     const exportResult = await runSnapshotExport({ trigger: "scheduled" });
     const computedNextRunAt = buildNextRunAt(settings.frequency, settings.hour, settings.minute, now, true);
 
@@ -172,7 +159,6 @@ export async function GET(request: Request) {
       .eq("id", "default");
 
     if (updateError) {
-      console.error("[cron][snapshots] update_error", updateError.message);
       return NextResponse.json({
         ok: true,
         warning: updateError.message,
@@ -180,7 +166,6 @@ export async function GET(request: Request) {
       });
     }
 
-    console.log("[cron][snapshots] completed", { nextRunAt: computedNextRunAt });
     return NextResponse.json({
       ok: true,
       scheduledRun: true,
@@ -189,7 +174,6 @@ export async function GET(request: Request) {
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown cron snapshot error";
-    console.error("[cron][snapshots] fatal", message);
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

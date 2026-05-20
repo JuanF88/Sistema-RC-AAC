@@ -102,19 +102,11 @@ export async function GET(request: Request) {
       ? buildNextRunAt(settings.frequency, settings.hour, settings.minute, new Date(settings.last_run_at), true)
       : null;
 
-    const nextRunAtDate = data?.next_run_at ? new Date(data.next_run_at) : null;
-    const isPastDue =
-      settings.enabled &&
-      nextRunAtDate &&
-      !Number.isNaN(nextRunAtDate.getTime()) &&
-      nextRunAtDate.getTime() < Date.now();
-
     const needsRebuild =
       settings.enabled &&
       (!data?.next_run_at ||
         Number.isNaN(new Date(data.next_run_at).getTime()) ||
-        (expectedFromLastRun && data.next_run_at !== expectedFromLastRun) ||
-        isPastDue);
+        (expectedFromLastRun && data.next_run_at !== expectedFromLastRun));
 
     if (needsRebuild) {
       const nextRunAt = expectedFromLastRun ?? buildNextRunAt(settings.frequency, settings.hour, settings.minute);

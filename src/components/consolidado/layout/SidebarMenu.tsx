@@ -107,12 +107,15 @@ export function SidebarMenu({ menuOpen, view, items, currentUser, currentRole, c
       <nav className={styles.nav}>
         {items.map((item) => {
           const active = view === item.id;
+          const collapsedTitle = menuOpen ? undefined : item.label;
           return (
             <button
               key={item.id}
               type="button"
               onClick={() => onSelect(item.id)}
               className={`${styles.navItem} ${active ? styles.navItemActive : ""}`}
+              aria-label={collapsedTitle ?? item.label}
+              data-tooltip={item.label}
             >
               <span className={styles.menuIcon}>
                 <MenuIcon id={item.id} />
@@ -132,8 +135,8 @@ export function SidebarMenu({ menuOpen, view, items, currentUser, currentRole, c
             type="button"
             className={`${styles.settingsButton} ${view === "usuarios" ? styles.settingsButtonActive : ""}`}
             onClick={onOpenUsers}
-            title="Configuracion"
             aria-label="Abrir configuracion"
+            data-tooltip="Configuracion"
           >
             <span className={styles.settingsIcon}>⚙</span>
           </button>

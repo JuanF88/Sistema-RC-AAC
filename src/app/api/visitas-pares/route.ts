@@ -64,7 +64,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Todos los campos son obligatorios para registrar la visita." }, { status: 400 });
     }
 
-    if (new Date(endDate).getTime() < new Date(startDate).getTime()) {
+    if (endDate < startDate) {
       return NextResponse.json({ error: "La fecha final no puede ser anterior a la fecha de inicio." }, { status: 400 });
     }
 
