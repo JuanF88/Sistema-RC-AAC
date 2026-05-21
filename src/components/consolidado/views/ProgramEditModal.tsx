@@ -178,7 +178,7 @@ const LEVEL_OPTIONS = [
 
 const ACADEMIC_LEVEL_OPTIONS = ["Posgrado", "Pregrado"];
 
-const MODALITY_OPTIONS = ["Presencial", "Presencial-Virtual", "Virtual"];
+const MODALITY_OPTIONS = ["Presencial", "Virtual", "Dual", "A distancia", "Híbrida"];
 
 function boolToString(value: boolean | null): BoolString {
   if (value === null) return "";
