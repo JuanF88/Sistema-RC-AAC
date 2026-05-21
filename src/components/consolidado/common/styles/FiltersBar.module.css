@@ -75,6 +75,35 @@
   background: rgba(255, 248, 243, 0.78);
 }
 
+.dateRow {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.55rem;
+  padding-top: 0.25rem;
+  border-top: 1px dashed rgba(252, 111, 91, 0.35);
+}
+
+.dateGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.dateLabel {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #7c2d12;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.dateFields {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.4rem;
+}
+
 .actions {
   display: flex;
   align-items: center;

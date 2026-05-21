@@ -195,7 +195,6 @@ export function formatAccreditationStatus(
   inProcess: boolean | undefined
 ): string {
   if (accredited) return "Acreditado";
-  if (inProcess) return "En proceso AAC";
   if (acreditable) return "Acreditable";
   return "Sin Acreditación";
 }

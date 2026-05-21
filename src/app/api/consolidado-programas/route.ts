@@ -88,7 +88,6 @@ function mapPayloadToInsert(payload: ProgramRecord) {
     number_graduates: payload.numberGraduates || null,
     acreditable: payload.acreditable || false,
     accredited: payload.accredited || false,
-    in_accreditation_process: payload.inAccreditationProcess || false,
     aac_resolution: payload.aacResolution || null,
     aac_start: payload.aacStart || null,
     aac_duration_years: payload.aacDurationYears || null,

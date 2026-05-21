@@ -217,7 +217,6 @@ async function createHistorialExcel(
     { key: "numberGraduates", header: "Número Egresados" },
     { key: "acreditable", header: "Acreditable" },
     { key: "accredited", header: "Acreditado" },
-    { key: "inAccreditationProcess", header: "En Proceso AAC" },
     { key: "aacResolution", header: "Resolución AAC" },
     { key: "aacStart", header: "Inicio AAC" },
     { key: "aacDurationYears", header: "Duración AAC (años)" },
@@ -292,7 +291,6 @@ async function createHistorialExcel(
       numberGraduates: program.numberGraduates,
       acreditable: program.acreditable ? "Sí" : "No",
       accredited: program.accredited ? "Sí" : "No",
-      inAccreditationProcess: program.inAccreditationProcess ? "Sí" : "No",
       aacResolution: program.aacResolution,
       aacStart: formatDate(program.aacStart),
       aacDurationYears: program.aacDurationYears,
@@ -436,7 +434,6 @@ async function createHistorialExcel(
     { key: "program", header: "Programa" },
     { key: "acreditable", header: "Acreditable" },
     { key: "accredited", header: "Acreditado" },
-    { key: "inProcess", header: "En Proceso" },
     { key: "aacStart", header: "Inicio AAC" },
     { key: "aacEnd", header: "Vencimiento AAC" },
   ];
@@ -456,7 +453,6 @@ async function createHistorialExcel(
         program: program.program,
         acreditable: program.acreditable ? "Sí" : "No",
         accredited: program.accredited ? "Sí" : "No",
-        inProcess: program.inAccreditationProcess ? "Sí" : "No",
         aacStart: formatDate(program.aacStart),
         aacEnd: formatDate(program.aacEnd),
       });

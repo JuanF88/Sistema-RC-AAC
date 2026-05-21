@@ -196,7 +196,6 @@ function mapExcelRow(ws, row) {
     // Accreditation (A.A.C.)
     acreditable: toYesNo(val("AR")),
     accredited: toYesNo(val("AS")),
-    in_accreditation_process: toYesNo(val("AT")) || String(val("AT") ?? "").trim().length > 0,
     aac_resolution: String(val("AU") ?? "").trim() || null,
     aac_start: aacStart,
     aac_duration_years: aacDurationYears,

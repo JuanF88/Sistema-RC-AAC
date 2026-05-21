@@ -70,7 +70,6 @@ export type ConsolidadoProgram = {
   // Accreditation (A.A.C.)
   acreditable: boolean;
   accredited: boolean;
-  inAccreditationProcess: boolean;
   aacResolution: string | null;
   aacStart: string | null;
   aacDurationYears: number | null;
@@ -102,7 +101,6 @@ export type ConsolidadoDashboard = {
     activeRc: number;
     expiredRc: number;
     accredited: number;
-    inAacProcess: number;
     upcomingRrcIn120Days: number;
   };
   byFaculty: Array<{
@@ -297,11 +295,6 @@ function mapSupabaseRow(raw: Record<string, unknown>): ConsolidadoProgram | null
     isActiveRaw === null || isActiveRaw === undefined || String(isActiveRaw).trim() === ""
       ? true
       : toYesNo(isActiveRaw);
-  const inAccreditationProcess =
-    toYesNo(getFirst(raw, ["in_accreditation_process", "en_proceso_acreditacion"])) ||
-    String(getFirst(raw, ["estado_aac", "estado_acreditacion"]) ?? "")
-      .toLowerCase()
-      .includes("proceso");
 
   const parsedDuration = parseDurationFromValue(getFirst(raw, ["duration", "duracion"]));
   const parsedDurationUnit = parseDurationFromValue(
@@ -356,7 +349,6 @@ function mapSupabaseRow(raw: Record<string, unknown>): ConsolidadoProgram | null
     numberGraduates: toNumber(getFirst(raw, ["number_graduates", "numero_egresados"])) || null,
     acreditable,
     accredited,
-    inAccreditationProcess,
     aacResolution: String(getFirst(raw, ["aac_resolution", "resolucion_aac"]) ?? "") || null,
     aacStart,
     aacDurationYears,
@@ -511,7 +503,6 @@ function mapExcelRow(ws: XLSX.WorkSheet, row: number): ConsolidadoProgram | null
     // Accreditation (A.A.C.)
     acreditable: toYesNo(val("AR")),
     accredited: toYesNo(val("AS")),
-    inAccreditationProcess: toYesNo(val("AT")) || String(val("AT") ?? "").trim().length > 0,
     aacResolution: String(val("AU") ?? "").trim() || null,
     aacStart,
     aacDurationYears,
@@ -562,7 +553,6 @@ function buildDashboard(programs: ConsolidadoProgram[]): ConsolidadoDashboard {
   const activeRc = programs.filter((p) => p.hasCurrentRc === true).length;
   const expiredRc = programs.filter((p) => p.hasCurrentRc === false).length;
   const accredited = programs.filter((p) => p.accredited).length;
-  const inAacProcess = programs.filter((p) => p.inAccreditationProcess).length;
   const upcomingRrcIn120Days = programs.filter((p) => {
     const days = daysUntil(p.rcMineducacion);
     return days !== null && days >= 0 && days <= 120;
@@ -590,7 +580,6 @@ function buildDashboard(programs: ConsolidadoProgram[]): ConsolidadoDashboard {
       activeRc,
       expiredRc,
       accredited,
-      inAacProcess,
       upcomingRrcIn120Days,
     },
     byFaculty,

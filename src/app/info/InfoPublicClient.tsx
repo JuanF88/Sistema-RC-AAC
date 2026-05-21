@@ -17,6 +17,7 @@ type Props = {
 
 export function InfoPublicClient({ programs, source, generatedAt }: Props) {
   const [subTab, setSubTab] = useState<EstadisticasSubTab>("generales");
+  const activePrograms = programs.filter((program) => program.isActive !== false);
 
   return (
     <main className={styles.page}>
@@ -33,7 +34,7 @@ export function InfoPublicClient({ programs, source, generatedAt }: Props) {
           variant="public"
         />
         <div className={styles.panel}>
-          <EstadisticasView programs={programs} subTab={subTab} onSubTabChange={setSubTab} />
+          <EstadisticasView programs={activePrograms} subTab={subTab} onSubTabChange={setSubTab} />
         </div>
       </div>
     </main>

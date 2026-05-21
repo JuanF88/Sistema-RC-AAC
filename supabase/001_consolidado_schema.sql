@@ -66,7 +66,6 @@ CREATE TABLE public.consolidado_programas (
   -- Accreditation (A.A.C.)
   acreditable BOOLEAN,
   accredited BOOLEAN,
-  in_accreditation_process BOOLEAN,
   aac_resolution TEXT,
   aac_start DATE,
   aac_duration_years INT,

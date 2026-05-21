@@ -71,7 +71,6 @@ type FormState = {
   numberGraduates: string;
   acreditable: "true" | "false";
   accredited: "true" | "false";
-  inAccreditationProcess: "true" | "false";
   aacResolution: string;
   aacStart: string;
   aacDurationYears: string;
@@ -137,7 +136,6 @@ const EMPTY_FORM: FormState = {
   numberGraduates: "",
   acreditable: "false",
   accredited: "false",
-  inAccreditationProcess: "false",
   aacResolution: "",
   aacStart: "",
   aacDurationYears: "",
@@ -350,7 +348,6 @@ function mapProgramToForm(program: ProgramRecord | null): FormState {
     numberGraduates: program.numberGraduates?.toString() ?? "",
     acreditable: program.acreditable ? "true" : "false",
     accredited: program.accredited ? "true" : "false",
-    inAccreditationProcess: program.inAccreditationProcess ? "true" : "false",
     aacResolution: text(program.aacResolution),
     aacStart: text(program.aacStart),
     aacDurationYears: program.aacDurationYears?.toString() ?? "",
@@ -573,7 +570,6 @@ export function ProgramEditModal({
     numberGraduates: toNullableNumber(form.numberGraduates),
     acreditable: form.acreditable === "true",
     accredited: form.accredited === "true",
-    inAccreditationProcess: form.inAccreditationProcess === "true",
     aacResolution: toNullableText(form.aacResolution),
     aacStart: toNullableText(form.aacStart),
     aacDurationYears: toNullableNumber(form.aacDurationYears),
@@ -914,15 +910,6 @@ export function ProgramEditModal({
                 label="Acreditado"
                 value={form.accredited}
                 onChange={(value) => setField("accredited", value)}
-                options={[
-                  { value: "true", label: "Si" },
-                  { value: "false", label: "No" },
-                ]}
-              />
-              <SelectField
-                label="En proceso AAC"
-                value={form.inAccreditationProcess}
-                onChange={(value) => setField("inAccreditationProcess", value)}
                 options={[
                   { value: "true", label: "Si" },
                   { value: "false", label: "No" },

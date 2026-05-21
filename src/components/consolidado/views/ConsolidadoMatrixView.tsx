@@ -36,7 +36,6 @@ type SortKey =
   | "rcMineducacion"
   | "acreditable"
   | "accredited"
-  | "inAccreditationProcess"
   | "aacResolution"
   | "aacStart"
   | "aacEnd"
@@ -95,7 +94,6 @@ const COLUMNS: ColumnDef[] = [
   { key: "rcMineducacion", label: "RC MinEdu", width: 150, sortable: true, render: (program) => formatDate(program.rcMineducacion) },
   { key: "acreditable", label: "Acreditable", width: 120, sortable: true, render: (program) => (program.acreditable ? "Sí" : "") },
   { key: "accredited", label: "Acreditado", width: 110, sortable: true, render: (program) => (program.accredited ? "Sí" : "") },
-  { key: "inAccreditationProcess", label: "Proceso AAC", width: 130, sortable: true, render: (program) => (program.inAccreditationProcess ? "Sí" : "") },
   { key: "aacResolution", label: "Resolución\nAcreditación A.C.", width: 180, sortable: true, render: (program) => program.aacResolution },
   { key: "aacStart", label: "Inicio AAC", width: 140, sortable: true, render: (program) => formatDate(program.aacStart) },
   { key: "aacEnd", label: "Vencimiento AAC", width: 150, sortable: true, render: (program) => formatDate(program.aacEnd) },
@@ -149,7 +147,6 @@ const FULL_EXPORT_COLUMNS: ExportMatrixColumn[] = [
   { key: "numberGraduates", header: "Numero\nEgresados", width: 14, getValue: (program) => program.numberGraduates },
   { key: "acreditable", header: "Acreditable", width: 12, getValue: (program) => (program.acreditable ? "Si" : "No") },
   { key: "accredited", header: "Acreditado", width: 12, getValue: (program) => (program.accredited ? "Si" : "No") },
-  { key: "inAccreditationProcess", header: "En Proceso de\nAcreditacion", width: 18, getValue: (program) => (program.inAccreditationProcess ? "Si" : "No") },
   { key: "aacResolution", header: "Resolucion\nAcreditacion A.C.", width: 20, getValue: (program) => program.aacResolution },
   { key: "aacStart", header: "Inicio A.A.C.", width: 14, getValue: (program) => formatDate(program.aacStart) },
   { key: "aacDurationYears", header: "Duracion\n(anos)", width: 12, getValue: (program) => program.aacDurationYears },

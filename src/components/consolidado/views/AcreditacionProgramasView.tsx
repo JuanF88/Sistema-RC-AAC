@@ -255,7 +255,7 @@ function inferStepsFromEstado(estado: EstadoOption | undefined, program: Program
     return { informeCgcEnviado: true, enviadoMinisterio: true, acreditacionRecibida: true };
   }
 
-  if (estado === "En proceso de Acreditacion" || program.inAccreditationProcess) {
+  if (estado === "En proceso de Acreditacion") {
     return { informeCgcEnviado: true, enviadoMinisterio: false, acreditacionRecibida: false };
   }
 
@@ -421,7 +421,6 @@ export function AcreditacionProgramasView({ rows, groupingMode, onExportReady, o
 
   function inferEstado(program: ProgramRecord): EstadoOption {
     if (program.accredited) return "Acreditado 2026";
-    if (program.inAccreditationProcess) return "En proceso de Acreditacion";
     return "Acreditable";
   }
 
@@ -491,7 +490,6 @@ export function AcreditacionProgramasView({ rows, groupingMode, onExportReady, o
       const updatedProgram: ProgramRecord = {
         ...program,
         acreditable: true,
-        inAccreditationProcess: estado === "En proceso de Acreditacion",
         accredited: estado === "Acreditado 2026",
       };
 
@@ -576,7 +574,6 @@ export function AcreditacionProgramasView({ rows, groupingMode, onExportReady, o
       const updatedProgram: ProgramRecord = {
         ...program,
         acreditable: true,
-        inAccreditationProcess: next.informeCgcEnviado || next.enviadoMinisterio,
         accredited: next.acreditacionRecibida,
       };
 

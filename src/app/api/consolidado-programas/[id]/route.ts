@@ -50,7 +50,6 @@ function isValidUuid(value: string): boolean {
 
 function deriveAcreditacionEstado(payload: ProgramRecord): string | null {
   if (payload.accredited) return "Acreditado 2026";
-  if (payload.acreditable && payload.inAccreditationProcess) return "En proceso de Acreditacion";
   if (payload.acreditable) return "Acreditable";
   return null;
 }
@@ -139,7 +138,6 @@ export async function PATCH(request: Request, context: RouteContext) {
       // Accreditation (A.A.C.)
       acreditable: payload.acreditable || false,
       accredited: payload.accredited || false,
-      in_accreditation_process: payload.inAccreditationProcess || false,
       aac_resolution: payload.aacResolution || null,
       aac_start: payload.aacStart || null,
       aac_duration_years: payload.aacDurationYears || null,

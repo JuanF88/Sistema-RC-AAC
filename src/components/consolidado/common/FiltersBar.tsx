@@ -14,6 +14,10 @@ type Props = {
   accreditedFilter: string;
   programStatusFilter: string;
   rcState: string;
+  rcStart: string;
+  rcEnd: string;
+  aacStart: string;
+  aacEnd: string;
   modalities: string[];
   levels: string[];
   locations: string[];
@@ -27,6 +31,10 @@ type Props = {
   onAccreditedFilterChange: (value: string) => void;
   onProgramStatusFilterChange: (value: string) => void;
   onRcStateChange: (value: string) => void;
+  onRcStartChange: (value: string) => void;
+  onRcEndChange: (value: string) => void;
+  onAacStartChange: (value: string) => void;
+  onAacEndChange: (value: string) => void;
   onCreateProgram: () => void;
   showModality?: boolean;
   showLocationFilter?: boolean;
@@ -34,6 +42,7 @@ type Props = {
   showAccreditationState?: boolean;
   showProgramStatus?: boolean;
   showRcState?: boolean;
+  showDateFilters?: boolean;
   showCreateProgram?: boolean;
   rightContent?: ReactNode;
   createDisabled?: boolean;
@@ -51,6 +60,10 @@ export function FiltersBar({
   accreditedFilter,
   programStatusFilter,
   rcState,
+  rcStart,
+  rcEnd,
+  aacStart,
+  aacEnd,
   modalities,
   levels,
   locations,
@@ -64,6 +77,10 @@ export function FiltersBar({
   onAccreditedFilterChange,
   onProgramStatusFilterChange,
   onRcStateChange,
+  onRcStartChange,
+  onRcEndChange,
+  onAacStartChange,
+  onAacEndChange,
   onCreateProgram,
   showModality = true,
   showLocationFilter = true,
@@ -71,6 +88,7 @@ export function FiltersBar({
   showAccreditationState = true,
   showProgramStatus = true,
   showRcState = true,
+  showDateFilters = false,
   showCreateProgram = true,
   rightContent,
   createDisabled = false,
@@ -123,6 +141,10 @@ export function FiltersBar({
     if (showAccreditationState && acreditableFilter !== "Todos") count += 1;
     if (showAccreditationState && accreditedFilter !== "Todos") count += 1;
     if (showRcState && rcState !== "Todos") count += 1;
+    if (showDateFilters && rcStart) count += 1;
+    if (showDateFilters && rcEnd) count += 1;
+    if (showDateFilters && aacStart) count += 1;
+    if (showDateFilters && aacEnd) count += 1;
     return count;
   }, [
     search,
@@ -141,6 +163,11 @@ export function FiltersBar({
     accreditedFilter,
     showRcState,
     rcState,
+    showDateFilters,
+    rcStart,
+    rcEnd,
+    aacStart,
+    aacEnd,
   ]);
 
   return (
@@ -262,6 +289,58 @@ export function FiltersBar({
             <option value="vencido">Vencido</option>
             <option value="sin-definir">Sin definir</option>
           </select>
+        )}
+        {showDateFilters && (
+          <div className={styles.dateRow}>
+            <div className={styles.dateGroup}>
+              <span className={styles.dateLabel}>Inicio RC</span>
+              <div className={styles.dateFields}>
+                <input
+                  type="date"
+                  value={rcStart}
+                  onChange={(event) => onRcStartChange(event.target.value)}
+                  className={styles.input}
+                  aria-label="Inicio RC"
+                />
+              </div>
+            </div>
+            <div className={styles.dateGroup}>
+              <span className={styles.dateLabel}>Fin RC</span>
+              <div className={styles.dateFields}>
+                <input
+                  type="date"
+                  value={rcEnd}
+                  onChange={(event) => onRcEndChange(event.target.value)}
+                  className={styles.input}
+                  aria-label="Fin RC"
+                />
+              </div>
+            </div>
+            <div className={styles.dateGroup}>
+              <span className={styles.dateLabel}>Inicio AAC</span>
+              <div className={styles.dateFields}>
+                <input
+                  type="date"
+                  value={aacStart}
+                  onChange={(event) => onAacStartChange(event.target.value)}
+                  className={styles.input}
+                  aria-label="Inicio AAC"
+                />
+              </div>
+            </div>
+            <div className={styles.dateGroup}>
+              <span className={styles.dateLabel}>Fin AAC</span>
+              <div className={styles.dateFields}>
+                <input
+                  type="date"
+                  value={aacEnd}
+                  onChange={(event) => onAacEndChange(event.target.value)}
+                  className={styles.input}
+                  aria-label="Fin AAC"
+                />
+              </div>
+            </div>
+          </div>
         )}
       </div>}
     </div>

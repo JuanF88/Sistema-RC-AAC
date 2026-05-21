@@ -22,7 +22,6 @@ import { HistorialView } from "./views/HistorialView";
 import { UsersManagementView } from "./views/UsersManagementView";
 import { ExportButton } from "./widgets/ExportButton";
 import { KpiGrid } from "./widgets/KpiGrid";
-
 type Props = {
   data: ConsolidadoDashboard;
   currentUser: string;
@@ -96,7 +95,6 @@ function createEmptyProgramDraft(): ProgramRecord {
     numberGraduates: null,
     acreditable: false,
     accredited: false,
-    inAccreditationProcess: false,
     aacResolution: null,
     aacStart: null,
     aacDurationYears: null,
@@ -134,6 +132,10 @@ export function ConsolidadoDashboardClient({ data, currentUser, currentRole }: P
   const [accreditedFilter, setAccreditedFilter] = useState("Todos");
   const [programStatusFilter, setProgramStatusFilter] = useState("Todos");
   const [rcState, setRcState] = useState("Todos");
+  const [rcStart, setRcStart] = useState("");
+  const [rcEnd, setRcEnd] = useState("");
+  const [aacStart, setAacStart] = useState("");
+  const [aacEnd, setAacEnd] = useState("");
   const [registryGrouping, setRegistryGrouping] = useState<RegistroCalificadoGroupingMode>("programas");
   const [acreditacionGrouping, setAcreditacionGrouping] = useState<AcreditacionGroupingMode>("programas");
   const [estadisticasSubTab, setEstadisticasSubTab] = useState<EstadisticasSubTab>("generales");
@@ -161,6 +163,10 @@ export function ConsolidadoDashboardClient({ data, currentUser, currentRole }: P
     setAccreditedFilter("Todos");
     setProgramStatusFilter("Todos");
     setRcState("Todos");
+    setRcStart("");
+    setRcEnd("");
+    setAacStart("");
+    setAacEnd("");
   }, []);
 
   useEffect(() => {
@@ -285,6 +291,28 @@ export function ConsolidadoDashboardClient({ data, currentUser, currentRole }: P
 
   const filtered = useMemo(() => {
     const query = search.trim().toLowerCase();
+    const today = new Date();
+    const todayIso = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+    const normalizeDate = (value: string) => (value && value.trim() ? value.trim() : "");
+    const withinStartRange = (isoDate: string | null, startInput: string, endInput: string) => {
+      const start = normalizeDate(startInput);
+      const end = normalizeDate(endInput);
+
+      if (!start && !end) return true;
+      if (!isoDate) return false;
+
+      const effectiveEnd = end || (start ? todayIso : "");
+      if (start && isoDate < start) return false;
+      if (effectiveEnd && isoDate > effectiveEnd) return false;
+      return true;
+    };
+    const withinEndLimit = (isoDate: string | null, endInput: string) => {
+      const end = normalizeDate(endInput);
+      if (!end) return true;
+      if (!isoDate) return false;
+      return isoDate <= end;
+    };
+
     return programs.filter((program) => {
       const byStatus =
         view === "consolidado"
@@ -331,12 +359,19 @@ export function ConsolidadoDashboardClient({ data, currentUser, currentRole }: P
         (rcState === "sin-definir" && program.hasCurrentRc === null);
       if (!byRc) return false;
 
+      if (view === "consolidado") {
+        if (!withinStartRange(program.rcStart, rcStart, rcEnd)) return false;
+        if (!withinEndLimit(program.rcEnd, rcEnd)) return false;
+        if (!withinStartRange(program.aacStart, aacStart, aacEnd)) return false;
+        if (!withinEndLimit(program.aacEnd, aacEnd)) return false;
+      }
+
       if (!query) return true;
 
       const corpus = `${program.program} ${program.processCode} ${program.snies} ${program.faculty} ${program.degree} ${program.location} ${program.methodology} ${program.workday} ${program.generalObservations} ${program.programCoordinator}`.toLowerCase();
       return corpus.includes(query);
     });
-  }, [programs, view, programStatusFilter, faculty, modality, level, locationFilter, regionalizedFilter, acreditableFilter, accreditedFilter, rcState, search]);
+  }, [programs, view, programStatusFilter, faculty, modality, level, locationFilter, regionalizedFilter, acreditableFilter, accreditedFilter, rcState, search, rcStart, rcEnd, aacStart, aacEnd]);
 
   const filteredSummary = useMemo(() => {
     const activeFiltered = filtered.filter((program) => program.isActive !== false);
@@ -346,7 +381,6 @@ export function ConsolidadoDashboardClient({ data, currentUser, currentRole }: P
     const accreditedOverAccreditablePct = accreditable > 0
       ? Number(((accredited / accreditable) * 100).toFixed(1))
       : 0;
-    const inAacProcess = activeFiltered.filter((program) => program.inAccreditationProcess).length;
     const upcomingRrcIn120Days = activeFiltered.filter((program) => {
       if (!program.rcMineducacion) return false;
       const target = new Date(program.rcMineducacion);
@@ -362,7 +396,6 @@ export function ConsolidadoDashboardClient({ data, currentUser, currentRole }: P
       accreditable,
       accredited,
       accreditedOverAccreditablePct,
-      inAacProcess,
       upcomingRrcIn120Days,
     };
   }, [filtered]);
@@ -629,6 +662,10 @@ export function ConsolidadoDashboardClient({ data, currentUser, currentRole }: P
                 accreditedFilter={accreditedFilter}
                 programStatusFilter={programStatusFilter}
                 rcState={rcState}
+                rcStart={rcStart}
+                rcEnd={rcEnd}
+                aacStart={aacStart}
+                aacEnd={aacEnd}
                 modalities={modalities}
                 levels={levels}
                 locations={locations}
@@ -642,6 +679,10 @@ export function ConsolidadoDashboardClient({ data, currentUser, currentRole }: P
                 onAccreditedFilterChange={setAccreditedFilter}
                 onProgramStatusFilterChange={setProgramStatusFilter}
                 onRcStateChange={setRcState}
+                onRcStartChange={setRcStart}
+                onRcEndChange={setRcEnd}
+                onAacStartChange={setAacStart}
+                onAacEndChange={setAacEnd}
                 onCreateProgram={handleCreateProgram}
                 showModality={view === "consolidado"}
                 showLocationFilter={view === "consolidado"}
@@ -649,6 +690,7 @@ export function ConsolidadoDashboardClient({ data, currentUser, currentRole }: P
                 showAccreditationState={view === "consolidado"}
                 showProgramStatus={view === "consolidado"}
                 showRcState={view === "consolidado"}
+                showDateFilters={view === "consolidado"}
                 showCreateProgram={view === "consolidado"}
                 rightContent={
                   view === "registro-calificado" ? (

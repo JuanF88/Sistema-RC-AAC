@@ -22,7 +22,6 @@ export function EstadisticasGenerales({ programs }: Props) {
     const totalPrograms = programs.length;
     const accredited = programs.filter((p) => p.accredited).length;
     const acreditable = programs.filter((p) => p.acreditable && !p.accredited).length;
-    const inProcess = programs.filter((p) => p.inAccreditationProcess).length;
     const activeRc = programs.filter((p) => p.hasCurrentRc === true).length;
     const expiredRc = programs.filter((p) => p.hasCurrentRc === false).length;
     const totalAccreditableAndAccredited = programs.filter((p) => p.acreditable || p.accredited).length;
@@ -51,8 +50,7 @@ export function EstadisticasGenerales({ programs }: Props) {
     const accreditationData = [
       { name: "Acreditados", y: accredited },
       { name: "Acreditables", y: acreditable },
-      { name: "En proceso", y: inProcess },
-      { name: "Sin acreditación", y: totalPrograms - accredited - acreditable - inProcess },
+      { name: "Sin acreditación", y: totalPrograms - accredited - acreditable },
     ].filter((d) => d.y > 0);
 
     const now = new Date();
@@ -100,7 +98,6 @@ export function EstadisticasGenerales({ programs }: Props) {
       totalPrograms,
       accredited,
       acreditable,
-      inProcess,
       activeRc,
       expiredRc,
       faculties: Object.keys(byFaculty).length,
@@ -238,10 +235,7 @@ export function EstadisticasGenerales({ programs }: Props) {
             <span className={styles.statLabel}>% Acreditados/Acreditables</span>
             <strong className={styles.statValue}>{stats.accreditationPercentage}%</strong>
           </div>
-          <div className={styles.statCard}>
-            <span className={styles.statLabel}>En Proceso AAC</span>
-            <strong className={styles.statValue}>{stats.inProcess}</strong>
-          </div>
+
         </div>
 
         <div className={styles.chartsRow}>
