@@ -213,6 +213,58 @@
   box-shadow: 0 20px 32px -22px rgba(92, 35, 21, 0.55);
 }
 
+.navItemAlert {
+  position: relative;
+}
+
+.alertBadge {
+  position: absolute;
+  top: -0.35rem;
+  right: -0.35rem;
+  background: #fffaf7;
+  color: #7c2d12;
+  border: 1px solid #fe965e;
+  border-radius: 999px;
+  padding: 0.04rem 0.35rem;
+  font-size: 0.7rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.alertTooltip {
+  position: absolute;
+  left: calc(100% + 0.65rem);
+  top: 50%;
+  transform: translateY(-50%) translateX(-4px);
+  padding: 0.5rem 0.7rem;
+  border-radius: 0.7rem;
+  background: #fffaf7;
+  color: #7c2d12;
+  font-size: 0.75rem;
+  font-weight: 700;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  box-shadow: 0 18px 36px -28px rgba(92, 35, 21, 0.6);
+  border: 1px solid rgba(254, 150, 94, 0.3);
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  min-width: 16rem;
+  max-width: 28rem;
+  z-index: 40;
+}
+
+.alertTooltipText {
+  color: #7c4a36;
+  font-weight: 600;
+}
+
+.navItemAlert:hover .alertTooltip {
+  opacity: 1;
+  transform: translateY(-50%) translateX(0);
+}
+
 
 .menuIcon {
   display: inline-flex;
@@ -223,6 +275,7 @@
   flex-shrink: 0;
   color: rgba(254, 206, 174, 0.95);
   transition: color 0.3s ease, transform 0.3s ease;
+  position: relative;
 }
 
 .menuIconSvg {

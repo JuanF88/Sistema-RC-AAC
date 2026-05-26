@@ -28,6 +28,14 @@ type Props = {
   currentRole: UserRole;
 };
 
+type AlertHistoryRecord = {
+  id: string;
+  program_id: string;
+  alert_type: "rrc" | "aac";
+  alert_kind: "inicio" | "recordatorio" | "entrega";
+  sent_at: string;
+};
+
 const MENU_ITEMS: MenuItem[] = [
   { id: "consolidado", label: "Consolidado", subtitle: "Matriz editable" },
   { id: "alertas", label: "Alertas", subtitle: "Vencimientos RRC/AAC" },
@@ -38,8 +46,46 @@ const MENU_ITEMS: MenuItem[] = [
   { id: "historial", label: "Historial", subtitle: "Snapshots de BD" },
 ];
 
+const START_MONTHS = 18;
+const REMINDER_MONTHS = 6;
+const DELIVERY_REMINDER_MONTHS = 2;
+
 function isUuid(value: string): boolean {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
+}
+
+function parseIsoDate(value: string | null): Date | null {
+  if (!value) return null;
+  const match = String(value).trim().match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!match) return null;
+
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  const date = new Date(Date.UTC(year, month - 1, day));
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
+function addMonths(value: string | null, months: number): string | null {
+  if (!value) return null;
+  const date = parseIsoDate(value);
+  if (!date) return null;
+  date.setUTCMonth(date.getUTCMonth() + months);
+  return date.toISOString().slice(0, 10);
+}
+
+function isOnOrAfter(value: string | null): boolean {
+  const date = parseIsoDate(value);
+  if (!date) return false;
+  const now = new Date();
+  now.setUTCHours(0, 0, 0, 0);
+  return date.getTime() <= now.getTime();
+}
+
+function buildMomentStatus(dueDate: string | null, sentAt: string | null) {
+  if (sentAt) return { canSend: false };
+  if (!dueDate) return { canSend: false };
+  return { canSend: isOnOrAfter(dueDate) };
 }
 
 function mapProgramToApiPayload(program: ProgramRecord) {
@@ -151,6 +197,8 @@ export function ConsolidadoDashboardClient({ data, currentUser, currentRole }: P
   const [documentsByProgram, setDocumentsByProgram] = useState<Record<string, ProgramDocument[]>>({});
   const [loadingDocuments, setLoadingDocuments] = useState(false);
   const [floatingExportState, setFloatingExportState] = useState<{ action: (() => Promise<void>) | null }>({ action: null });
+  const [alertHistory, setAlertHistory] = useState<AlertHistoryRecord[]>([]);
+  const [loadingAlertHistory, setLoadingAlertHistory] = useState(false);
 
   const resetFiltersToDefault = useCallback(() => {
     setSearch("");
@@ -230,6 +278,37 @@ export function ConsolidadoDashboardClient({ data, currentUser, currentRole }: P
   useEffect(() => {
     let cancelled = false;
 
+    const loadAlertHistory = async () => {
+      setLoadingAlertHistory(true);
+      try {
+        const response = await fetch("/api/notifications/alertas", { cache: "no-store" });
+        const body = (await response.json()) as { data?: AlertHistoryRecord[]; error?: string };
+        if (!response.ok) {
+          throw new Error(body.error ?? "No se pudo cargar el historial de alertas.");
+        }
+        if (!cancelled) {
+          setAlertHistory(body.data ?? []);
+        }
+      } catch {
+        if (!cancelled) {
+          setAlertHistory([]);
+        }
+      } finally {
+        if (!cancelled) {
+          setLoadingAlertHistory(false);
+        }
+      }
+    };
+
+    void loadAlertHistory();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
     const redirectToLogin = () => {
       if (sessionRedirectingRef.current) return;
       sessionRedirectingRef.current = true;
@@ -288,6 +367,78 @@ export function ConsolidadoDashboardClient({ data, currentUser, currentRole }: P
     [programs],
   );
   const activePrograms = useMemo(() => programs.filter((program) => program.isActive !== false), [programs]);
+
+  const alertHistoryMap = useMemo(() => {
+    const map = new Map<string, AlertHistoryRecord>();
+    for (const record of alertHistory) {
+      const key = `${record.program_id}:${record.alert_type}:${record.alert_kind}`;
+      if (!map.has(key)) {
+        map.set(key, record);
+      }
+    }
+    return map;
+  }, [alertHistory]);
+
+  const getAlertRecord = useCallback(
+    (programId: string, type: "rrc" | "aac", kind: "inicio" | "recordatorio" | "entrega") => {
+      const key = `${programId}:${type}:${kind}`;
+      return alertHistoryMap.get(key) ?? null;
+    },
+    [alertHistoryMap],
+  );
+
+  const buildAlertTimeline = useCallback(
+    (programId: string, type: "rrc" | "aac", expiration: string | null, delivery: string | null) => {
+      const inicioRecord = getAlertRecord(programId, type, "inicio");
+      const reminderRecord = getAlertRecord(programId, type, "recordatorio");
+      const entregaRecord = getAlertRecord(programId, type, "entrega");
+
+      const startDate = addMonths(expiration, -START_MONTHS);
+      const deliveryDue = addMonths(delivery, -DELIVERY_REMINDER_MONTHS);
+
+      const reminderAnchor = reminderRecord?.sent_at ?? inicioRecord?.sent_at ?? startDate;
+      const nextReminder = reminderAnchor ? addMonths(reminderAnchor, REMINDER_MONTHS) : null;
+
+      return {
+        startDate,
+        deliveryDue,
+        nextReminder,
+        inicioRecord,
+        reminderRecord,
+        entregaRecord,
+      };
+    },
+    [getAlertRecord],
+  );
+
+  const pendingAlertPrograms = useMemo(() => {
+    const pending: string[] = [];
+
+    for (const program of activePrograms) {
+      const programName = program.program || program.processCode || "Programa";
+      let hasPending = false;
+
+      const rrcTimeline = buildAlertTimeline(program.id, "rrc", program.rcEnd, program.rcSiga);
+      const rrcInicio = buildMomentStatus(rrcTimeline.startDate, rrcTimeline.inicioRecord?.sent_at ?? null);
+      const rrcReminder = buildMomentStatus(rrcTimeline.nextReminder, rrcTimeline.reminderRecord?.sent_at ?? null);
+      const rrcEntrega = buildMomentStatus(rrcTimeline.deliveryDue, rrcTimeline.entregaRecord?.sent_at ?? null);
+      hasPending = rrcInicio.canSend || rrcReminder.canSend || rrcEntrega.canSend;
+
+      if (!hasPending && program.accredited) {
+        const aacTimeline = buildAlertTimeline(program.id, "aac", program.aacEnd, program.aacCgcaiDelivery);
+        const aacInicio = buildMomentStatus(aacTimeline.startDate, aacTimeline.inicioRecord?.sent_at ?? null);
+        const aacReminder = buildMomentStatus(aacTimeline.nextReminder, aacTimeline.reminderRecord?.sent_at ?? null);
+        const aacEntrega = buildMomentStatus(aacTimeline.deliveryDue, aacTimeline.entregaRecord?.sent_at ?? null);
+        hasPending = aacInicio.canSend || aacReminder.canSend || aacEntrega.canSend;
+      }
+
+      if (hasPending) {
+        pending.push(programName);
+      }
+    }
+
+    return pending.sort((left, right) => left.localeCompare(right, "es", { sensitivity: "base" }));
+  }, [activePrograms, buildAlertTimeline]);
 
   const filtered = useMemo(() => {
     const query = search.trim().toLowerCase();
@@ -636,6 +787,8 @@ export function ConsolidadoDashboardClient({ data, currentUser, currentRole }: P
           currentUser={currentUser}
           currentRole={currentRole}
           canOpenUsers={currentRole !== "visualizador"}
+          alertPendingCount={pendingAlertPrograms.length}
+          alertPendingNames={pendingAlertPrograms}
           onToggle={() => setMenuOpen((value) => !value)}
           onSelect={setView}
           onOpenUsers={() => setView("usuarios")}
@@ -839,6 +992,7 @@ export function ConsolidadoDashboardClient({ data, currentUser, currentRole }: P
         onClose={handleCloseModal}
         onSave={handleSave}
       />
+
     </div>
   );
 }

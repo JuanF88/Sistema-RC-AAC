@@ -262,30 +262,6 @@ export function HistorialView({ programs, generatedAt }: Props) {
             </div>
           </div>
 
-          <div className={styles.scheduleCard}>
-            <div className={styles.scheduleCardHeader}>
-              <h3 className={styles.sectionTitle}>Próxima ejecución automática</h3>
-              <span className={`${styles.scheduleBadge} ${schedule?.enabled ? styles.scheduleBadgeActive : styles.scheduleBadgeDisabled}`}>
-                {schedule?.enabled ? "Activa" : "Pausada"}
-              </span>
-            </div>
-            <div className={styles.scheduleCardBody}>
-              <div>
-                <span className={styles.scheduleLabel}>Frecuencia</span>
-                <strong className={styles.scheduleValue}>{schedule ? FREQUENCY_LABELS[schedule.frequency] : "Sin programación"}</strong>
-              </div>
-              <div>
-                <span className={styles.scheduleLabel}>Hora</span>
-                <strong className={styles.scheduleValue}>
-                  {schedule ? `${String(schedule.hour).padStart(2, "0")}:${String(schedule.minute).padStart(2, "0")}` : "--:--"}
-                </strong>
-              </div>
-              <div>
-                <span className={styles.scheduleLabel}>Próxima ejecución</span>
-                <strong className={styles.scheduleValue}>{formatBogotaDateTime(schedule?.next_run_at ?? null)}</strong>
-              </div>
-            </div>
-          </div>
 
           <div className={styles.snapshotsSection}>
             <h3 className={styles.sectionTitle}>Snapshots Guardados</h3>

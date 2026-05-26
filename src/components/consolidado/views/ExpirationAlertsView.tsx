@@ -7,6 +7,7 @@ import type { ProgramRecord } from "../types";
 import { formatDate } from "../utils";
 import { exportToExcel, type ExportColumn } from "@/lib/export";
 import styles from "./styles/ExpirationAlertsView.module.css";
+import modalStyles from "./styles/ProgramEditModal.module.css";
 
 type Props = {
   rows: ProgramRecord[];
@@ -16,6 +17,10 @@ type Props = {
 
 type AlertMode = "rrc" | "acreditados";
 
+type AlertType = "rrc" | "aac";
+
+type AlertKind = "inicio" | "recordatorio" | "entrega";
+
 type AlertLevel = "vencido" | "proximo" | "aldia" | "sin-fecha";
 
 type AlertResult = {
@@ -23,6 +28,26 @@ type AlertResult = {
   label: string;
   days: number | null;
 };
+
+type AlertHistoryRecord = {
+  id: string;
+  program_id: string;
+  alert_type: AlertType;
+  alert_kind: AlertKind;
+  sent_at: string;
+  actor_username: string | null;
+  recipients: string[];
+};
+
+const ALERT_KIND_LABELS: Record<AlertKind, string> = {
+  inicio: "Inicio de renovacion",
+  recordatorio: "Recordatorio semestral",
+  entrega: "Recordatorio de entrega",
+};
+
+const START_MONTHS = 18;
+const REMINDER_MONTHS = 6;
+const DELIVERY_REMINDER_MONTHS = 2;
 
 function parseIsoDate(value: string | null): Date | null {
   if (!value) return null;
@@ -55,6 +80,56 @@ function evaluateAlert(value: string | null): AlertResult {
   return { level: "aldia", label: "Al dia", days };
 }
 
+function addMonths(value: string | null, months: number): string | null {
+  if (!value) return null;
+  const date = parseIsoDate(value);
+  if (!date) return null;
+  date.setUTCMonth(date.getUTCMonth() + months);
+  return date.toISOString().slice(0, 10);
+}
+
+function isOnOrAfter(value: string | null): boolean {
+  const date = parseIsoDate(value);
+  if (!date) return false;
+  const now = new Date();
+  now.setUTCHours(0, 0, 0, 0);
+  return date.getTime() <= now.getTime();
+}
+
+function isFutureDate(value: string | null): boolean {
+  const date = parseIsoDate(value);
+  if (!date) return false;
+  const now = new Date();
+  now.setUTCHours(0, 0, 0, 0);
+  return date.getTime() > now.getTime();
+}
+
+function formatRelativeDays(value: string | null): string {
+  const date = parseIsoDate(value);
+  if (!date) return "-";
+  const now = new Date();
+  now.setUTCHours(0, 0, 0, 0);
+  const diff = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
+  if (diff === 0) return "hoy";
+  if (diff < 0) return `en ${Math.abs(diff)} dias`;
+  if (diff < 30) return `hace ${diff} dias`;
+  const months = Math.round(diff / 30);
+  return `hace ${months} meses`;
+}
+
+function buildMomentStatus(dueDate: string | null, sentAt: string | null) {
+  if (sentAt) {
+    return { label: `Enviado ${formatDate(sentAt)}`, tone: "ok" as const, canSend: false };
+  }
+  if (!dueDate) {
+    return { label: "Sin fecha", tone: "neutral" as const, canSend: false };
+  }
+  if (isOnOrAfter(dueDate)) {
+    return { label: "Pendiente", tone: "warn" as const, canSend: true };
+  }
+  return { label: `Programado ${formatDate(dueDate)}`, tone: "neutral" as const, canSend: false };
+}
+
 function sortByClosestExpiration(left: string | null, right: string | null): number {
   const leftDays = daysUntil(left);
   const rightDays = daysUntil(right);
@@ -76,6 +151,18 @@ export function ExpirationAlertsView({ rows, onExportReady, onProgramUpdate }: P
   const [mode, setMode] = useState<AlertMode>("rrc");
   const [programs, setPrograms] = useState(rows);
   const [savingObservationId, setSavingObservationId] = useState<string | null>(null);
+  const [alertHistory, setAlertHistory] = useState<AlertHistoryRecord[]>([]);
+  const [loadingAlertHistory, setLoadingAlertHistory] = useState(false);
+  const [sendingAlertId, setSendingAlertId] = useState<string | null>(null);
+  const [alertModal, setAlertModal] = useState<null | {
+    id: string;
+    program: string;
+    type: AlertType;
+    expiration: string | null;
+    delivery: string | null;
+    coordinatorEmail: string;
+    coordinatorName: string | null;
+  }>(null);
   const textareaRefs = useRef<Record<string, HTMLTextAreaElement | null>>({});
   const rafIds = useRef<Record<string, number>>({});
 
@@ -83,28 +170,110 @@ export function ExpirationAlertsView({ rows, onExportReady, onProgramUpdate }: P
     setPrograms(rows);
   }, [rows]);
 
+  const loadAlertHistory = useCallback(async () => {
+    setLoadingAlertHistory(true);
+    try {
+      const response = await fetch("/api/notifications/alertas", { cache: "no-store" });
+      const body = (await response.json()) as { data?: AlertHistoryRecord[]; error?: string };
+      if (!response.ok) {
+        throw new Error(body.error ?? "No se pudo cargar el historial de alertas.");
+      }
+      setAlertHistory(body.data ?? []);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "No se pudo cargar el historial de alertas.";
+      showToast.error(message, {
+        position: "top-right",
+        duration: 2800,
+      });
+    } finally {
+      setLoadingAlertHistory(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void loadAlertHistory();
+  }, [loadAlertHistory]);
+
   const programsRef = useRef(rows);
   useEffect(() => {
     programsRef.current = programs;
   }, [programs]);
+
+  const historyMap = useMemo(() => {
+    const map = new Map<string, AlertHistoryRecord>();
+    for (const record of alertHistory) {
+      const key = `${record.program_id}:${record.alert_type}:${record.alert_kind}`;
+      if (!map.has(key)) {
+        map.set(key, record);
+      }
+    }
+    return map;
+  }, [alertHistory]);
+
+  const getHistoryRecord = useCallback(
+    (programId: string, type: AlertType, kind: AlertKind): AlertHistoryRecord | null => {
+      const key = `${programId}:${type}:${kind}`;
+      return historyMap.get(key) ?? null;
+    },
+    [historyMap],
+  );
+
+  const buildAlertTimeline = useCallback(
+    (programId: string, type: AlertType, expiration: string | null, delivery: string | null) => {
+      const inicioRecord = getHistoryRecord(programId, type, "inicio");
+      const reminderRecord = getHistoryRecord(programId, type, "recordatorio");
+      const entregaRecord = getHistoryRecord(programId, type, "entrega");
+
+      const startDate = addMonths(expiration, -START_MONTHS);
+      const deliveryDue = addMonths(delivery, -DELIVERY_REMINDER_MONTHS);
+
+      const reminderAnchor = reminderRecord?.sent_at ?? inicioRecord?.sent_at ?? startDate;
+      const nextReminder = reminderAnchor ? addMonths(reminderAnchor, REMINDER_MONTHS) : null;
+
+      return {
+        inicioRecord,
+        reminderRecord,
+        entregaRecord,
+        startDate,
+        deliveryDue,
+        nextReminder,
+      };
+    },
+    [getHistoryRecord],
+  );
 
   const rrcRows = useMemo(() => {
     return [...programs]
       .map((program) => {
         const rcAlert = evaluateAlert(program.rcEnd);
         const siacAlert = evaluateAlert(program.rcMineducacion);
+        const timeline = buildAlertTimeline(program.id, "rrc", program.rcEnd, program.rcSiga);
+        const inicioStatus = buildMomentStatus(timeline.startDate, timeline.inicioRecord?.sent_at ?? null);
+        const reminderStatus = buildMomentStatus(timeline.nextReminder, timeline.reminderRecord?.sent_at ?? null);
+        const entregaStatus = buildMomentStatus(timeline.deliveryDue, timeline.entregaRecord?.sent_at ?? null);
+        const allSent = Boolean(
+          timeline.inicioRecord?.sent_at &&
+          timeline.reminderRecord?.sent_at &&
+          timeline.entregaRecord?.sent_at,
+        );
         return {
           id: program.id,
           program: program.program,
           rcEnd: program.rcEnd,
           rcAlert,
+          coordinatorEmail: program.programCoordinatorEmail ?? "",
+          coordinatorName: program.programCoordinator ?? null,
           siacEnd: program.rcMineducacion,
           siacAlert,
+          expiration: program.rcEnd,
+          delivery: program.rcSiga,
           observations: program.observacionesAlertaRrc ?? "",
+          hasPendingAlert: inicioStatus.canSend || reminderStatus.canSend || entregaStatus.canSend,
+          hasAllAlertsSent: allSent,
         };
       })
       .sort((a, b) => sortByClosestExpiration(a.rcEnd, b.rcEnd));
-  }, [programs]);
+  }, [programs, buildAlertTimeline]);
 
   const accreditedRows = useMemo(() => {
     return [...programs]
@@ -112,21 +281,37 @@ export function ExpirationAlertsView({ rows, onExportReady, onProgramUpdate }: P
       .map((program) => {
         const aacAlert = evaluateAlert(program.aacEnd);
         const siacAlert = evaluateAlert(program.aacCgcaiDelivery);
+        const timeline = buildAlertTimeline(program.id, "aac", program.aacEnd, program.aacCgcaiDelivery);
+        const inicioStatus = buildMomentStatus(timeline.startDate, timeline.inicioRecord?.sent_at ?? null);
+        const reminderStatus = buildMomentStatus(timeline.nextReminder, timeline.reminderRecord?.sent_at ?? null);
+        const entregaStatus = buildMomentStatus(timeline.deliveryDue, timeline.entregaRecord?.sent_at ?? null);
+        const allSent = Boolean(
+          timeline.inicioRecord?.sent_at &&
+          timeline.reminderRecord?.sent_at &&
+          timeline.entregaRecord?.sent_at,
+        );
         return {
           id: program.id,
           program: program.program,
           aacEnd: program.aacEnd,
           aacAlert,
+          coordinatorEmail: program.programCoordinatorEmail ?? "",
+          coordinatorName: program.programCoordinator ?? null,
           siacEnd: program.aacCgcaiDelivery,
           siacAlert,
+          expiration: program.aacEnd,
+          delivery: program.aacCgcaiDelivery,
           observations: program.observacionesAlertaAcreditados ?? "",
+          hasPendingAlert: inicioStatus.canSend || reminderStatus.canSend || entregaStatus.canSend,
+          hasAllAlertsSent: allSent,
         };
       })
       .sort((a, b) => sortByClosestExpiration(a.aacEnd, b.aacEnd));
-  }, [programs]);
+  }, [programs, buildAlertTimeline]);
 
   const observationField = mode === "rrc" ? "observacionesAlertaRrc" : "observacionesAlertaAcreditados";
-  const observationHeader = mode === "rrc" ? "Observaciones alerta RRC" : "Observaciones alerta acreditados";
+  const observationHeader = mode === "rrc" ? "Observaciones alerta RRC" : "Observaciones  acreditados";
+
 
   const adjustTextareaHeight = useCallback((element: HTMLTextAreaElement | null) => {
     if (!element) return;
@@ -238,6 +423,38 @@ export function ExpirationAlertsView({ rows, onExportReady, onProgramUpdate }: P
     }
   }, [observationField]);
 
+  const handleSendAlert = useCallback(
+    async (programId: string, alertType: AlertType, alertKind: AlertKind) => {
+      setSendingAlertId(programId);
+      try {
+        const response = await fetch("/api/notifications/alertas", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ programId, alertType, alertKind }),
+        });
+        const body = (await response.json()) as { error?: string };
+        if (!response.ok) {
+          throw new Error(body.error ?? "No se pudo enviar la alerta.");
+        }
+
+        await loadAlertHistory();
+        showToast.success("Alerta enviada.", {
+          position: "top-right",
+          duration: 2000,
+        });
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "No se pudo enviar la alerta.";
+        showToast.error(message, {
+          position: "top-right",
+          duration: 2800,
+        });
+      } finally {
+        setSendingAlertId(null);
+      }
+    },
+    [loadAlertHistory],
+  );
+
   // Keep reference to current data for export
   const dataRef = useRef({ rrcRows, accreditedRows, mode });
   useEffect(() => {
@@ -306,6 +523,23 @@ export function ExpirationAlertsView({ rows, onExportReady, onProgramUpdate }: P
     return () => onExportReady(null);
   }, [onExportReady]);
 
+  const modalTimeline = alertModal
+    ? buildAlertTimeline(alertModal.id, alertModal.type, alertModal.expiration, alertModal.delivery)
+    : null;
+
+  const modalTypeLabel = alertModal?.type === "rrc" ? "RRC" : "AAC";
+  const modalCanSend = Boolean(alertModal?.coordinatorEmail);
+
+  const inicioStatus = modalTimeline
+    ? buildMomentStatus(modalTimeline.startDate, modalTimeline.inicioRecord?.sent_at ?? null)
+    : null;
+  const reminderStatus = modalTimeline
+    ? buildMomentStatus(modalTimeline.nextReminder, modalTimeline.reminderRecord?.sent_at ?? null)
+    : null;
+  const entregaStatus = modalTimeline
+    ? buildMomentStatus(modalTimeline.deliveryDue, modalTimeline.entregaRecord?.sent_at ?? null)
+    : null;
+
   return (
     <div className={styles.wrap}>
       <div className={styles.switcher}>
@@ -337,6 +571,7 @@ export function ExpirationAlertsView({ rows, onExportReady, onProgramUpdate }: P
                 <th>Vencimiento SIAC RRC</th>
                 <th>Alerta SIAC RRC</th>
                 <th>Dias SIAC RRC</th>
+                <th>Accion</th>
                 <th>{observationHeader}</th>
               </tr>
             </thead>
@@ -354,6 +589,37 @@ export function ExpirationAlertsView({ rows, onExportReady, onProgramUpdate }: P
                     <span className={`${styles.badge} ${alertClass(row.siacAlert.level)}`}>{row.siacAlert.label}</span>
                   </td>
                   <td>{row.siacAlert.days ?? "-"}</td>
+                  <td className={styles.actionCell}>
+                    <button
+                      type="button"
+                      className={`${styles.sendButton} ${
+                        row.hasAllAlertsSent
+                          ? styles.sendButtonSuccess
+                          : row.hasPendingAlert
+                            ? ""
+                            : styles.sendButtonInactive
+                      }`}
+                      onClick={() =>
+                        (row.hasPendingAlert || row.hasAllAlertsSent) &&
+                        setAlertModal({
+                          id: row.id,
+                          program: row.program,
+                          type: "rrc",
+                          expiration: row.expiration ?? null,
+                          delivery: row.delivery ?? null,
+                          coordinatorEmail: row.coordinatorEmail,
+                          coordinatorName: row.coordinatorName ?? null,
+                        })
+                      }
+                      disabled={!row.hasPendingAlert && !row.hasAllAlertsSent}
+                    >
+                      {row.hasAllAlertsSent
+                        ? "Alertas enviadas"
+                        : row.hasPendingAlert
+                          ? "Gestionar alertas"
+                          : "Inactivo"}
+                    </button>
+                  </td>
                   <td className={styles.observationsCell}>
                     <textarea
                       ref={setTextareaRef(row.id)}
@@ -383,6 +649,7 @@ export function ExpirationAlertsView({ rows, onExportReady, onProgramUpdate }: P
                 <th>Entrega al CGCAI</th>
                 <th>Alerta CGCAI</th>
                 <th>Dias CGCAI</th>
+                <th>Accion</th>
                 <th>{observationHeader}</th>
               </tr>
             </thead>
@@ -400,6 +667,37 @@ export function ExpirationAlertsView({ rows, onExportReady, onProgramUpdate }: P
                     <span className={`${styles.badge} ${alertClass(row.siacAlert.level)}`}>{row.siacAlert.label}</span>
                   </td>
                   <td>{row.siacAlert.days ?? "-"}</td>
+                  <td className={styles.actionCell}>
+                    <button
+                      type="button"
+                      className={`${styles.sendButton} ${
+                        row.hasAllAlertsSent
+                          ? styles.sendButtonSuccess
+                          : row.hasPendingAlert
+                            ? ""
+                            : styles.sendButtonInactive
+                      }`}
+                      onClick={() =>
+                        (row.hasPendingAlert || row.hasAllAlertsSent) &&
+                        setAlertModal({
+                          id: row.id,
+                          program: row.program,
+                          type: "aac",
+                          expiration: row.expiration ?? null,
+                          delivery: row.delivery ?? null,
+                          coordinatorEmail: row.coordinatorEmail,
+                          coordinatorName: row.coordinatorName ?? null,
+                        })
+                      }
+                      disabled={!row.hasPendingAlert && !row.hasAllAlertsSent}
+                    >
+                      {row.hasAllAlertsSent
+                        ? "Alertas enviadas"
+                        : row.hasPendingAlert
+                          ? "Gestionar alertas"
+                          : "Inactivo"}
+                    </button>
+                  </td>
                   <td className={styles.observationsCell}>
                     <textarea
                       ref={setTextareaRef(row.id)}
@@ -416,6 +714,168 @@ export function ExpirationAlertsView({ rows, onExportReady, onProgramUpdate }: P
               ))}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {alertModal && modalTimeline && (
+        <div
+          className={`${modalStyles.backdrop} ${styles.alertModalBackdrop}`}
+          onClick={() => setAlertModal(null)}
+        >
+          <div
+            className={`${modalStyles.modal} ${styles.alertModal}`}
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className={modalStyles.header}>
+              <div>
+                <div className={modalStyles.title}>Gestion de alertas</div>
+                <div className={modalStyles.subtitle}>
+                  {alertModal.program} · {modalTypeLabel}
+                </div>
+                <div className={styles.modalMuted}>
+                  Coordinador: {alertModal.coordinatorName || "-"} · Email: {alertModal.coordinatorEmail || "-"}
+                </div>
+              </div>
+              <button type="button" className={modalStyles.closeButton} onClick={() => setAlertModal(null)}>
+                Cerrar
+              </button>
+            </div>
+
+            <div className={modalStyles.form}>
+              <section className={`${modalStyles.section} ${modalStyles.sectionAmber}`}>
+                <h4>Inicio de renovacion (18 meses antes)</h4>
+                <div className={modalStyles.grid}>
+                  <div className={modalStyles.field}>
+                    <span>Fecha objetivo</span>
+                    <strong className={styles.modalValue}>{formatDate(modalTimeline.startDate)}</strong>
+                  </div>
+                  <div className={modalStyles.field}>
+                    <span>Estado</span>
+                    <span
+                      className={`${styles.modalStatus} ${
+                        inicioStatus?.tone === "warn"
+                          ? styles.modalStatusWarn
+                          : inicioStatus?.tone === "ok"
+                            ? styles.modalStatusOk
+                            : styles.modalStatusNeutral
+                      }`}
+                    >
+                      {inicioStatus?.label ?? "-"}
+                    </span>
+                  </div>
+                  <div className={modalStyles.field}>
+                    <span>Ultimo envio</span>
+                    <strong className={styles.modalValue}>
+                      {modalTimeline.inicioRecord?.sent_at
+                        ? `${formatDate(modalTimeline.inicioRecord.sent_at)} (${formatRelativeDays(
+                            modalTimeline.inicioRecord.sent_at,
+                          )})`
+                        : "-"}
+                    </strong>
+                  </div>
+                </div>
+                <div className={styles.modalActions}>
+                  <button
+                    type="button"
+                    className={styles.sendButton}
+                    onClick={() => handleSendAlert(alertModal.id, alertModal.type, "inicio")}
+                    disabled={!modalCanSend || !inicioStatus?.canSend || sendingAlertId === alertModal.id}
+                  >
+                    {sendingAlertId === alertModal.id ? "Enviando..." : "Enviar ahora"}
+                  </button>
+                </div>
+              </section>
+
+              <section className={`${modalStyles.section} ${modalStyles.sectionSky}`}>
+                <h4>Recordatorios semestrales</h4>
+                <div className={modalStyles.grid}>
+                  <div className={modalStyles.field}>
+                    <span>Proximo recordatorio</span>
+                    <strong className={styles.modalValue}>{formatDate(modalTimeline.nextReminder)}</strong>
+                  </div>
+                  <div className={modalStyles.field}>
+                    <span>Estado</span>
+                    <span
+                      className={`${styles.modalStatus} ${
+                        reminderStatus?.tone === "warn"
+                          ? styles.modalStatusWarn
+                          : reminderStatus?.tone === "ok"
+                            ? styles.modalStatusOk
+                            : styles.modalStatusNeutral
+                      }`}
+                    >
+                      {reminderStatus?.label ?? "-"}
+                    </span>
+                  </div>
+                  <div className={modalStyles.field}>
+                    <span>Ultimo envio</span>
+                    <strong className={styles.modalValue}>
+                      {modalTimeline.reminderRecord?.sent_at
+                        ? `${formatDate(modalTimeline.reminderRecord.sent_at)} (${formatRelativeDays(
+                            modalTimeline.reminderRecord.sent_at,
+                          )})`
+                        : "-"}
+                    </strong>
+                  </div>
+                </div>
+                <div className={styles.modalActions}>
+                  <button
+                    type="button"
+                    className={styles.sendButton}
+                    onClick={() => handleSendAlert(alertModal.id, alertModal.type, "recordatorio")}
+                    disabled={!modalCanSend || !reminderStatus?.canSend || sendingAlertId === alertModal.id}
+                  >
+                    {sendingAlertId === alertModal.id ? "Enviando..." : "Enviar ahora"}
+                  </button>
+                  <span className={styles.modalMuted}>Frecuencia: cada {REMINDER_MONTHS} meses</span>
+                </div>
+              </section>
+
+              <section className={`${modalStyles.section} ${modalStyles.sectionRose}`}>
+                <h4>Recordatorio de entrega (2 meses antes)</h4>
+                <div className={modalStyles.grid}>
+                  <div className={modalStyles.field}>
+                    <span>Fecha objetivo</span>
+                    <strong className={styles.modalValue}>{formatDate(modalTimeline.deliveryDue)}</strong>
+                  </div>
+                  <div className={modalStyles.field}>
+                    <span>Estado</span>
+                    <span
+                      className={`${styles.modalStatus} ${
+                        entregaStatus?.tone === "warn"
+                          ? styles.modalStatusWarn
+                          : entregaStatus?.tone === "ok"
+                            ? styles.modalStatusOk
+                            : styles.modalStatusNeutral
+                      }`}
+                    >
+                      {entregaStatus?.label ?? "-"}
+                    </span>
+                  </div>
+                  <div className={modalStyles.field}>
+                    <span>Ultimo envio</span>
+                    <strong className={styles.modalValue}>
+                      {modalTimeline.entregaRecord?.sent_at
+                        ? `${formatDate(modalTimeline.entregaRecord.sent_at)} (${formatRelativeDays(
+                            modalTimeline.entregaRecord.sent_at,
+                          )})`
+                        : "-"}
+                    </strong>
+                  </div>
+                </div>
+                <div className={styles.modalActions}>
+                  <button
+                    type="button"
+                    className={styles.sendButton}
+                    onClick={() => handleSendAlert(alertModal.id, alertModal.type, "entrega")}
+                    disabled={!modalCanSend || !entregaStatus?.canSend || sendingAlertId === alertModal.id}
+                  >
+                    {sendingAlertId === alertModal.id ? "Enviando..." : "Enviar ahora"}
+                  </button>
+                </div>
+              </section>
+            </div>
+          </div>
         </div>
       )}
     </div>

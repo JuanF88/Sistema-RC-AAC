@@ -12,6 +12,8 @@ type Props = {
   currentUser: string;
   currentRole: UserRole;
   canOpenUsers: boolean;
+  alertPendingCount: number;
+  alertPendingNames: string[];
   onToggle: () => void;
   onSelect: (view: ViewMode) => void;
   onOpenUsers: () => void;
@@ -89,7 +91,31 @@ function MenuIcon({ id }: { id: ViewMode }) {
   );
 }
 
-export function SidebarMenu({ menuOpen, view, items, currentUser, currentRole, canOpenUsers, onToggle, onSelect, onOpenUsers, onLogout }: Props) {
+function buildAlertTooltip(names: string[], maxItems = 8): string {
+  if (names.length === 0) return "";
+  const trimmed = names.slice(0, maxItems).join(", ");
+  if (names.length > maxItems) {
+    return `${trimmed} y ${names.length - maxItems} mas`;
+  }
+  return trimmed;
+}
+
+export function SidebarMenu({
+  menuOpen,
+  view,
+  items,
+  currentUser,
+  currentRole,
+  canOpenUsers,
+  alertPendingCount,
+  alertPendingNames,
+  onToggle,
+  onSelect,
+  onOpenUsers,
+  onLogout,
+}: Props) {
+  const alertTooltip = buildAlertTooltip(alertPendingNames);
+  const showAlertBadge = alertPendingCount > 0;
   return (
     <aside className={`${styles.sidebar} ${menuOpen ? styles.sidebarOpen : styles.sidebarClosed}`}>
       <div className={styles.topRow}>
@@ -108,22 +134,30 @@ export function SidebarMenu({ menuOpen, view, items, currentUser, currentRole, c
         {items.map((item) => {
           const active = view === item.id;
           const collapsedTitle = menuOpen ? undefined : item.label;
+          const isAlertItem = item.id === "alertas" && showAlertBadge;
           return (
             <button
               key={item.id}
               type="button"
               onClick={() => onSelect(item.id)}
-              className={`${styles.navItem} ${active ? styles.navItemActive : ""}`}
+              className={`${styles.navItem} ${active ? styles.navItemActive : ""} ${isAlertItem ? styles.navItemAlert : ""}`}
               aria-label={collapsedTitle ?? item.label}
               data-tooltip={item.label}
             >
               <span className={styles.menuIcon}>
                 <MenuIcon id={item.id} />
+                {isAlertItem && <span className={styles.alertBadge}>{alertPendingCount}</span>}
               </span>
               <span className={`${styles.textWrap} ${menuOpen ? styles.textVisible : styles.textHidden}`}>
                 <span className={styles.title}>{item.label}</span>
                 <span className={`${styles.subtitle} ${active ? styles.subtitleActive : ""}`}>{item.subtitle}</span>
               </span>
+              {isAlertItem && alertTooltip && (
+                <span className={styles.alertTooltip} role="tooltip">
+                  <strong>Alertas pendientes</strong>
+                  <span className={styles.alertTooltipText}>{alertTooltip}</span>
+                </span>
+              )}
             </button>
           );
         })}

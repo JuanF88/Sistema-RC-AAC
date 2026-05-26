@@ -99,7 +99,7 @@ function wrapProfessionalTemplate({ title, subtitle, intro, bodyHtml, footer }) 
       </div>
 
       <div style="border-top: 1px solid #feceae; padding: 14px 24px; background: #fff7ed; font-size: 12px; color: #c2410c; line-height: 1.6; white-space: normal; word-break: break-word;">
-        ${escapeHtml(footer || 'Este es un mensaje oficial del Sistema Órbita. Por favor no respondas a este correo.')}
+        ${escapeHtml(footer || 'Este es un mensaje oficial del Sistema Órbita. Por favor no responder a este correo.')}
       </div>
     </div>
   </div>`
