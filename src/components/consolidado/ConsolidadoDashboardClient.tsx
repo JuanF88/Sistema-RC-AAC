@@ -46,8 +46,8 @@ const MENU_ITEMS: MenuItem[] = [
   { id: "historial", label: "Historial", subtitle: "Snapshots de BD" },
 ];
 
-const START_MONTHS = 18;
-const REMINDER_MONTHS = 6;
+const START_MONTHS = 24;
+const DELIVERY_FIRST_REMINDER_MONTHS = 5;
 const DELIVERY_REMINDER_MONTHS = 2;
 
 function isUuid(value: string): boolean {
@@ -180,6 +180,7 @@ export function ConsolidadoDashboardClient({ data, currentUser, currentRole }: P
   const [rcState, setRcState] = useState("Todos");
   const [rcStart, setRcStart] = useState("");
   const [rcEnd, setRcEnd] = useState("");
+  const [rcValidAt, setRcValidAt] = useState("");
   const [aacStart, setAacStart] = useState("");
   const [aacEnd, setAacEnd] = useState("");
   const [registryGrouping, setRegistryGrouping] = useState<RegistroCalificadoGroupingMode>("programas");
@@ -213,6 +214,7 @@ export function ConsolidadoDashboardClient({ data, currentUser, currentRole }: P
     setRcState("Todos");
     setRcStart("");
     setRcEnd("");
+    setRcValidAt("");
     setAacStart("");
     setAacEnd("");
   }, []);
@@ -275,36 +277,35 @@ export function ConsolidadoDashboardClient({ data, currentUser, currentRole }: P
     }
   }, [currentRole]);
 
-  useEffect(() => {
-    let cancelled = false;
-
-    const loadAlertHistory = async () => {
-      setLoadingAlertHistory(true);
-      try {
-        const response = await fetch("/api/notifications/alertas", { cache: "no-store" });
-        const body = (await response.json()) as { data?: AlertHistoryRecord[]; error?: string };
-        if (!response.ok) {
-          throw new Error(body.error ?? "No se pudo cargar el historial de alertas.");
-        }
-        if (!cancelled) {
-          setAlertHistory(body.data ?? []);
-        }
-      } catch {
-        if (!cancelled) {
-          setAlertHistory([]);
-        }
-      } finally {
-        if (!cancelled) {
-          setLoadingAlertHistory(false);
-        }
+  const loadAlertHistory = useCallback(async () => {
+    setLoadingAlertHistory(true);
+    try {
+      const response = await fetch("/api/notifications/alertas", { cache: "no-store" });
+      const body = (await response.json()) as { data?: AlertHistoryRecord[]; error?: string };
+      if (!response.ok) {
+        throw new Error(body.error ?? "No se pudo cargar el historial de alertas.");
       }
-    };
-
-    void loadAlertHistory();
-    return () => {
-      cancelled = true;
-    };
+      setAlertHistory(body.data ?? []);
+    } catch {
+      setAlertHistory([]);
+    } finally {
+      setLoadingAlertHistory(false);
+    }
   }, []);
+
+  const handleAlertHistoryCreated = useCallback((record: AlertHistoryRecord) => {
+    setAlertHistory((current) => {
+      const next = current.filter(
+        (item) =>
+          !(item.program_id === record.program_id && item.alert_type === record.alert_type && item.alert_kind === record.alert_kind),
+      );
+      return [record, ...next];
+    });
+  }, []);
+
+  useEffect(() => {
+    void loadAlertHistory();
+  }, [loadAlertHistory]);
 
   useEffect(() => {
     let cancelled = false;
@@ -395,9 +396,7 @@ export function ConsolidadoDashboardClient({ data, currentUser, currentRole }: P
 
       const startDate = addMonths(expiration, -START_MONTHS);
       const deliveryDue = addMonths(delivery, -DELIVERY_REMINDER_MONTHS);
-
-      const reminderAnchor = reminderRecord?.sent_at ?? inicioRecord?.sent_at ?? startDate;
-      const nextReminder = reminderAnchor ? addMonths(reminderAnchor, REMINDER_MONTHS) : null;
+      const nextReminder = delivery ? addMonths(delivery, -DELIVERY_FIRST_REMINDER_MONTHS) : null;
 
       return {
         startDate,
@@ -513,6 +512,11 @@ export function ConsolidadoDashboardClient({ data, currentUser, currentRole }: P
       if (view === "consolidado") {
         if (!withinStartRange(program.rcStart, rcStart, rcEnd)) return false;
         if (!withinEndLimit(program.rcEnd, rcEnd)) return false;
+        if (rcValidAt) {
+          if (!program.rcEnd) return false;
+          if (program.rcEnd < rcValidAt) return false;
+          if (program.rcStart && program.rcStart > rcValidAt) return false;
+        }
         if (!withinStartRange(program.aacStart, aacStart, aacEnd)) return false;
         if (!withinEndLimit(program.aacEnd, aacEnd)) return false;
       }
@@ -522,7 +526,7 @@ export function ConsolidadoDashboardClient({ data, currentUser, currentRole }: P
       const corpus = `${program.program} ${program.processCode} ${program.snies} ${program.faculty} ${program.degree} ${program.location} ${program.methodology} ${program.workday} ${program.generalObservations} ${program.programCoordinator}`.toLowerCase();
       return corpus.includes(query);
     });
-  }, [programs, view, programStatusFilter, faculty, modality, level, locationFilter, regionalizedFilter, acreditableFilter, accreditedFilter, rcState, search, rcStart, rcEnd, aacStart, aacEnd]);
+  }, [programs, view, programStatusFilter, faculty, modality, level, locationFilter, regionalizedFilter, acreditableFilter, accreditedFilter, rcState, search, rcStart, rcEnd, rcValidAt, aacStart, aacEnd]);
 
   const filteredSummary = useMemo(() => {
     const activeFiltered = filtered.filter((program) => program.isActive !== false);
@@ -817,6 +821,7 @@ export function ConsolidadoDashboardClient({ data, currentUser, currentRole }: P
                 rcState={rcState}
                 rcStart={rcStart}
                 rcEnd={rcEnd}
+                rcValidAt={rcValidAt}
                 aacStart={aacStart}
                 aacEnd={aacEnd}
                 modalities={modalities}
@@ -834,6 +839,7 @@ export function ConsolidadoDashboardClient({ data, currentUser, currentRole }: P
                 onRcStateChange={setRcState}
                 onRcStartChange={setRcStart}
                 onRcEndChange={setRcEnd}
+                onRcValidAtChange={setRcValidAt}
                 onAacStartChange={setAacStart}
                 onAacEndChange={setAacEnd}
                 onCreateProgram={handleCreateProgram}
@@ -966,7 +972,13 @@ export function ConsolidadoDashboardClient({ data, currentUser, currentRole }: P
             </section>
           ) : (
             <section className={styles.panel}>
-              <ExpirationAlertsView rows={activePrograms} onExportReady={handleRegisterExportAction} onProgramUpdate={handleProgramUpdate} />
+              <ExpirationAlertsView
+                rows={activePrograms}
+                onExportReady={handleRegisterExportAction}
+                onProgramUpdate={handleProgramUpdate}
+                onAlertsUpdated={loadAlertHistory}
+                onAlertHistoryCreated={handleAlertHistoryCreated}
+              />
             </section>
           )}
 

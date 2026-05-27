@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useLayoutEffect, useMemo, useState, useRef } from "react";
+import { createPortal } from "react-dom";
 import { showToast } from "nextjs-toast-notify";
 
 import type { ProgramRecord } from "../types";
@@ -13,6 +14,8 @@ type Props = {
   rows: ProgramRecord[];
   onExportReady?: (action: (() => Promise<void>) | null) => void;
   onProgramUpdate?: (program: ProgramRecord) => void;
+  onAlertsUpdated?: () => void;
+  onAlertHistoryCreated?: (record: AlertHistoryRecord) => void;
 };
 
 type AlertMode = "rrc" | "acreditados";
@@ -41,12 +44,12 @@ type AlertHistoryRecord = {
 
 const ALERT_KIND_LABELS: Record<AlertKind, string> = {
   inicio: "Inicio de renovacion",
-  recordatorio: "Recordatorio semestral",
+  recordatorio: "Recordatorio previo a entrega",
   entrega: "Recordatorio de entrega",
 };
 
-const START_MONTHS = 18;
-const REMINDER_MONTHS = 6;
+const START_MONTHS = 24;
+const DELIVERY_FIRST_REMINDER_MONTHS = 5;
 const DELIVERY_REMINDER_MONTHS = 2;
 
 function parseIsoDate(value: string | null): Date | null {
@@ -147,8 +150,9 @@ function alertClass(level: AlertLevel): string {
   return styles.badgeNeutral;
 }
 
-export function ExpirationAlertsView({ rows, onExportReady, onProgramUpdate }: Props) {
+export function ExpirationAlertsView({ rows, onExportReady, onProgramUpdate, onAlertsUpdated, onAlertHistoryCreated }: Props) {
   const [mode, setMode] = useState<AlertMode>("rrc");
+  const [isClient, setIsClient] = useState(false);
   const [programs, setPrograms] = useState(rows);
   const [savingObservationId, setSavingObservationId] = useState<string | null>(null);
   const [alertHistory, setAlertHistory] = useState<AlertHistoryRecord[]>([]);
@@ -169,6 +173,10 @@ export function ExpirationAlertsView({ rows, onExportReady, onProgramUpdate }: P
   useEffect(() => {
     setPrograms(rows);
   }, [rows]);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   const loadAlertHistory = useCallback(async () => {
     setLoadingAlertHistory(true);
@@ -226,9 +234,7 @@ export function ExpirationAlertsView({ rows, onExportReady, onProgramUpdate }: P
 
       const startDate = addMonths(expiration, -START_MONTHS);
       const deliveryDue = addMonths(delivery, -DELIVERY_REMINDER_MONTHS);
-
-      const reminderAnchor = reminderRecord?.sent_at ?? inicioRecord?.sent_at ?? startDate;
-      const nextReminder = reminderAnchor ? addMonths(reminderAnchor, REMINDER_MONTHS) : null;
+      const nextReminder = delivery ? addMonths(delivery, -DELIVERY_FIRST_REMINDER_MONTHS) : null;
 
       return {
         inicioRecord,
@@ -424,21 +430,25 @@ export function ExpirationAlertsView({ rows, onExportReady, onProgramUpdate }: P
   }, [observationField]);
 
   const handleSendAlert = useCallback(
-    async (programId: string, alertType: AlertType, alertKind: AlertKind) => {
+    async (programId: string, alertType: AlertType, alertKind: AlertKind, manualOnly = false) => {
       setSendingAlertId(programId);
       try {
         const response = await fetch("/api/notifications/alertas", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ programId, alertType, alertKind }),
+          body: JSON.stringify({ programId, alertType, alertKind, manualOnly }),
         });
-        const body = (await response.json()) as { error?: string };
+        const body = (await response.json()) as { error?: string; data?: AlertHistoryRecord };
         if (!response.ok) {
           throw new Error(body.error ?? "No se pudo enviar la alerta.");
         }
 
         await loadAlertHistory();
-        showToast.success("Alerta enviada.", {
+        onAlertsUpdated?.();
+        if (body.data) {
+          onAlertHistoryCreated?.(body.data);
+        }
+        showToast.success(manualOnly ? "Alerta marcada como enviada." : "Alerta enviada.", {
           position: "top-right",
           duration: 2000,
         });
@@ -529,6 +539,7 @@ export function ExpirationAlertsView({ rows, onExportReady, onProgramUpdate }: P
 
   const modalTypeLabel = alertModal?.type === "rrc" ? "RRC" : "AAC";
   const modalCanSend = Boolean(alertModal?.coordinatorEmail);
+  const modalCanMark = true;
 
   const inicioStatus = modalTimeline
     ? buildMomentStatus(modalTimeline.startDate, modalTimeline.inicioRecord?.sent_at ?? null)
@@ -717,167 +728,194 @@ export function ExpirationAlertsView({ rows, onExportReady, onProgramUpdate }: P
         </div>
       )}
 
-      {alertModal && modalTimeline && (
-        <div
-          className={`${modalStyles.backdrop} ${styles.alertModalBackdrop}`}
-          onClick={() => setAlertModal(null)}
-        >
-          <div
-            className={`${modalStyles.modal} ${styles.alertModal}`}
-            onClick={(event) => event.stopPropagation()}
-          >
-            <div className={modalStyles.header}>
-              <div>
-                <div className={modalStyles.title}>Gestion de alertas</div>
-                <div className={modalStyles.subtitle}>
-                  {alertModal.program} · {modalTypeLabel}
+      {alertModal && modalTimeline && isClient
+        ? createPortal(
+            <div
+              className={`${modalStyles.backdrop} ${styles.alertModalBackdrop}`}
+              onClick={() => setAlertModal(null)}
+            >
+              <div
+                className={`${modalStyles.modal} ${styles.alertModal}`}
+                onClick={(event) => event.stopPropagation()}
+              >
+                <div className={modalStyles.header}>
+                  <div>
+                    <div className={modalStyles.title}>Gestion de alertas</div>
+                    <div className={modalStyles.subtitle}>
+                      {alertModal.program} · {modalTypeLabel}
+                    </div>
+                    <div className={styles.modalMuted}>
+                      Coordinador: {alertModal.coordinatorName || "-"} · Email: {alertModal.coordinatorEmail || "-"}
+                    </div>
+                  </div>
+                  <button type="button" className={modalStyles.closeButton} onClick={() => setAlertModal(null)}>
+                    Cerrar
+                  </button>
                 </div>
-                <div className={styles.modalMuted}>
-                  Coordinador: {alertModal.coordinatorName || "-"} · Email: {alertModal.coordinatorEmail || "-"}
+
+                <div className={modalStyles.form}>
+                  <section className={`${modalStyles.section} ${modalStyles.sectionAmber}`}>
+                    <h4>Inicio de renovacion (18 meses antes)</h4>
+                    <div className={modalStyles.grid}>
+                      <div className={modalStyles.field}>
+                        <span>Fecha objetivo</span>
+                        <strong className={styles.modalValue}>{formatDate(modalTimeline.startDate)}</strong>
+                      </div>
+                      <div className={modalStyles.field}>
+                        <span>Estado</span>
+                        <span
+                          className={`${styles.modalStatus} ${
+                            inicioStatus?.tone === "warn"
+                              ? styles.modalStatusWarn
+                              : inicioStatus?.tone === "ok"
+                                ? styles.modalStatusOk
+                                : styles.modalStatusNeutral
+                          }`}
+                        >
+                          {inicioStatus?.label ?? "-"}
+                        </span>
+                      </div>
+                      <div className={modalStyles.field}>
+                        <span>Ultimo envio</span>
+                        <strong className={styles.modalValue}>
+                          {modalTimeline.inicioRecord?.sent_at
+                            ? `${formatDate(modalTimeline.inicioRecord.sent_at)} (${formatRelativeDays(
+                                modalTimeline.inicioRecord.sent_at,
+                              )})`
+                            : "-"}
+                        </strong>
+                      </div>
+                    </div>
+                    <div className={styles.modalActions}>
+                      <button
+                        type="button"
+                        className={styles.sendButton}
+                        onClick={() => handleSendAlert(alertModal.id, alertModal.type, "inicio")}
+                        disabled={!modalCanSend || !inicioStatus?.canSend || sendingAlertId === alertModal.id}
+                      >
+                        {sendingAlertId === alertModal.id ? "Enviando..." : "Enviar ahora"}
+                      </button>
+                      <button
+                        type="button"
+                        className={styles.markButton}
+                        onClick={() => handleSendAlert(alertModal.id, alertModal.type, "inicio", true)}
+                        disabled={!modalCanMark || !inicioStatus?.canSend || sendingAlertId === alertModal.id}
+                      >
+                        Marcar enviado
+                      </button>
+                    </div>
+                  </section>
+
+                  <section className={`${modalStyles.section} ${modalStyles.sectionSky}`}>
+                    <h4>Recordatorio previo a entrega (5 meses antes)</h4>
+                    <div className={modalStyles.grid}>
+                      <div className={modalStyles.field}>
+                        <span>Proximo recordatorio</span>
+                        <strong className={styles.modalValue}>{formatDate(modalTimeline.nextReminder)}</strong>
+                      </div>
+                      <div className={modalStyles.field}>
+                        <span>Estado</span>
+                        <span
+                          className={`${styles.modalStatus} ${
+                            reminderStatus?.tone === "warn"
+                              ? styles.modalStatusWarn
+                              : reminderStatus?.tone === "ok"
+                                ? styles.modalStatusOk
+                                : styles.modalStatusNeutral
+                          }`}
+                        >
+                          {reminderStatus?.label ?? "-"}
+                        </span>
+                      </div>
+                      <div className={modalStyles.field}>
+                        <span>Ultimo envio</span>
+                        <strong className={styles.modalValue}>
+                          {modalTimeline.reminderRecord?.sent_at
+                            ? `${formatDate(modalTimeline.reminderRecord.sent_at)} (${formatRelativeDays(
+                                modalTimeline.reminderRecord.sent_at,
+                              )})`
+                            : "-"}
+                        </strong>
+                      </div>
+                    </div>
+                    <div className={styles.modalActions}>
+                      <button
+                        type="button"
+                        className={styles.sendButton}
+                        onClick={() => handleSendAlert(alertModal.id, alertModal.type, "recordatorio")}
+                        disabled={!modalCanSend || !reminderStatus?.canSend || sendingAlertId === alertModal.id}
+                      >
+                        {sendingAlertId === alertModal.id ? "Enviando..." : "Enviar ahora"}
+                      </button>
+                      <button
+                        type="button"
+                        className={styles.markButton}
+                        onClick={() => handleSendAlert(alertModal.id, alertModal.type, "recordatorio", true)}
+                        disabled={!modalCanMark || !reminderStatus?.canSend || sendingAlertId === alertModal.id}
+                      >
+                        Marcar enviado
+                      </button>
+                      <span className={styles.modalMuted}>Aviso programado: 5 meses antes de la entrega</span>
+                    </div>
+                  </section>
+
+                  <section className={`${modalStyles.section} ${modalStyles.sectionRose}`}>
+                    <h4>Recordatorio de entrega (2 meses antes)</h4>
+                    <div className={modalStyles.grid}>
+                      <div className={modalStyles.field}>
+                        <span>Fecha objetivo</span>
+                        <strong className={styles.modalValue}>{formatDate(modalTimeline.deliveryDue)}</strong>
+                      </div>
+                      <div className={modalStyles.field}>
+                        <span>Estado</span>
+                        <span
+                          className={`${styles.modalStatus} ${
+                            entregaStatus?.tone === "warn"
+                              ? styles.modalStatusWarn
+                              : entregaStatus?.tone === "ok"
+                                ? styles.modalStatusOk
+                                : styles.modalStatusNeutral
+                          }`}
+                        >
+                          {entregaStatus?.label ?? "-"}
+                        </span>
+                      </div>
+                      <div className={modalStyles.field}>
+                        <span>Ultimo envio</span>
+                        <strong className={styles.modalValue}>
+                          {modalTimeline.entregaRecord?.sent_at
+                            ? `${formatDate(modalTimeline.entregaRecord.sent_at)} (${formatRelativeDays(
+                                modalTimeline.entregaRecord.sent_at,
+                              )})`
+                            : "-"}
+                        </strong>
+                      </div>
+                    </div>
+                    <div className={styles.modalActions}>
+                      <button
+                        type="button"
+                        className={styles.sendButton}
+                        onClick={() => handleSendAlert(alertModal.id, alertModal.type, "entrega")}
+                        disabled={!modalCanSend || !entregaStatus?.canSend || sendingAlertId === alertModal.id}
+                      >
+                        {sendingAlertId === alertModal.id ? "Enviando..." : "Enviar ahora"}
+                      </button>
+                      <button
+                        type="button"
+                        className={styles.markButton}
+                        onClick={() => handleSendAlert(alertModal.id, alertModal.type, "entrega", true)}
+                        disabled={!modalCanMark || !entregaStatus?.canSend || sendingAlertId === alertModal.id}
+                      >
+                        Marcar enviado
+                      </button>
+                    </div>
+                  </section>
                 </div>
               </div>
-              <button type="button" className={modalStyles.closeButton} onClick={() => setAlertModal(null)}>
-                Cerrar
-              </button>
-            </div>
-
-            <div className={modalStyles.form}>
-              <section className={`${modalStyles.section} ${modalStyles.sectionAmber}`}>
-                <h4>Inicio de renovacion (18 meses antes)</h4>
-                <div className={modalStyles.grid}>
-                  <div className={modalStyles.field}>
-                    <span>Fecha objetivo</span>
-                    <strong className={styles.modalValue}>{formatDate(modalTimeline.startDate)}</strong>
-                  </div>
-                  <div className={modalStyles.field}>
-                    <span>Estado</span>
-                    <span
-                      className={`${styles.modalStatus} ${
-                        inicioStatus?.tone === "warn"
-                          ? styles.modalStatusWarn
-                          : inicioStatus?.tone === "ok"
-                            ? styles.modalStatusOk
-                            : styles.modalStatusNeutral
-                      }`}
-                    >
-                      {inicioStatus?.label ?? "-"}
-                    </span>
-                  </div>
-                  <div className={modalStyles.field}>
-                    <span>Ultimo envio</span>
-                    <strong className={styles.modalValue}>
-                      {modalTimeline.inicioRecord?.sent_at
-                        ? `${formatDate(modalTimeline.inicioRecord.sent_at)} (${formatRelativeDays(
-                            modalTimeline.inicioRecord.sent_at,
-                          )})`
-                        : "-"}
-                    </strong>
-                  </div>
-                </div>
-                <div className={styles.modalActions}>
-                  <button
-                    type="button"
-                    className={styles.sendButton}
-                    onClick={() => handleSendAlert(alertModal.id, alertModal.type, "inicio")}
-                    disabled={!modalCanSend || !inicioStatus?.canSend || sendingAlertId === alertModal.id}
-                  >
-                    {sendingAlertId === alertModal.id ? "Enviando..." : "Enviar ahora"}
-                  </button>
-                </div>
-              </section>
-
-              <section className={`${modalStyles.section} ${modalStyles.sectionSky}`}>
-                <h4>Recordatorios semestrales</h4>
-                <div className={modalStyles.grid}>
-                  <div className={modalStyles.field}>
-                    <span>Proximo recordatorio</span>
-                    <strong className={styles.modalValue}>{formatDate(modalTimeline.nextReminder)}</strong>
-                  </div>
-                  <div className={modalStyles.field}>
-                    <span>Estado</span>
-                    <span
-                      className={`${styles.modalStatus} ${
-                        reminderStatus?.tone === "warn"
-                          ? styles.modalStatusWarn
-                          : reminderStatus?.tone === "ok"
-                            ? styles.modalStatusOk
-                            : styles.modalStatusNeutral
-                      }`}
-                    >
-                      {reminderStatus?.label ?? "-"}
-                    </span>
-                  </div>
-                  <div className={modalStyles.field}>
-                    <span>Ultimo envio</span>
-                    <strong className={styles.modalValue}>
-                      {modalTimeline.reminderRecord?.sent_at
-                        ? `${formatDate(modalTimeline.reminderRecord.sent_at)} (${formatRelativeDays(
-                            modalTimeline.reminderRecord.sent_at,
-                          )})`
-                        : "-"}
-                    </strong>
-                  </div>
-                </div>
-                <div className={styles.modalActions}>
-                  <button
-                    type="button"
-                    className={styles.sendButton}
-                    onClick={() => handleSendAlert(alertModal.id, alertModal.type, "recordatorio")}
-                    disabled={!modalCanSend || !reminderStatus?.canSend || sendingAlertId === alertModal.id}
-                  >
-                    {sendingAlertId === alertModal.id ? "Enviando..." : "Enviar ahora"}
-                  </button>
-                  <span className={styles.modalMuted}>Frecuencia: cada {REMINDER_MONTHS} meses</span>
-                </div>
-              </section>
-
-              <section className={`${modalStyles.section} ${modalStyles.sectionRose}`}>
-                <h4>Recordatorio de entrega (2 meses antes)</h4>
-                <div className={modalStyles.grid}>
-                  <div className={modalStyles.field}>
-                    <span>Fecha objetivo</span>
-                    <strong className={styles.modalValue}>{formatDate(modalTimeline.deliveryDue)}</strong>
-                  </div>
-                  <div className={modalStyles.field}>
-                    <span>Estado</span>
-                    <span
-                      className={`${styles.modalStatus} ${
-                        entregaStatus?.tone === "warn"
-                          ? styles.modalStatusWarn
-                          : entregaStatus?.tone === "ok"
-                            ? styles.modalStatusOk
-                            : styles.modalStatusNeutral
-                      }`}
-                    >
-                      {entregaStatus?.label ?? "-"}
-                    </span>
-                  </div>
-                  <div className={modalStyles.field}>
-                    <span>Ultimo envio</span>
-                    <strong className={styles.modalValue}>
-                      {modalTimeline.entregaRecord?.sent_at
-                        ? `${formatDate(modalTimeline.entregaRecord.sent_at)} (${formatRelativeDays(
-                            modalTimeline.entregaRecord.sent_at,
-                          )})`
-                        : "-"}
-                    </strong>
-                  </div>
-                </div>
-                <div className={styles.modalActions}>
-                  <button
-                    type="button"
-                    className={styles.sendButton}
-                    onClick={() => handleSendAlert(alertModal.id, alertModal.type, "entrega")}
-                    disabled={!modalCanSend || !entregaStatus?.canSend || sendingAlertId === alertModal.id}
-                  >
-                    {sendingAlertId === alertModal.id ? "Enviando..." : "Enviar ahora"}
-                  </button>
-                </div>
-              </section>
-            </div>
-          </div>
-        </div>
-      )}
+            </div>,
+            document.body,
+          )
+        : null}
     </div>
   );
 }

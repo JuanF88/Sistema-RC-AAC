@@ -133,12 +133,22 @@ export function buildCredentialsTemplate({ nombre, apellido, email, password, lo
   return { subject, html }
 }
 
-export function buildProfessionalTemplateFromText({ subject, text, intro, nombreCompleto, processKeyValue = false }) {
+export function buildProfessionalTemplateFromText({
+  subject,
+  text,
+  intro,
+  nombreCompleto,
+  processKeyValue = false,
+  keyValueText,
+}) {
   const introText = intro || (nombreCompleto ? `Hola ${escapeHtml(nombreCompleto)},` : '')
+  const bodyHtml = keyValueText
+    ? `${renderKeyValueBlock(keyValueText)}${textToHtml(text, false)}`
+    : textToHtml(text, processKeyValue)
   return wrapProfessionalTemplate({
     title: subject || 'Órbita',
     subtitle: 'Mensaje desde el Sistema Órbita',
     intro: introText,
-    bodyHtml: textToHtml(text, processKeyValue),
+    bodyHtml,
   })
 }

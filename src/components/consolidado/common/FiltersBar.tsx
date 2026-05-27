@@ -16,6 +16,7 @@ type Props = {
   rcState: string;
   rcStart: string;
   rcEnd: string;
+  rcValidAt: string;
   aacStart: string;
   aacEnd: string;
   modalities: string[];
@@ -33,6 +34,7 @@ type Props = {
   onRcStateChange: (value: string) => void;
   onRcStartChange: (value: string) => void;
   onRcEndChange: (value: string) => void;
+  onRcValidAtChange: (value: string) => void;
   onAacStartChange: (value: string) => void;
   onAacEndChange: (value: string) => void;
   onCreateProgram: () => void;
@@ -62,6 +64,7 @@ export function FiltersBar({
   rcState,
   rcStart,
   rcEnd,
+  rcValidAt,
   aacStart,
   aacEnd,
   modalities,
@@ -79,6 +82,7 @@ export function FiltersBar({
   onRcStateChange,
   onRcStartChange,
   onRcEndChange,
+  onRcValidAtChange,
   onAacStartChange,
   onAacEndChange,
   onCreateProgram,
@@ -143,6 +147,7 @@ export function FiltersBar({
     if (showRcState && rcState !== "Todos") count += 1;
     if (showDateFilters && rcStart) count += 1;
     if (showDateFilters && rcEnd) count += 1;
+    if (showDateFilters && rcValidAt) count += 1;
     if (showDateFilters && aacStart) count += 1;
     if (showDateFilters && aacEnd) count += 1;
     return count;
@@ -166,6 +171,7 @@ export function FiltersBar({
     showDateFilters,
     rcStart,
     rcEnd,
+    rcValidAt,
     aacStart,
     aacEnd,
   ]);
@@ -304,6 +310,7 @@ export function FiltersBar({
                 />
               </div>
             </div>
+
             <div className={styles.dateGroup}>
               <span className={styles.dateLabel}>Fin RC</span>
               <div className={styles.dateFields}>
@@ -337,6 +344,18 @@ export function FiltersBar({
                   onChange={(event) => onAacEndChange(event.target.value)}
                   className={styles.input}
                   aria-label="Fin AAC"
+                />
+              </div>
+            </div>
+            <div className={styles.dateGroup}>
+              <span className={styles.dateLabel}>RC vigente a</span>
+              <div className={styles.dateFields}>
+                <input
+                  type="date"
+                  value={rcValidAt}
+                  onChange={(event) => onRcValidAtChange(event.target.value)}
+                  className={styles.input}
+                  aria-label="RC vigente a"
                 />
               </div>
             </div>

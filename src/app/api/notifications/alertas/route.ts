@@ -11,6 +11,7 @@ type SendAlertPayload = {
   programId: string;
   alertType: AlertType;
   alertKind: AlertKind;
+  manualOnly?: boolean;
 };
 
 type ProgramRow = {
@@ -31,7 +32,7 @@ const ALERT_TYPE_LABELS: Record<AlertType, string> = {
 
 const ALERT_KIND_LABELS: Record<AlertKind, string> = {
   inicio: "Inicio de renovacion",
-  recordatorio: "Recordatorio semestral",
+  recordatorio: "Recordatorio previo a entrega",
   entrega: "Recordatorio de entrega",
 };
 
@@ -118,7 +119,7 @@ export async function POST(request: Request) {
 
     const record = program as ProgramRow;
     const recipients = parseCoordinatorEmails(record.program_coordinator_email ?? null);
-    if (recipients.length === 0) {
+    if (!payload.manualOnly && recipients.length === 0) {
       return NextResponse.json({ error: "El programa no tiene correo de coordinador." }, { status: 400 });
     }
 
@@ -139,32 +140,40 @@ export async function POST(request: Request) {
       `Coordinador: ${record.program_coordinator ?? "-"}`,
     ];
 
+    const explanation = `Te contactamos para el seguimiento del ${alertTypeLabel} del programa ${programName}. A continuacion encuentras las fechas clave y el motivo de esta alerta.`;
+    const accreditationNote = "Si el programa esta acreditado y cumple con los tiempos de renovacion, no tendra que realizar el tramite de renovacion de registro de este programa.";
+
     const plainText = [
       `Hola ${record.program_coordinator ?? "equipo"},`,
+      "",
+      explanation,
       "",
       ...textLines,
       "",
       "Este es un recordatorio oficial enviado desde el Sistema Orbita.",
+      accreditationNote,
     ].join("\n");
 
     const html = buildProfessionalTemplateFromText({
       subject,
       intro: `Hola ${record.program_coordinator ?? "equipo"},`,
       nombreCompleto: record.program_coordinator ?? undefined,
-      processKeyValue: true,
-      text: [...textLines, "", "Este es un recordatorio oficial enviado desde el Sistema Orbita."].join("\n"),
+      keyValueText: textLines.join("\n"),
+      text: `${explanation}\n\nEste es un recordatorio oficial enviado desde el Sistema Orbita.\n${accreditationNote}`,
     });
 
-    await sendEmail({
-      to: recipients,
-      subject,
-      text: plainText,
-      html,
-      audit: {
-        source: `alerta-${payload.alertType}-${payload.alertKind}`,
-        actorUsername: session.username,
-      },
-    });
+    if (!payload.manualOnly) {
+      await sendEmail({
+        to: recipients,
+        subject,
+        text: plainText,
+        html,
+        audit: {
+          source: `alerta-${payload.alertType}-${payload.alertKind}`,
+          actorUsername: session.username,
+        },
+      });
+    }
 
     const { error: insertError, data: insertData } = await client
       .from("notifications_alertas_envios")
@@ -176,14 +185,14 @@ export async function POST(request: Request) {
         actor_username: session.username,
         recipients,
       })
-      .select("id")
+      .select("id, program_id, alert_type, alert_kind, sent_at, actor_username, recipients")
       .single();
 
     if (insertError) {
       return NextResponse.json({ error: insertError.message }, { status: 500 });
     }
 
-    return NextResponse.json({ ok: true, id: insertData?.id });
+    return NextResponse.json({ ok: true, data: insertData });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown send alert error";
     return NextResponse.json({ error: message }, { status: 500 });

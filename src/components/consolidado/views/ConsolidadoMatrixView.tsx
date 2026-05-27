@@ -60,6 +60,73 @@ type ExportMatrixColumn = {
   getValue: (program: ProgramRecord) => string | number | boolean | null | undefined;
 };
 
+const DATE_SORT_KEYS = new Set<SortKey>([
+  "rcStart",
+  "rcEnd",
+  "rcSiga",
+  "rcMineducacion",
+  "aacStart",
+  "aacEnd",
+  "aacImprovementHalfway",
+]);
+
+function parseIsoDate(value: string | null): number | null {
+  if (!value) return null;
+  const match = String(value).trim().match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!match) return null;
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  const date = new Date(Date.UTC(year, month - 1, day));
+  return Number.isNaN(date.getTime()) ? null : date.getTime();
+}
+
+function parseLatamDate(value: string): number | null {
+  const match = value.trim().match(/^(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})$/);
+  if (!match) return null;
+  const day = Number(match[1]);
+  const month = Number(match[2]);
+  const year = Number(match[3]);
+  const date = new Date(Date.UTC(year, month - 1, day));
+  return Number.isNaN(date.getTime()) ? null : date.getTime();
+}
+
+function getSortValue(program: ProgramRecord, key: SortKey, rendered: unknown): string | number {
+  if (DATE_SORT_KEYS.has(key)) {
+    const rawValue = program[key] as string | null | undefined;
+    const parsed = parseIsoDate(rawValue ?? null);
+    if (parsed !== null) return parsed;
+    if (typeof rendered === "string") {
+      return parseLatamDate(rendered) ?? "";
+    }
+    return "";
+  }
+
+  if (rendered === null || rendered === undefined) return "";
+  if (typeof rendered === "number") return rendered;
+  if (typeof rendered === "boolean") return rendered ? 1 : 0;
+  const asString = String(rendered).trim();
+  const parsedNumber = Number(asString);
+  return Number.isFinite(parsedNumber) && asString !== "" ? parsedNumber : asString.toLowerCase();
+}
+
+function sortPrograms(rows: ProgramRecord[], column: ColumnDef | undefined, direction: SortDirection): ProgramRecord[] {
+  if (!column) return rows;
+  return [...rows].sort((left, right) => {
+    const leftValue = getSortValue(left, column.key, column.render(left));
+    const rightValue = getSortValue(right, column.key, column.render(right));
+
+    let comparison = 0;
+    if (typeof leftValue === "number" && typeof rightValue === "number") {
+      comparison = leftValue - rightValue;
+    } else {
+      comparison = String(leftValue).localeCompare(String(rightValue), "es", { sensitivity: "base" });
+    }
+
+    return direction === "asc" ? comparison : -comparison;
+  });
+}
+
 function formatRegionalizedForExport(value: unknown): string {
   if (typeof value === "boolean") return value ? "SI" : "NO";
 
@@ -208,32 +275,7 @@ export function ConsolidadoMatrixView({ rows, selectedId, onExportReady, onSelec
     const state = sortStateRef.current;
     const column = COLUMNS.find((item) => item.key === state.sortKey);
     
-    const normalize = (value: unknown): string | number => {
-      if (value === null || value === undefined) return "";
-      if (typeof value === "number") return value;
-      if (typeof value === "boolean") return value ? 1 : 0;
-      const asString = String(value).trim();
-      const parsedNumber = Number(asString);
-      return Number.isFinite(parsedNumber) && asString !== "" ? parsedNumber : asString.toLowerCase();
-    };
-
-    const exportRowsBase = state.rows.filter((program) => program.isActive === true);
-    let exportRows = exportRowsBase;
-    if (column) {
-      exportRows = [...exportRowsBase].sort((left, right) => {
-        const leftValue = normalize(column.render(left));
-        const rightValue = normalize(column.render(right));
-
-        let comparison = 0;
-        if (typeof leftValue === "number" && typeof rightValue === "number") {
-          comparison = leftValue - rightValue;
-        } else {
-          comparison = String(leftValue).localeCompare(String(rightValue), "es", { sensitivity: "base" });
-        }
-
-        return state.sortDirection === "asc" ? comparison : -comparison;
-      });
-    }
+    const exportRows = sortPrograms(state.rows, column, state.sortDirection);
 
     const visibleExportData = exportRows.map((program) => ({
       ...Object.fromEntries(COLUMNS.map((col) => [col.key, col.render(program)])),
@@ -369,40 +411,20 @@ export function ConsolidadoMatrixView({ rows, selectedId, onExportReady, onSelec
 
   const sortedRows = useMemo(() => {
     const column = COLUMNS.find((item) => item.key === sortKey);
-    if (!column) return rows;
-
-    const normalize = (value: unknown): string | number => {
-      if (value === null || value === undefined) return "";
-      if (typeof value === "number") return value;
-      if (typeof value === "boolean") return value ? 1 : 0;
-      const asString = String(value).trim();
-      const parsedNumber = Number(asString);
-      return Number.isFinite(parsedNumber) && asString !== "" ? parsedNumber : asString.toLowerCase();
-    };
-
-    return [...rows].sort((left, right) => {
-      const leftValue = normalize(column.render(left));
-      const rightValue = normalize(column.render(right));
-
-      let comparison = 0;
-      if (typeof leftValue === "number" && typeof rightValue === "number") {
-        comparison = leftValue - rightValue;
-      } else {
-        comparison = String(leftValue).localeCompare(String(rightValue), "es", { sensitivity: "base" });
-      }
-
-      return sortDirection === "asc" ? comparison : -comparison;
-    });
+    return sortPrograms(rows, column, sortDirection);
   }, [rows, sortDirection, sortKey]);
 
   const handleSort = (key: SortKey) => {
     if (key === sortKey) {
       // Misma columna: alterna la dirección entre asc y desc
-      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+      const nextDirection = sortDirection === "asc" ? "desc" : "asc";
+      setSortDirection(nextDirection);
+      sortStateRef.current = { sortDirection: nextDirection, sortKey, rows };
     } else {
       // Columna diferente: comienza con ordenamiento ascendente
       setSortKey(key);
       setSortDirection("asc");
+      sortStateRef.current = { sortDirection: "asc", sortKey: key, rows };
     }
   };
 
