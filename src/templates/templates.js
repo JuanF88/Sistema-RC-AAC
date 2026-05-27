@@ -139,7 +139,7 @@ export function buildProfessionalTemplateFromText({
   intro,
   nombreCompleto,
   processKeyValue = false,
-  keyValueText,
+  keyValueText = '',
 }) {
   const introText = intro || (nombreCompleto ? `Hola ${escapeHtml(nombreCompleto)},` : '')
   const bodyHtml = keyValueText
