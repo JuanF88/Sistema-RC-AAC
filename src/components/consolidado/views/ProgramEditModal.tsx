@@ -157,6 +157,8 @@ const EMPTY_FORM: FormState = {
 
 const ADMISSION_PERIODICITY_OPTIONS = [
   "Anual",
+  "Bianual",
+  "Bienal",
   "Bimestral",
   "Cada 2 años",
   "Cuatrimestral",
