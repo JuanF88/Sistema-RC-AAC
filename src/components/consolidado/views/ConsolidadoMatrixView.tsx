@@ -40,7 +40,6 @@ type SortKey =
   | "aacStart"
   | "aacEnd"
   | "aacImprovementHalfway"
-  | "numberGraduates"
   | "generalObservations";
 
 type SortDirection = "asc" | "desc";

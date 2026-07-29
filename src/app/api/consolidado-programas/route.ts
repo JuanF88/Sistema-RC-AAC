@@ -85,7 +85,6 @@ function mapPayloadToInsert(payload: ProgramRecord) {
     rc_resolution_count: payload.rcResolutionCount || null,
     rc_official_resolution: payload.rcOfficialResolution || null,
     rc_denied_resolution: payload.rcDeniedResolution || null,
-    number_graduates: payload.numberGraduates || null,
     acreditable: payload.acreditable || false,
     accredited: payload.accredited || false,
     aac_resolution: payload.aacResolution || null,

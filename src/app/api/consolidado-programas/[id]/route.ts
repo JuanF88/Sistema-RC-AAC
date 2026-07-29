@@ -132,9 +132,6 @@ export async function PATCH(request: Request, context: RouteContext) {
       rc_official_resolution: payload.rcOfficialResolution || null,
       rc_denied_resolution: payload.rcDeniedResolution || null,
 
-      // Graduates
-      number_graduates: payload.numberGraduates || null,
-
       // Accreditation (A.A.C.)
       acreditable: payload.acreditable || false,
       accredited: payload.accredited || false,

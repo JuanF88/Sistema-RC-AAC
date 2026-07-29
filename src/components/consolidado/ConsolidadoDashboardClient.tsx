@@ -138,7 +138,6 @@ function createEmptyProgramDraft(): ProgramRecord {
     rcResolutionCount: null,
     rcOfficialResolution: null,
     rcDeniedResolution: null,
-    numberGraduates: null,
     acreditable: false,
     accredited: false,
     aacResolution: null,

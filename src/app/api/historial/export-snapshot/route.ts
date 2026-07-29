@@ -287,7 +287,6 @@ async function createHistorialExcel(
       rcResolutionCount: program.rcResolutionCount,
       rcOfficialResolution: program.rcOfficialResolution,
       rcDeniedResolution: program.rcDeniedResolution,
-      numberGraduates: program.numberGraduates,
       acreditable: program.acreditable ? "Sí" : "No",
       accredited: program.accredited ? "Sí" : "No",
       aacResolution: program.aacResolution,

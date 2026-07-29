@@ -68,7 +68,6 @@ type FormState = {
   rcResolutionCount: string;
   rcOfficialResolution: string;
   rcDeniedResolution: string;
-  numberGraduates: string;
   acreditable: "true" | "false";
   accredited: "true" | "false";
   aacResolution: string;
@@ -133,7 +132,6 @@ const EMPTY_FORM: FormState = {
   rcResolutionCount: "",
   rcOfficialResolution: "",
   rcDeniedResolution: "",
-  numberGraduates: "",
   acreditable: "false",
   accredited: "false",
   aacResolution: "",
@@ -347,7 +345,6 @@ function mapProgramToForm(program: ProgramRecord | null): FormState {
     rcResolutionCount: program.rcResolutionCount?.toString() ?? "",
     rcOfficialResolution: text(program.rcOfficialResolution),
     rcDeniedResolution: text(program.rcDeniedResolution),
-    numberGraduates: program.numberGraduates?.toString() ?? "",
     acreditable: program.acreditable ? "true" : "false",
     accredited: program.accredited ? "true" : "false",
     aacResolution: text(program.aacResolution),
@@ -569,7 +566,6 @@ export function ProgramEditModal({
     rcResolutionCount: toNullableNumber(form.rcResolutionCount),
     rcOfficialResolution: toNullableText(form.rcOfficialResolution),
     rcDeniedResolution: toNullableText(form.rcDeniedResolution),
-    numberGraduates: toNullableNumber(form.numberGraduates),
     acreditable: form.acreditable === "true",
     accredited: form.accredited === "true",
     aacResolution: toNullableText(form.aacResolution),

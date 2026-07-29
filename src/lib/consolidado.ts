@@ -64,9 +64,6 @@ export type ConsolidadoProgram = {
   rcOfficialResolution: string | null;
   rcDeniedResolution: string | null;
 
-  // Graduates
-  numberGraduates: number | null;
-
   // Accreditation (A.A.C.)
   acreditable: boolean;
   accredited: boolean;
@@ -495,9 +492,6 @@ function mapExcelRow(ws: XLSX.WorkSheet, row: number): ConsolidadoProgram | null
     rcResolutionCount: toNumber(val("AN")) || null,
     rcOfficialResolution: String(val("AO") ?? "").trim() || null,
     rcDeniedResolution: String(val("AP") ?? "").trim() || null,
-
-    // Graduates
-    numberGraduates: toNumber(val("AQ")) || null,
 
     // Accreditation (A.A.C.)
     acreditable: toYesNo(val("AR")),
