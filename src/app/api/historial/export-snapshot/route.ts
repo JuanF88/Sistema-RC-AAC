@@ -214,7 +214,6 @@ async function createHistorialExcel(
     { key: "rcResolutionCount", header: "Cantidad Resoluciones RC" },
     { key: "rcOfficialResolution", header: "Resolución RC Oficio" },
     { key: "rcDeniedResolution", header: "Resolución RC Negada" },
-    { key: "numberGraduates", header: "Número Egresados" },
     { key: "acreditable", header: "Acreditable" },
     { key: "accredited", header: "Acreditado" },
     { key: "aacResolution", header: "Resolución AAC" },

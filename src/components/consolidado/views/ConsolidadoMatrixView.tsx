@@ -165,7 +165,6 @@ const COLUMNS: ColumnDef[] = [
   { key: "aacStart", label: "Inicio AAC", width: 140, sortable: true, render: (program) => formatDate(program.aacStart) },
   { key: "aacEnd", label: "Vencimiento AAC", width: 150, sortable: true, render: (program) => formatDate(program.aacEnd) },
   { key: "aacImprovementHalfway", label: "Mitad Vigencia AAC", width: 170, sortable: true, render: (program) => formatDate(program.aacImprovementHalfway) },
-  { key: "numberGraduates", label: "Egresados", width: 110, sortable: true, render: (program) => program.numberGraduates },
   { key: "generalObservations", label: "Observaciones", width: 340, sortable: true, render: (program) => program.generalObservations },
 ];
 
@@ -211,7 +210,6 @@ const FULL_EXPORT_COLUMNS: ExportMatrixColumn[] = [
   { key: "rcResolutionCount", header: "Cantidad\nRes/Ren R.C.", width: 14, getValue: (program) => program.rcResolutionCount },
   { key: "rcOfficialResolution", header: "Resolucion R.C.\nde Oficio", width: 20, getValue: (program) => program.rcOfficialResolution },
   { key: "rcDeniedResolution", header: "Resolucion R.C.\nNegada", width: 20, getValue: (program) => program.rcDeniedResolution },
-  { key: "numberGraduates", header: "Numero\nEgresados", width: 14, getValue: (program) => program.numberGraduates },
   { key: "acreditable", header: "Acreditable", width: 12, getValue: (program) => (program.acreditable ? "Si" : "No") },
   { key: "accredited", header: "Acreditado", width: 12, getValue: (program) => (program.accredited ? "Si" : "No") },
   { key: "aacResolution", header: "Resolucion\nAcreditacion A.C.", width: 20, getValue: (program) => program.aacResolution },

@@ -346,7 +346,6 @@ function mapSupabaseRow(raw: Record<string, unknown>): ConsolidadoProgram | null
     rcResolutionCount: toNumber(getFirst(raw, ["rc_resolution_count", "cantidad_res_rc"])) || null,
     rcOfficialResolution: String(getFirst(raw, ["rc_official_resolution", "resolucion_rc_oficio"]) ?? "") || null,
     rcDeniedResolution: String(getFirst(raw, ["rc_denied_resolution", "resolucion_rc_negada"]) ?? "") || null,
-    numberGraduates: toNumber(getFirst(raw, ["number_graduates", "numero_egresados"])) || null,
     acreditable,
     accredited,
     aacResolution: String(getFirst(raw, ["aac_resolution", "resolucion_aac"]) ?? "") || null,

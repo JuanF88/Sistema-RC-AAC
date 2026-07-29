@@ -891,7 +891,6 @@ export function ProgramEditModal({
               <Field label="Cantidad resoluciones RC" type="number" value={form.rcResolutionCount} onChange={(value) => setField("rcResolutionCount", value)} />
               <Field label="Resolucion RC oficio" value={form.rcOfficialResolution} onChange={(value) => setField("rcOfficialResolution", value)} />
               <Field label="Resolucion RC negada" value={form.rcDeniedResolution} onChange={(value) => setField("rcDeniedResolution", value)} />
-              <Field label="Numero egresados" type="number" value={form.numberGraduates} onChange={(value) => setField("numberGraduates", value)} />
             </div>
             <TextareaField label="Historico resoluciones RC" value={form.rcHistoricalResolutions} onChange={(value) => setField("rcHistoricalResolutions", value)} />
           </section>
