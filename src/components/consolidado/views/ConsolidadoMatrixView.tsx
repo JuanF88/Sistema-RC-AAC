@@ -40,6 +40,8 @@ type SortKey =
   | "aacStart"
   | "aacEnd"
   | "aacImprovementHalfway"
+  | "rcExecutoriaConceptDate"
+  | "aacExecutoriaConceptDate"
   | "generalObservations";
 
 type SortDirection = "asc" | "desc";
@@ -67,6 +69,8 @@ const DATE_SORT_KEYS = new Set<SortKey>([
   "aacStart",
   "aacEnd",
   "aacImprovementHalfway",
+  "rcExecutoriaConceptDate",
+  "aacExecutoriaConceptDate",
 ]);
 
 function parseIsoDate(value: string | null): number | null {
@@ -158,12 +162,26 @@ const COLUMNS: ColumnDef[] = [
   { key: "rcEnd", label: "Vencimiento RC", width: 150, sortable: true, render: (program) => formatDate(program.rcEnd) },
   { key: "rcSiga", label: "RC SIGA", width: 140, sortable: true, render: (program) => formatDate(program.rcSiga) },
   { key: "rcMineducacion", label: "RC MinEdu", width: 150, sortable: true, render: (program) => formatDate(program.rcMineducacion) },
+  {
+    key: "rcExecutoriaConceptDate",
+    label: "Fecha concepto\nde ejecutoria RC",
+    width: 170,
+    sortable: true,
+    render: (program) => formatDate(program.rcExecutoriaConceptDate),
+  },
   { key: "acreditable", label: "Acreditable", width: 120, sortable: true, render: (program) => (program.acreditable ? "Sí" : "No") },
   { key: "accredited", label: "Acreditado", width: 110, sortable: true, render: (program) => (program.accredited ? "Sí" : "No") },
   { key: "aacResolution", label: "Resolución\nAcreditación A.C.", width: 180, sortable: true, render: (program) => program.aacResolution },
   { key: "aacStart", label: "Inicio AAC", width: 140, sortable: true, render: (program) => formatDate(program.aacStart) },
   { key: "aacEnd", label: "Vencimiento AAC", width: 150, sortable: true, render: (program) => formatDate(program.aacEnd) },
   { key: "aacImprovementHalfway", label: "Mitad Vigencia AAC", width: 170, sortable: true, render: (program) => formatDate(program.aacImprovementHalfway) },
+  {
+    key: "aacExecutoriaConceptDate",
+    label: "Fecha concepto\nde ejecutoria AAC",
+    width: 175,
+    sortable: true,
+    render: (program) => formatDate(program.aacExecutoriaConceptDate),
+  },
   { key: "generalObservations", label: "Observaciones", width: 340, sortable: true, render: (program) => program.generalObservations },
 ];
 
@@ -209,6 +227,7 @@ const FULL_EXPORT_COLUMNS: ExportMatrixColumn[] = [
   { key: "rcResolutionCount", header: "Cantidad\nRes/Ren R.C.", width: 14, getValue: (program) => program.rcResolutionCount },
   { key: "rcOfficialResolution", header: "Resolucion R.C.\nde Oficio", width: 20, getValue: (program) => program.rcOfficialResolution },
   { key: "rcDeniedResolution", header: "Resolucion R.C.\nNegada", width: 20, getValue: (program) => program.rcDeniedResolution },
+  { key: "rcExecutoriaConceptDate", header: "Fecha concepto\nde ejecutoria R.C.", width: 20, getValue: (program) => formatDate(program.rcExecutoriaConceptDate) },
   { key: "acreditable", header: "Acreditable", width: 12, getValue: (program) => (program.acreditable ? "Si" : "No") },
   { key: "accredited", header: "Acreditado", width: 12, getValue: (program) => (program.accredited ? "Si" : "No") },
   { key: "aacResolution", header: "Resolucion\nAcreditacion A.C.", width: 20, getValue: (program) => program.aacResolution },
@@ -221,6 +240,7 @@ const FULL_EXPORT_COLUMNS: ExportMatrixColumn[] = [
   { key: "aacHistoricalResolutions", header: "Historico\nResoluciones AAC", width: 24, getValue: (program) => program.aacHistoricalResolutions },
   { key: "aacResolutionCount", header: "Cantidad\nRes. AAC", width: 14, getValue: (program) => program.aacResolutionCount },
   { key: "aacDeniedResolution", header: "Resolucion AAC\nNegada", width: 20, getValue: (program) => program.aacDeniedResolution },
+  { key: "aacExecutoriaConceptDate", header: "Fecha concepto\nde ejecutoria AAC", width: 20, getValue: (program) => formatDate(program.aacExecutoriaConceptDate) },
   { key: "accreditationGuideline", header: "Lineamiento Acreditacion", width: 22, getValue: (program) => program.accreditationGuideline },
   { key: "generalObservations", header: "Observaciones\nGenerales", width: 26, getValue: (program) => program.generalObservations },
   { key: "programCoordinator", header: "Coordinador\nde Programa", width: 22, getValue: (program) => program.programCoordinator },

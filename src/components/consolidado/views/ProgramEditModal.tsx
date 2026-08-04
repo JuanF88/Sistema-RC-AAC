@@ -68,6 +68,7 @@ type FormState = {
   rcResolutionCount: string;
   rcOfficialResolution: string;
   rcDeniedResolution: string;
+  rcExecutoriaConceptDate: string;
   acreditable: "true" | "false";
   accredited: "true" | "false";
   aacResolution: string;
@@ -80,6 +81,7 @@ type FormState = {
   aacHistoricalResolutions: string;
   aacResolutionCount: string;
   aacDeniedResolution: string;
+  aacExecutoriaConceptDate: string;
   accreditationGuideline: string;
   generalObservations: string;
   programCoordinator: string;
@@ -132,6 +134,7 @@ const EMPTY_FORM: FormState = {
   rcResolutionCount: "",
   rcOfficialResolution: "",
   rcDeniedResolution: "",
+  rcExecutoriaConceptDate: "",
   acreditable: "false",
   accredited: "false",
   aacResolution: "",
@@ -144,6 +147,7 @@ const EMPTY_FORM: FormState = {
   aacHistoricalResolutions: "",
   aacResolutionCount: "",
   aacDeniedResolution: "",
+  aacExecutoriaConceptDate: "",
   accreditationGuideline: "",
   generalObservations: "",
   programCoordinator: "",
@@ -345,6 +349,7 @@ function mapProgramToForm(program: ProgramRecord | null): FormState {
     rcResolutionCount: program.rcResolutionCount?.toString() ?? "",
     rcOfficialResolution: text(program.rcOfficialResolution),
     rcDeniedResolution: text(program.rcDeniedResolution),
+    rcExecutoriaConceptDate: text(program.rcExecutoriaConceptDate),
     acreditable: program.acreditable ? "true" : "false",
     accredited: program.accredited ? "true" : "false",
     aacResolution: text(program.aacResolution),
@@ -357,6 +362,7 @@ function mapProgramToForm(program: ProgramRecord | null): FormState {
     aacHistoricalResolutions: text(program.aacHistoricalResolutions),
     aacResolutionCount: program.aacResolutionCount?.toString() ?? "",
     aacDeniedResolution: text(program.aacDeniedResolution),
+    aacExecutoriaConceptDate: text(program.aacExecutoriaConceptDate),
     accreditationGuideline: text(program.accreditationGuideline),
     generalObservations: text(program.generalObservations),
     programCoordinator: text(program.programCoordinator),
@@ -566,6 +572,7 @@ export function ProgramEditModal({
     rcResolutionCount: toNullableNumber(form.rcResolutionCount),
     rcOfficialResolution: toNullableText(form.rcOfficialResolution),
     rcDeniedResolution: toNullableText(form.rcDeniedResolution),
+    rcExecutoriaConceptDate: toNullableText(form.rcExecutoriaConceptDate),
     acreditable: form.acreditable === "true",
     accredited: form.accredited === "true",
     aacResolution: toNullableText(form.aacResolution),
@@ -578,6 +585,7 @@ export function ProgramEditModal({
     aacHistoricalResolutions: toNullableText(form.aacHistoricalResolutions),
     aacResolutionCount: toNullableNumber(form.aacResolutionCount),
     aacDeniedResolution: toNullableText(form.aacDeniedResolution),
+    aacExecutoriaConceptDate: toNullableText(form.aacExecutoriaConceptDate),
     accreditationGuideline: toNullableText(form.accreditationGuideline),
     generalObservations: toNullableText(form.generalObservations),
     programCoordinator: toNullableText(form.programCoordinator),
@@ -887,6 +895,12 @@ export function ProgramEditModal({
               <Field label="Cantidad resoluciones RC" type="number" value={form.rcResolutionCount} onChange={(value) => setField("rcResolutionCount", value)} />
               <Field label="Resolucion RC oficio" value={form.rcOfficialResolution} onChange={(value) => setField("rcOfficialResolution", value)} />
               <Field label="Resolucion RC negada" value={form.rcDeniedResolution} onChange={(value) => setField("rcDeniedResolution", value)} />
+              <Field
+                label="Fecha concepto de ejecutoria"
+                type="date"
+                value={form.rcExecutoriaConceptDate}
+                onChange={(value) => setField("rcExecutoriaConceptDate", value)}
+              />
             </div>
             <TextareaField label="Historico resoluciones RC" value={form.rcHistoricalResolutions} onChange={(value) => setField("rcHistoricalResolutions", value)} />
           </section>
@@ -921,6 +935,12 @@ export function ProgramEditModal({
               <Field label="Mitad vigencia AAC" type="date" value={form.aacImprovementHalfway} onChange={(value) => setField("aacImprovementHalfway", value)} />
               <Field label="Cantidad resoluciones AAC" type="number" value={form.aacResolutionCount} onChange={(value) => setField("aacResolutionCount", value)} />
               <Field label="Resolucion AAC negada" value={form.aacDeniedResolution} onChange={(value) => setField("aacDeniedResolution", value)} />
+              <Field
+                label="Fecha concepto de ejecutoria"
+                type="date"
+                value={form.aacExecutoriaConceptDate}
+                onChange={(value) => setField("aacExecutoriaConceptDate", value)}
+              />
             </div>
             <TextareaField label="Historico resoluciones AAC" value={form.aacHistoricalResolutions} onChange={(value) => setField("aacHistoricalResolutions", value)} />
           </section>

@@ -63,6 +63,7 @@ export type ConsolidadoProgram = {
   rcResolutionCount: number | null;
   rcOfficialResolution: string | null;
   rcDeniedResolution: string | null;
+  rcExecutoriaConceptDate: string | null;
 
   // Accreditation (A.A.C.)
   acreditable: boolean;
@@ -77,6 +78,7 @@ export type ConsolidadoProgram = {
   aacHistoricalResolutions: string | null;
   aacResolutionCount: number | null;
   aacDeniedResolution: string | null;
+  aacExecutoriaConceptDate: string | null;
 
   // Notes and Metadata
   accreditationGuideline: string | null;
@@ -343,6 +345,8 @@ function mapSupabaseRow(raw: Record<string, unknown>): ConsolidadoProgram | null
     rcResolutionCount: toNumber(getFirst(raw, ["rc_resolution_count", "cantidad_res_rc"])) || null,
     rcOfficialResolution: String(getFirst(raw, ["rc_official_resolution", "resolucion_rc_oficio"]) ?? "") || null,
     rcDeniedResolution: String(getFirst(raw, ["rc_denied_resolution", "resolucion_rc_negada"]) ?? "") || null,
+    rcExecutoriaConceptDate:
+      toIsoDate(getFirst(raw, ["rc_executoria_concept_date", "fecha_concepto_ejecutoria_rc"])) || null,
     acreditable,
     accredited,
     aacResolution: String(getFirst(raw, ["aac_resolution", "resolucion_aac"]) ?? "") || null,
@@ -355,6 +359,8 @@ function mapSupabaseRow(raw: Record<string, unknown>): ConsolidadoProgram | null
     aacHistoricalResolutions: String(getFirst(raw, ["aac_historical_resolutions", "historico_resoluciones_aac"]) ?? "") || null,
     aacResolutionCount: toNumber(getFirst(raw, ["aac_resolution_count", "cantidad_res_aac"])) || null,
     aacDeniedResolution: String(getFirst(raw, ["aac_denied_resolution", "resolucion_aac_negada"]) ?? "") || null,
+    aacExecutoriaConceptDate:
+      toIsoDate(getFirst(raw, ["aac_executoria_concept_date", "fecha_concepto_ejecutoria_aac"])) || null,
     accreditationGuideline: String(getFirst(raw, ["accreditation_guideline", "lineamiento_acreditacion"]) ?? "") || null,
     generalObservations: String(getFirst(raw, ["general_observations", "observaciones_generales"]) ?? "") || null,
     programCoordinator: String(getFirst(raw, ["program_coordinator", "coordinador_programa"]) ?? "") || null,
@@ -492,6 +498,8 @@ function mapExcelRow(ws: XLSX.WorkSheet, row: number): ConsolidadoProgram | null
     rcResolutionCount: toNumber(val("AN")) || null,
     rcOfficialResolution: String(val("AO") ?? "").trim() || null,
     rcDeniedResolution: String(val("AP") ?? "").trim() || null,
+    // Sin columna en el Excel: solo se captura desde la aplicacion.
+    rcExecutoriaConceptDate: null,
 
     // Accreditation (A.A.C.)
     acreditable: toYesNo(val("AR")),
@@ -506,6 +514,8 @@ function mapExcelRow(ws: XLSX.WorkSheet, row: number): ConsolidadoProgram | null
     aacHistoricalResolutions: String(val("BB") ?? "").trim() || null,
     aacResolutionCount: toNumber(val("BC")) || null,
     aacDeniedResolution: String(val("BD") ?? "").trim() || null,
+    // Sin columna en el Excel: solo se captura desde la aplicacion.
+    aacExecutoriaConceptDate: null,
 
     // Notes and Metadata
     accreditationGuideline: String(val("BE") ?? "").trim() || null,

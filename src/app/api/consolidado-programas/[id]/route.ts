@@ -131,6 +131,7 @@ export async function PATCH(request: Request, context: RouteContext) {
       rc_resolution_count: payload.rcResolutionCount || null,
       rc_official_resolution: payload.rcOfficialResolution || null,
       rc_denied_resolution: payload.rcDeniedResolution || null,
+      rc_executoria_concept_date: payload.rcExecutoriaConceptDate || null,
 
       // Accreditation (A.A.C.)
       acreditable: payload.acreditable || false,
@@ -145,6 +146,7 @@ export async function PATCH(request: Request, context: RouteContext) {
       aac_historical_resolutions: payload.aacHistoricalResolutions || null,
       aac_resolution_count: payload.aacResolutionCount || null,
       aac_denied_resolution: payload.aacDeniedResolution || null,
+      aac_executoria_concept_date: payload.aacExecutoriaConceptDate || null,
 
       // Notes and Metadata
       accreditation_guideline: payload.accreditationGuideline || null,

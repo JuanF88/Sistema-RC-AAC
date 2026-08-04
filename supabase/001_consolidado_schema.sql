@@ -59,7 +59,8 @@ CREATE TABLE public.consolidado_programas (
   rc_resolution_count INT,
   rc_official_resolution TEXT,
   rc_denied_resolution TEXT,
-  
+  rc_executoria_concept_date DATE,
+
   -- Graduates
   number_graduates INT,
   
@@ -76,7 +77,8 @@ CREATE TABLE public.consolidado_programas (
   aac_historical_resolutions TEXT,
   aac_resolution_count INT,
   aac_denied_resolution TEXT,
-  
+  aac_executoria_concept_date DATE,
+
   -- Notes and Metadata
   accreditation_guideline TEXT,
   general_observations TEXT,
