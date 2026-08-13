@@ -896,7 +896,7 @@ export function ProgramEditModal({
               <Field label="Resolucion RC oficio" value={form.rcOfficialResolution} onChange={(value) => setField("rcOfficialResolution", value)} />
               <Field label="Resolucion RC negada" value={form.rcDeniedResolution} onChange={(value) => setField("rcDeniedResolution", value)} />
               <Field
-                label="Fecha concepto de ejecutoria"
+                label="Fecha constancia de ejecutoria"
                 type="date"
                 value={form.rcExecutoriaConceptDate}
                 onChange={(value) => setField("rcExecutoriaConceptDate", value)}
@@ -936,7 +936,7 @@ export function ProgramEditModal({
               <Field label="Cantidad resoluciones AAC" type="number" value={form.aacResolutionCount} onChange={(value) => setField("aacResolutionCount", value)} />
               <Field label="Resolucion AAC negada" value={form.aacDeniedResolution} onChange={(value) => setField("aacDeniedResolution", value)} />
               <Field
-                label="Fecha concepto de ejecutoria"
+                label="Fecha constancia de ejecutoria"
                 type="date"
                 value={form.aacExecutoriaConceptDate}
                 onChange={(value) => setField("aacExecutoriaConceptDate", value)}
