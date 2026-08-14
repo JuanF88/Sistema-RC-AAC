@@ -527,7 +527,7 @@ async function resolvePrograms(options?: SnapshotRunOptions): Promise<{ programs
 export async function runSnapshotExport(options?: SnapshotRunOptions) {
   const { programs, generatedAt } = await resolvePrograms(options);
   if (!programs || programs.length === 0) {
-    throw new Error("No hay programas disponibles para generar la instantanea.");
+    throw new Error("No hay programas disponibles para generar la instantánea.");
   }
 
   const client = createClient(supabaseUrl, supabaseServiceKey);

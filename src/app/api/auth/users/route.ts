@@ -32,7 +32,7 @@ function parseRole(role: string | undefined): UserRole {
 export async function GET(request: Request) {
   try {
     const session = await getSessionFromRequest(request);
-    if (!session) return NextResponse.json({ error: "Sesion no valida o expirada." }, { status: 401 });
+    if (!session) return NextResponse.json({ error: "Sesión no válida o expirada." }, { status: 401 });
     if (session.role !== "administrador") return NextResponse.json({ error: "Permisos insuficientes." }, { status: 403 });
 
     const client = getAdminClient();
@@ -56,7 +56,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const session = await getSessionFromRequest(request);
-    if (!session) return NextResponse.json({ error: "Sesion no valida o expirada." }, { status: 401 });
+    if (!session) return NextResponse.json({ error: "Sesión no válida o expirada." }, { status: 401 });
     if (session.role !== "administrador") return NextResponse.json({ error: "Permisos insuficientes." }, { status: 403 });
 
     const payload = (await request.json()) as CreateUserPayload;

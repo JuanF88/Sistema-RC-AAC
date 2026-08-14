@@ -10,7 +10,7 @@ export async function POST(request: Request) {
   try {
     const session = await getSessionFromRequest(request);
     if (!session) {
-      return NextResponse.json({ error: "Sesion no valida o expirada." }, { status: 401 });
+      return NextResponse.json({ error: "Sesión no válida o expirada." }, { status: 401 });
     }
 
     if (session.role === "visualizador") {

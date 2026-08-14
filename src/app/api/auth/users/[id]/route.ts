@@ -35,7 +35,7 @@ function isValidUuid(value: string): boolean {
 export async function PATCH(request: Request, context: RouteContext) {
   try {
     const session = await getSessionFromRequest(request);
-    if (!session) return NextResponse.json({ error: "Sesion no valida o expirada." }, { status: 401 });
+    if (!session) return NextResponse.json({ error: "Sesión no válida o expirada." }, { status: 401 });
     if (session.role !== "administrador") return NextResponse.json({ error: "Permisos insuficientes." }, { status: 403 });
 
     const { id } = await context.params;
@@ -106,7 +106,7 @@ export async function PATCH(request: Request, context: RouteContext) {
 export async function DELETE(request: Request, context: RouteContext) {
   try {
     const session = await getSessionFromRequest(request);
-    if (!session) return NextResponse.json({ error: "Sesion no valida o expirada." }, { status: 401 });
+    if (!session) return NextResponse.json({ error: "Sesión no válida o expirada." }, { status: 401 });
     if (session.role !== "administrador") return NextResponse.json({ error: "Permisos insuficientes." }, { status: 403 });
 
     const { id } = await context.params;

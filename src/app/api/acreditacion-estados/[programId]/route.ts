@@ -36,7 +36,7 @@ export async function PUT(request: Request, context: RouteContext) {
   try {
     const session = await getSessionFromRequest(request);
     if (!session) {
-      return NextResponse.json({ error: "Sesion no valida o expirada." }, { status: 401 });
+      return NextResponse.json({ error: "Sesión no válida o expirada." }, { status: 401 });
     }
     if (session.role === "visualizador") {
       return NextResponse.json({ error: "Tu rol no permite modificar datos." }, { status: 403 });
@@ -54,15 +54,15 @@ export async function PUT(request: Request, context: RouteContext) {
     }
 
     if (!estado || !ESTADO_OPTIONS.includes(estado as (typeof ESTADO_OPTIONS)[number])) {
-      return NextResponse.json({ error: "Estado invalido para acreditacion." }, { status: 400 });
+      return NextResponse.json({ error: "Estado inválido para acreditación." }, { status: 400 });
     }
 
     if (enviadoMinisterio && !informeCgcEnviado) {
-      return NextResponse.json({ error: "Para marcar envio al ministerio primero debe enviarse al CGC." }, { status: 400 });
+      return NextResponse.json({ error: "Para marcar envío al ministerio primero debe enviarse al CGC." }, { status: 400 });
     }
 
     if (acreditacionRecibida && !enviadoMinisterio) {
-      return NextResponse.json({ error: "Para marcar acreditacion recibida primero debe enviarse al ministerio." }, { status: 400 });
+      return NextResponse.json({ error: "Para marcar acreditación recibida primero debe enviarse al ministerio." }, { status: 400 });
     }
 
     const client = getAdminClient();

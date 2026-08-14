@@ -2,7 +2,14 @@ import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { getSessionFromRequest } from "@/lib/auth";
 import { sendEmail } from "@/lib/email";
-import { buildProfessionalTemplateFromText } from "@/templates/templates.js";
+import { buildAlertTemplate } from "@/templates/templates.js";
+import {
+  DELIVERY_FIRST_REMINDER_MONTHS,
+  DELIVERY_REMINDER_MONTHS,
+  monthsLabel,
+  monthsStageLabel,
+  remainingMonthsPhrase,
+} from "@/lib/alertSchedule";
 
 type AlertType = "rrc" | "aac";
 type AlertKind = "inicio" | "recordatorio" | "entrega";
@@ -18,6 +25,7 @@ type ProgramRow = {
   id: string;
   program: string | null;
   program_coordinator: string | null;
+  program_coordinator_title: string | null;
   program_coordinator_email: string | null;
   rc_end: string | null;
   rc_siga: string | null;
@@ -27,14 +35,114 @@ type ProgramRow = {
 
 const ALERT_TYPE_LABELS: Record<AlertType, string> = {
   rrc: "Registro Calificado",
-  aac: "Acreditacion",
+  aac: "Acreditación",
 };
 
 const ALERT_KIND_LABELS: Record<AlertKind, string> = {
-  inicio: "Inicio de renovacion",
+  inicio: "Inicio de renovación",
   recordatorio: "Recordatorio previo a entrega",
   entrega: "Recordatorio de entrega",
 };
+
+// Nombre del proceso tal como se muestra en la fila "Proceso" del correo.
+const PROCESS_NAMES: Record<AlertType, string> = {
+  rrc: "Renovación del Registro Calificado",
+  aac: "Renovación de la Acreditación en Alta Calidad",
+};
+
+// Nombre largo del proceso, con artículo, para usarlo dentro de frases.
+const PROCESS_PHRASES: Record<AlertType, string> = {
+  rrc: "del Registro Calificado",
+  aac: "de la Acreditación en Alta Calidad",
+};
+
+// Entidad receptora de la documentación, ya contraída con la preposición
+// ("a SIGA" / "al Centro...") para que las frases queden bien construidas.
+const DELIVERY_TARGETS: Record<AlertType, string> = {
+  rrc: "a SIGA",
+  aac: "al Centro de Gestión de la Calidad y la Acreditación Institucional",
+};
+
+// Párrafo de cierre común a las tres etapas.
+function buildDeliveryClosingParagraph(deliveryTarget: string): string {
+  return `La documentación deberá ser entregada por el programa ${deliveryTarget} dentro del plazo establecido, para su correspondiente revisión y posterior trámite ante la plataforma del Ministerio de Educación Nacional.`;
+}
+
+type AlertStageContext = {
+  processPhrase: string;
+  deliveryTarget: string;
+};
+
+type AlertStage = {
+  /** Etiqueta del pill del encabezado, sin el prefijo "Alerta | ". */
+  badge: string;
+  /** Titular blanco del encabezado. */
+  title: (context: AlertStageContext) => string;
+  /** Valor de la fila "Etapa" de la tabla. */
+  stageLabel: string;
+  /** Bloque "¿Qué debe hacer el programa?". */
+  instructions: (context: AlertStageContext) => string;
+  /** Cada alerta usa su propio degradado y escala de titular. */
+  gradientFrom: string;
+  gradientTo: string;
+  titleSize: number;
+  headerPadding: string;
+};
+
+// Una entrada por etapa: lo único que cambia entre alertas es el contenido de
+// estos campos. La estructura visual (tabla, información importante, contacto,
+// pie) es común y vive en buildAlertTemplate.
+const ALERT_STAGES: Record<AlertKind, AlertStage> = {
+  inicio: {
+    badge: "Inicio de renovación",
+    title: ({ processPhrase }) => `Inicio del proceso de renovación ${processPhrase}`,
+    stageLabel: "Inicio del proceso de renovación",
+    instructions: ({ processPhrase, deliveryTarget }) =>
+      `A partir de esta notificación, se debe iniciar el proceso de autoevaluación y la preparación de la documentación requerida para la renovación ${processPhrase}.\n\n${buildDeliveryClosingParagraph(deliveryTarget)}`,
+    gradientFrom: "#f15a3c",
+    gradientTo: "#f5a623",
+    titleSize: 27,
+    headerPadding: "30px 28px 34px",
+  },
+  recordatorio: {
+    // Alerta preventiva: enfatiza revisar el avance, completar y organizar.
+    badge: `${monthsLabel(DELIVERY_FIRST_REMINDER_MONTHS)} para la fecha límite`,
+    title: ({ processPhrase }) =>
+      `${remainingMonthsPhrase(DELIVERY_FIRST_REMINDER_MONTHS)} para la entrega de la documentación para la renovación ${processPhrase}`,
+    stageLabel: monthsStageLabel(DELIVERY_FIRST_REMINDER_MONTHS),
+    instructions: ({ deliveryTarget }) =>
+      `${remainingMonthsPhrase(DELIVERY_FIRST_REMINDER_MONTHS)} para la fecha límite de entrega de la documentación. En este momento, el programa debe verificar el avance del proceso de autoevaluación, completar la información requerida y asegurar que la documentación se encuentre organizada para su entrega dentro del plazo establecido.\n\n${buildDeliveryClosingParagraph(deliveryTarget)}`,
+    gradientFrom: "#ff6a00",
+    gradientTo: "#ffa800",
+    titleSize: 29,
+    headerPadding: "34px 28px 38px",
+  },
+  entrega: {
+    // Alerta final: enfatiza finalizar, verificar y entregar.
+    badge: `${monthsLabel(DELIVERY_REMINDER_MONTHS)} para la fecha límite`,
+    title: ({ processPhrase }) =>
+      `${remainingMonthsPhrase(DELIVERY_REMINDER_MONTHS)} para la entrega de la documentación para la renovación ${processPhrase}`,
+    stageLabel: "Etapa final de preparación y entrega",
+    instructions: ({ deliveryTarget }) =>
+      `${remainingMonthsPhrase(DELIVERY_REMINDER_MONTHS)} para la fecha límite de entrega de la documentación. En este momento, el programa debe finalizar la preparación de la información, verificar que la documentación requerida esté completa y realizar su entrega ${deliveryTarget} dentro del plazo establecido.\n\n${buildDeliveryClosingParagraph(deliveryTarget)}`,
+    gradientFrom: "#f57c00",
+    gradientTo: "#ffb300",
+    titleSize: 29,
+    headerPadding: "34px 28px 38px",
+  },
+};
+
+const DELIVERY_DATE_LABELS: Record<AlertType, string> = {
+  rrc: "Fecha límite de entrega a SIGA",
+  aac: "Fecha límite de entrega al CGCAI",
+};
+
+const EXPIRATION_DATE_LABELS: Record<AlertType, string> = {
+  rrc: "Fecha de vencimiento del Registro Calificado",
+  aac: "Fecha de vencimiento de la acreditación",
+};
+
+const CONTACT_EMAIL = process.env.ALERTS_CONTACT_EMAIL?.trim() || "acredigral@unicauca.edu.co";
 
 function getAdminClient() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -93,7 +201,7 @@ export async function POST(request: Request) {
   try {
     const session = await getSessionFromRequest(request);
     if (!session) {
-      return NextResponse.json({ error: "Sesion no valida o expirada." }, { status: 401 });
+      return NextResponse.json({ error: "Sesión no válida o expirada." }, { status: 401 });
     }
     if (session.role === "visualizador") {
       return NextResponse.json({ error: "Tu rol no permite enviar correos." }, { status: 403 });
@@ -101,14 +209,14 @@ export async function POST(request: Request) {
 
     const payload = (await request.json()) as SendAlertPayload;
     if (!payload.programId || !isValidAlertType(payload.alertType) || !isValidAlertKind(payload.alertKind)) {
-      return NextResponse.json({ error: "Datos de alerta invalidos." }, { status: 400 });
+      return NextResponse.json({ error: "Datos de alerta inválidos." }, { status: 400 });
     }
 
     const client = getAdminClient();
     const { data: program, error } = await client
       .from("consolidado_programas")
       .select(
-        "id, program, program_coordinator, program_coordinator_email, rc_end, rc_siga, aac_end, aac_cgcai_delivery",
+        "id, program, program_coordinator, program_coordinator_title, program_coordinator_email, rc_end, rc_siga, aac_end, aac_cgcai_delivery",
       )
       .eq("id", payload.programId)
       .single();
@@ -131,35 +239,69 @@ export async function POST(request: Request) {
     const expirationDate = payload.alertType === "rrc" ? record.rc_end : record.aac_end;
     const deliveryDate = payload.alertType === "rrc" ? record.rc_siga : record.aac_cgcai_delivery;
 
-    const textLines = [
-      `Programa: ${programName}`,
-      `Tipo de alerta: ${alertTypeLabel}`,
-      `Motivo: ${alertKindLabel}`,
-      `Fecha vencimiento: ${formatDate(expirationDate)}`,
-      `Fecha entrega: ${formatDate(deliveryDate)}`,
-      `Coordinador: ${record.program_coordinator ?? "-"}`,
+    const stage = ALERT_STAGES[payload.alertKind];
+    const stageContext = {
+      processPhrase: PROCESS_PHRASES[payload.alertType],
+      deliveryTarget: DELIVERY_TARGETS[payload.alertType],
+    };
+    const coordinatorName = record.program_coordinator?.trim() || "";
+    const coordinatorTitle = record.program_coordinator_title?.trim() || "";
+    const recipientName = `${coordinatorTitle} ${coordinatorName}`.trim() || "Coordinador(a) del programa";
+
+    const alertTitle = stage.title(stageContext);
+    const explanation = `Esta alerta se genera en el marco del seguimiento que realiza el Centro de Gestión de la Calidad y la Acreditación Institucional al proceso de renovación ${stageContext.processPhrase} de los programas académicos de la Universidad.`;
+    const instructions = stage.instructions(stageContext);
+    const accreditationNote =
+      "Si el programa se encuentra acreditado y cumple con los tiempos establecidos para la renovación de la Acreditación en Alta Calidad, no tendrá que realizar el trámite de renovación del Registro Calificado del programa.";
+    const contactText =
+      "Para resolver inquietudes o realizar el envío de la información correspondiente al proceso, puede escribir al correo electrónico";
+
+    const details = [
+      { label: "Programa", value: programName },
+      { label: "Proceso", value: PROCESS_NAMES[payload.alertType] },
+      { label: "Etapa", value: stage.stageLabel },
+      { label: EXPIRATION_DATE_LABELS[payload.alertType], value: formatDate(expirationDate) },
+      { label: DELIVERY_DATE_LABELS[payload.alertType], value: formatDate(deliveryDate) },
+      { label: "Coordinador", value: coordinatorName || "-" },
     ];
 
-    const explanation = `Te contactamos para el seguimiento del ${alertTypeLabel} del programa ${programName}. A continuacion encuentras las fechas clave y el motivo de esta alerta.`;
-    const accreditationNote = "Si el programa esta acreditado y cumple con los tiempos de renovacion, no tendra que realizar el tramite de renovacion de registro de este programa.";
-
     const plainText = [
-      `Hola ${record.program_coordinator ?? "equipo"},`,
+      `${recipientName}:`,
       "",
       explanation,
       "",
-      ...textLines,
+      "Información del proceso",
+      ...details.map((item) => `${item.label}: ${item.value}`),
       "",
-      "Este es un recordatorio oficial enviado desde el Sistema Orbita.",
+      "¿Qué debe hacer el programa?",
+      instructions,
+      "",
+      "Información importante",
       accreditationNote,
+      "",
+      `${contactText} ${CONTACT_EMAIL}.`,
+      "",
+      "Este es un mensaje automático. Por favor, no responda a este correo.",
     ].join("\n");
 
-    const html = buildProfessionalTemplateFromText({
-      subject,
-      intro: `Hola ${record.program_coordinator ?? "equipo"},`,
-      nombreCompleto: record.program_coordinator ?? undefined,
-      keyValueText: textLines.join("\n"),
-      text: `${explanation}\n\nEste es un recordatorio oficial enviado desde el Sistema Orbita.\n${accreditationNote}`,
+    const html = buildAlertTemplate({
+      alertBadge: `Alerta | ${stage.badge}`,
+      title: alertTitle,
+      programName,
+      recipientName,
+      introText: explanation,
+      detailsTitle: "Información del proceso",
+      details,
+      actionTitle: "¿Qué debe hacer el programa?",
+      actionText: instructions,
+      importantTitle: "Información importante",
+      importantText: accreditationNote,
+      contactText,
+      contactEmail: CONTACT_EMAIL,
+      gradientFrom: stage.gradientFrom,
+      gradientTo: stage.gradientTo,
+      titleSize: stage.titleSize,
+      headerPadding: stage.headerPadding,
     });
 
     if (!payload.manualOnly) {

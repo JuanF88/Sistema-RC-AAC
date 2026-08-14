@@ -83,7 +83,7 @@ export async function GET(request: Request) {
   try {
     const session = await getSessionFromRequest(request);
     if (!session) {
-      return NextResponse.json({ error: "Sesion no valida o expirada." }, { status: 401 });
+      return NextResponse.json({ error: "Sesión no válida o expirada." }, { status: 401 });
     }
 
     const client = getAdminClient();
@@ -172,11 +172,11 @@ export async function PATCH(request: Request) {
   try {
     const session = await getSessionFromRequest(request);
     if (!session) {
-      return NextResponse.json({ error: "Sesion no valida o expirada." }, { status: 401 });
+      return NextResponse.json({ error: "Sesión no válida o expirada." }, { status: 401 });
     }
 
     if (session.role === "visualizador") {
-      return NextResponse.json({ error: "Tu rol no permite modificar la programacion de snapshots." }, { status: 403 });
+      return NextResponse.json({ error: "Tu rol no permite modificar la programación de snapshots." }, { status: 403 });
     }
 
     const payload = (await request.json()) as SnapshotSettingsPayload;

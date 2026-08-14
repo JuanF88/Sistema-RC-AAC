@@ -46,7 +46,7 @@ export async function POST(request: Request) {
   try {
     const session = await getSessionFromRequest(request);
     if (!session) {
-      return NextResponse.json({ error: "Sesion no valida o expirada." }, { status: 401 });
+      return NextResponse.json({ error: "Sesión no válida o expirada." }, { status: 401 });
     }
 
     if (session.role === "visualizador") {
@@ -57,7 +57,7 @@ export async function POST(request: Request) {
     const email = payload.email?.trim().toLowerCase() ?? "";
 
     if (!email || !isValidEmail(email)) {
-      return NextResponse.json({ error: "El correo no es valido." }, { status: 400 });
+      return NextResponse.json({ error: "El correo no es válido." }, { status: 400 });
     }
 
     const client = getAdminClient();

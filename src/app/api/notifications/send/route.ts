@@ -21,7 +21,7 @@ function normalizeRecipients(value: string | string[]): string[] {
 function normalizeMessage(input: EmailPayload): EmailPayload {
   const to = normalizeRecipients(input.to);
   if (to.length === 0) {
-    throw new Error("El correo debe tener al menos un destinatario valido en 'to'.");
+    throw new Error("El correo debe tener al menos un destinatario válido en 'to'.");
   }
 
   const subject = input.subject?.trim();
@@ -43,7 +43,7 @@ export async function POST(request: Request) {
   try {
     const session = await getSessionFromRequest(request);
     if (!session) {
-      return NextResponse.json({ error: "Sesion no valida o expirada." }, { status: 401 });
+      return NextResponse.json({ error: "Sesión no válida o expirada." }, { status: 401 });
     }
 
     if (session.role === "visualizador") {

@@ -26,7 +26,7 @@ export async function DELETE(request: Request, context: RouteContext) {
   try {
     const session = await getSessionFromRequest(request);
     if (!session) {
-      return NextResponse.json({ error: "Sesion no valida o expirada." }, { status: 401 });
+      return NextResponse.json({ error: "Sesión no válida o expirada." }, { status: 401 });
     }
     if (session.role === "visualizador") {
       return NextResponse.json({ error: "Tu rol no permite modificar datos." }, { status: 403 });

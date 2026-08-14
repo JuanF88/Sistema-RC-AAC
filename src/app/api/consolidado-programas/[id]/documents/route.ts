@@ -92,7 +92,7 @@ export async function POST(request: Request, context: RouteContext) {
   try {
     const session = await getSessionFromRequest(request);
     if (!session) {
-      return NextResponse.json({ error: "Sesion no valida o expirada." }, { status: 401 });
+      return NextResponse.json({ error: "Sesión no válida o expirada." }, { status: 401 });
     }
     if (session.role === "visualizador") {
       return NextResponse.json({ error: "Tu rol no permite modificar datos." }, { status: 403 });
@@ -123,7 +123,7 @@ export async function POST(request: Request, context: RouteContext) {
       try {
         parsedUrl = new URL(rawUrl);
       } catch {
-        return NextResponse.json({ error: "La URL no es valida." }, { status: 400 });
+        return NextResponse.json({ error: "La URL no es válida." }, { status: 400 });
       }
 
       const inferredName = parsedUrl.pathname.split("/").filter(Boolean).pop() || parsedUrl.hostname;

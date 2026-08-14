@@ -7,6 +7,12 @@ import { showToast } from "nextjs-toast-notify";
 import type { ProgramRecord } from "../types";
 import { formatDate } from "../utils";
 import { exportToExcel, type ExportColumn } from "@/lib/export";
+import {
+  START_MONTHS,
+  DELIVERY_FIRST_REMINDER_MONTHS,
+  DELIVERY_REMINDER_MONTHS,
+  monthsLabel,
+} from "@/lib/alertSchedule";
 import styles from "./styles/ExpirationAlertsView.module.css";
 import modalStyles from "./styles/ProgramEditModal.module.css";
 
@@ -48,9 +54,6 @@ const ALERT_KIND_LABELS: Record<AlertKind, string> = {
   entrega: "Recordatorio de entrega",
 };
 
-const START_MONTHS = 24;
-const DELIVERY_FIRST_REMINDER_MONTHS = 5;
-const DELIVERY_REMINDER_MONTHS = 2;
 
 function parseIsoDate(value: string | null): Date | null {
   if (!value) return null;
@@ -755,7 +758,7 @@ export function ExpirationAlertsView({ rows, onExportReady, onProgramUpdate, onA
 
                 <div className={modalStyles.form}>
                   <section className={`${modalStyles.section} ${modalStyles.sectionAmber}`}>
-                    <h4>Inicio de renovacion (18 meses antes)</h4>
+                    <h4>Inicio de renovacion ({monthsLabel(START_MONTHS)} antes)</h4>
                     <div className={modalStyles.grid}>
                       <div className={modalStyles.field}>
                         <span>Fecha objetivo</span>
@@ -807,7 +810,7 @@ export function ExpirationAlertsView({ rows, onExportReady, onProgramUpdate, onA
                   </section>
 
                   <section className={`${modalStyles.section} ${modalStyles.sectionSky}`}>
-                    <h4>Recordatorio previo a entrega (5 meses antes)</h4>
+                    <h4>Recordatorio previo a entrega ({monthsLabel(DELIVERY_FIRST_REMINDER_MONTHS)} antes)</h4>
                     <div className={modalStyles.grid}>
                       <div className={modalStyles.field}>
                         <span>Proximo recordatorio</span>
@@ -855,12 +858,14 @@ export function ExpirationAlertsView({ rows, onExportReady, onProgramUpdate, onA
                       >
                         Marcar enviado
                       </button>
-                      <span className={styles.modalMuted}>Aviso programado: 5 meses antes de la entrega</span>
+                      <span className={styles.modalMuted}>
+                        Aviso programado: {monthsLabel(DELIVERY_FIRST_REMINDER_MONTHS)} antes de la entrega
+                      </span>
                     </div>
                   </section>
 
                   <section className={`${modalStyles.section} ${modalStyles.sectionRose}`}>
-                    <h4>Recordatorio de entrega (2 meses antes)</h4>
+                    <h4>Recordatorio de entrega ({monthsLabel(DELIVERY_REMINDER_MONTHS)} antes)</h4>
                     <div className={modalStyles.grid}>
                       <div className={modalStyles.field}>
                         <span>Fecha objetivo</span>

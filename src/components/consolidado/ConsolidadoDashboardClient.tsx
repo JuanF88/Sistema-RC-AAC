@@ -3,6 +3,11 @@
 import { useCallback, useEffect, useMemo, useState, useRef } from "react";
 
 import type { ConsolidadoDashboard } from "@/lib/consolidado";
+import {
+  START_MONTHS,
+  DELIVERY_FIRST_REMINDER_MONTHS,
+  DELIVERY_REMINDER_MONTHS,
+} from "@/lib/alertSchedule";
 
 import { FiltersBar } from "./common/FiltersBar";
 import { FACULTY_OPTIONS } from "./constants";
@@ -45,10 +50,6 @@ const MENU_ITEMS: MenuItem[] = [
   { id: "estadisticas", label: "Estadísticas", subtitle: "Análisis y gráficos" },
   { id: "historial", label: "Historial", subtitle: "Snapshots de BD" },
 ];
-
-const START_MONTHS = 24;
-const DELIVERY_FIRST_REMINDER_MONTHS = 5;
-const DELIVERY_REMINDER_MONTHS = 2;
 
 function isUuid(value: string): boolean {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
