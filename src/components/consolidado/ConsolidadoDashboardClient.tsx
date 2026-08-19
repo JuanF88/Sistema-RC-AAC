@@ -38,8 +38,18 @@ type AlertHistoryRecord = {
   program_id: string;
   alert_type: "rrc" | "aac";
   alert_kind: "inicio" | "recordatorio" | "entrega";
+  cycle_date: string | null;
   sent_at: string;
 };
+
+/**
+ * Normaliza la fecha de ciclo a YYYY-MM-DD para poder comparar el historial
+ * con la fecha de vencimiento vigente del programa. Los registros anteriores a
+ * la columna cycle_date devuelven cadena vacia y se tratan como "sin ciclo".
+ */
+function cycleKey(value: string | null | undefined): string {
+  return value ? value.slice(0, 10) : "";
+}
 
 const MENU_ITEMS: MenuItem[] = [
   { id: "consolidado", label: "Consolidado", subtitle: "Matriz editable" },
@@ -299,7 +309,12 @@ export function ConsolidadoDashboardClient({ data, currentUser, currentRole }: P
     setAlertHistory((current) => {
       const next = current.filter(
         (item) =>
-          !(item.program_id === record.program_id && item.alert_type === record.alert_type && item.alert_kind === record.alert_kind),
+          !(
+            item.program_id === record.program_id &&
+            item.alert_type === record.alert_type &&
+            item.alert_kind === record.alert_kind &&
+            cycleKey(item.cycle_date) === cycleKey(record.cycle_date)
+          ),
       );
       return [record, ...next];
     });
@@ -374,7 +389,7 @@ export function ConsolidadoDashboardClient({ data, currentUser, currentRole }: P
   const alertHistoryMap = useMemo(() => {
     const map = new Map<string, AlertHistoryRecord>();
     for (const record of alertHistory) {
-      const key = `${record.program_id}:${record.alert_type}:${record.alert_kind}`;
+      const key = `${record.program_id}:${record.alert_type}:${record.alert_kind}:${cycleKey(record.cycle_date)}`;
       if (!map.has(key)) {
         map.set(key, record);
       }
@@ -383,18 +398,19 @@ export function ConsolidadoDashboardClient({ data, currentUser, currentRole }: P
   }, [alertHistory]);
 
   const getAlertRecord = useCallback(
-    (programId: string, type: "rrc" | "aac", kind: "inicio" | "recordatorio" | "entrega") => {
-      const key = `${programId}:${type}:${kind}`;
-      return alertHistoryMap.get(key) ?? null;
+    (programId: string, type: "rrc" | "aac", kind: "inicio" | "recordatorio" | "entrega", cycleDate: string | null) => {
+      const base = `${programId}:${type}:${kind}`;
+      // Igual que en la vista de alertas: el historial sin ciclo sigue valiendo.
+      return alertHistoryMap.get(`${base}:${cycleKey(cycleDate)}`) ?? alertHistoryMap.get(`${base}:`) ?? null;
     },
     [alertHistoryMap],
   );
 
   const buildAlertTimeline = useCallback(
     (programId: string, type: "rrc" | "aac", expiration: string | null, delivery: string | null) => {
-      const inicioRecord = getAlertRecord(programId, type, "inicio");
-      const reminderRecord = getAlertRecord(programId, type, "recordatorio");
-      const entregaRecord = getAlertRecord(programId, type, "entrega");
+      const inicioRecord = getAlertRecord(programId, type, "inicio", expiration);
+      const reminderRecord = getAlertRecord(programId, type, "recordatorio", expiration);
+      const entregaRecord = getAlertRecord(programId, type, "entrega", expiration);
 
       const startDate = addMonths(expiration, -START_MONTHS);
       const deliveryDue = addMonths(delivery, -DELIVERY_REMINDER_MONTHS);

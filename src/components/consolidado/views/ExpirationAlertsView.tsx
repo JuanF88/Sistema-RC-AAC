@@ -43,6 +43,7 @@ type AlertHistoryRecord = {
   program_id: string;
   alert_type: AlertType;
   alert_kind: AlertKind;
+  cycle_date: string | null;
   sent_at: string;
   actor_username: string | null;
   recipients: string[];
@@ -121,6 +122,15 @@ function formatRelativeDays(value: string | null): string {
   if (diff < 30) return `hace ${diff} dias`;
   const months = Math.round(diff / 30);
   return `hace ${months} meses`;
+}
+
+/**
+ * Normaliza la fecha de ciclo a YYYY-MM-DD para poder comparar el historial
+ * con la fecha de vencimiento vigente del programa. Los registros anteriores a
+ * la columna cycle_date devuelven cadena vacia y se tratan como "sin ciclo".
+ */
+function cycleKey(value: string | null | undefined): string {
+  return value ? value.slice(0, 10) : "";
 }
 
 function buildMomentStatus(dueDate: string | null, sentAt: string | null) {
@@ -213,7 +223,7 @@ export function ExpirationAlertsView({ rows, onExportReady, onProgramUpdate, onA
   const historyMap = useMemo(() => {
     const map = new Map<string, AlertHistoryRecord>();
     for (const record of alertHistory) {
-      const key = `${record.program_id}:${record.alert_type}:${record.alert_kind}`;
+      const key = `${record.program_id}:${record.alert_type}:${record.alert_kind}:${cycleKey(record.cycle_date)}`;
       if (!map.has(key)) {
         map.set(key, record);
       }
@@ -222,18 +232,20 @@ export function ExpirationAlertsView({ rows, onExportReady, onProgramUpdate, onA
   }, [alertHistory]);
 
   const getHistoryRecord = useCallback(
-    (programId: string, type: AlertType, kind: AlertKind): AlertHistoryRecord | null => {
-      const key = `${programId}:${type}:${kind}`;
-      return historyMap.get(key) ?? null;
+    (programId: string, type: AlertType, kind: AlertKind, cycleDate: string | null): AlertHistoryRecord | null => {
+      const base = `${programId}:${type}:${kind}`;
+      // Si no hay registro para el ciclo vigente, se acepta uno sin ciclo
+      // (historial previo a la migracion) para no reabrir alertas ya enviadas.
+      return historyMap.get(`${base}:${cycleKey(cycleDate)}`) ?? historyMap.get(`${base}:`) ?? null;
     },
     [historyMap],
   );
 
   const buildAlertTimeline = useCallback(
     (programId: string, type: AlertType, expiration: string | null, delivery: string | null) => {
-      const inicioRecord = getHistoryRecord(programId, type, "inicio");
-      const reminderRecord = getHistoryRecord(programId, type, "recordatorio");
-      const entregaRecord = getHistoryRecord(programId, type, "entrega");
+      const inicioRecord = getHistoryRecord(programId, type, "inicio", expiration);
+      const reminderRecord = getHistoryRecord(programId, type, "recordatorio", expiration);
+      const entregaRecord = getHistoryRecord(programId, type, "entrega", expiration);
 
       const startDate = addMonths(expiration, -START_MONTHS);
       const deliveryDue = addMonths(delivery, -DELIVERY_REMINDER_MONTHS);
