@@ -7,6 +7,7 @@ import {
   START_MONTHS,
   DELIVERY_FIRST_REMINDER_MONTHS,
   DELIVERY_REMINDER_MONTHS,
+  addMonthsToIsoDate,
 } from "@/lib/alertSchedule";
 
 import { FiltersBar } from "./common/FiltersBar";
@@ -75,14 +76,6 @@ function parseIsoDate(value: string | null): Date | null {
   const day = Number(match[3]);
   const date = new Date(Date.UTC(year, month - 1, day));
   return Number.isNaN(date.getTime()) ? null : date;
-}
-
-function addMonths(value: string | null, months: number): string | null {
-  if (!value) return null;
-  const date = parseIsoDate(value);
-  if (!date) return null;
-  date.setUTCMonth(date.getUTCMonth() + months);
-  return date.toISOString().slice(0, 10);
 }
 
 function isOnOrAfter(value: string | null): boolean {
@@ -412,9 +405,9 @@ export function ConsolidadoDashboardClient({ data, currentUser, currentRole }: P
       const reminderRecord = getAlertRecord(programId, type, "recordatorio", expiration);
       const entregaRecord = getAlertRecord(programId, type, "entrega", expiration);
 
-      const startDate = addMonths(expiration, -START_MONTHS);
-      const deliveryDue = addMonths(delivery, -DELIVERY_REMINDER_MONTHS);
-      const nextReminder = delivery ? addMonths(delivery, -DELIVERY_FIRST_REMINDER_MONTHS) : null;
+      const startDate = addMonthsToIsoDate(expiration, -START_MONTHS);
+      const deliveryDue = addMonthsToIsoDate(delivery, -DELIVERY_REMINDER_MONTHS);
+      const nextReminder = delivery ? addMonthsToIsoDate(delivery, -DELIVERY_FIRST_REMINDER_MONTHS) : null;
 
       return {
         startDate,

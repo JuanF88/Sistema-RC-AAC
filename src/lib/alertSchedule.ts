@@ -16,6 +16,40 @@ export const DELIVERY_FIRST_REMINDER_MONTHS = 6;
 /** Recordatorio final: se cuenta desde la fecha limite de entrega. */
 export const DELIVERY_REMINDER_MONTHS = 1;
 
+/**
+ * Suma (o resta) meses a una fecha ISO conservando el dia del mes.
+ *
+ * Cuando el mes destino es mas corto que el de origen la fecha se ancla a su
+ * ultimo dia en vez de desbordarse al mes siguiente: al 31 de agosto menos seis
+ * meses le corresponde el 28 de febrero, no el 3 de marzo. Sin ese ajuste las
+ * alertas de programas con fechas de fin de mes se habilitaban unos dias tarde
+ * y el texto del correo ("quedan seis meses") no cuadraba con la fecha real.
+ *
+ * Fuente unica: la usan las vistas de alertas y el calculo automatico de fechas
+ * derivadas del modal de programas, para que ambos den siempre el mismo dia.
+ */
+export function addMonthsToIsoDate(value: string | null, months: number): string | null {
+  if (!value || !Number.isFinite(months)) return null;
+
+  const match = String(value).trim().match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!match) return null;
+
+  const year = Number(match[1]);
+  const monthIndex = Number(match[2]) - 1;
+  const day = Number(match[3]);
+
+  // Se posiciona primero en el dia 1 del mes destino para que el desbordamiento
+  // no ocurra, y solo despues se elige el dia.
+  const target = new Date(Date.UTC(year, monthIndex + Math.trunc(months), 1));
+  if (Number.isNaN(target.getTime())) return null;
+
+  // Dia 0 del mes siguiente equivale al ultimo dia del mes destino.
+  const lastDay = new Date(Date.UTC(target.getUTCFullYear(), target.getUTCMonth() + 1, 0)).getUTCDate();
+  target.setUTCDate(Math.min(day, lastDay));
+
+  return target.toISOString().slice(0, 10);
+}
+
 const MONTH_WORDS: Record<number, string> = {
   1: "un",
   2: "dos",

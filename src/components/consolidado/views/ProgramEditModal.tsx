@@ -6,6 +6,7 @@ import { showToast } from "nextjs-toast-notify";
 import type { ProgramDocument, ProgramRecord } from "../types";
 import { DURATION_UNIT_OPTIONS, normalizeDurationUnit } from "@/lib/duration";
 import { METHODOLOGY_OPTIONS, normalizeMethodology } from "@/lib/methodology";
+import { addMonthsToIsoDate } from "@/lib/alertSchedule";
 import styles from "./styles/ProgramEditModal.module.css";
 
 type Props = {
@@ -230,33 +231,6 @@ function toNullableBool(value: BoolString): boolean | null {
   if (value === "") return null;
   return value === "true";
 }
-
-function parseIsoDate(value: string): Date | null {
-  const match = value.match(/^(\d{4})-(\d{2})-(\d{2})$/);
-  if (!match) return null;
-
-  const year = Number(match[1]);
-  const month = Number(match[2]);
-  const day = Number(match[3]);
-  const date = new Date(Date.UTC(year, month - 1, day));
-  if (Number.isNaN(date.getTime())) return null;
-  return date;
-}
-
-function formatIsoDate(date: Date): string {
-  const year = date.getUTCFullYear();
-  const month = String(date.getUTCMonth() + 1).padStart(2, "0");
-  const day = String(date.getUTCDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-}
-
-function addMonthsToIsoDate(isoDate: string, months: number): string | null {
-  const baseDate = parseIsoDate(isoDate);
-  if (!baseDate || !Number.isFinite(months)) return null;
-  baseDate.setUTCMonth(baseDate.getUTCMonth() + months);
-  return formatIsoDate(baseDate);
-}
-
 
 function calculateRcDerivedDates(rcStart: string, rcDurationYears: string) {
   const cleanStart = rcStart.trim();

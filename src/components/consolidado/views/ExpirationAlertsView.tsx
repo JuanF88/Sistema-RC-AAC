@@ -11,6 +11,7 @@ import {
   START_MONTHS,
   DELIVERY_FIRST_REMINDER_MONTHS,
   DELIVERY_REMINDER_MONTHS,
+  addMonthsToIsoDate,
   monthsLabel,
 } from "@/lib/alertSchedule";
 import styles from "./styles/ExpirationAlertsView.module.css";
@@ -85,14 +86,6 @@ function evaluateAlert(value: string | null): AlertResult {
   if (days < 0) return { level: "vencido", label: "Vencido", days };
   if (days <= 120) return { level: "proximo", label: "Proximo", days };
   return { level: "aldia", label: "Al dia", days };
-}
-
-function addMonths(value: string | null, months: number): string | null {
-  if (!value) return null;
-  const date = parseIsoDate(value);
-  if (!date) return null;
-  date.setUTCMonth(date.getUTCMonth() + months);
-  return date.toISOString().slice(0, 10);
 }
 
 function isOnOrAfter(value: string | null): boolean {
@@ -247,9 +240,9 @@ export function ExpirationAlertsView({ rows, onExportReady, onProgramUpdate, onA
       const reminderRecord = getHistoryRecord(programId, type, "recordatorio", expiration);
       const entregaRecord = getHistoryRecord(programId, type, "entrega", expiration);
 
-      const startDate = addMonths(expiration, -START_MONTHS);
-      const deliveryDue = addMonths(delivery, -DELIVERY_REMINDER_MONTHS);
-      const nextReminder = delivery ? addMonths(delivery, -DELIVERY_FIRST_REMINDER_MONTHS) : null;
+      const startDate = addMonthsToIsoDate(expiration, -START_MONTHS);
+      const deliveryDue = addMonthsToIsoDate(delivery, -DELIVERY_REMINDER_MONTHS);
+      const nextReminder = delivery ? addMonthsToIsoDate(delivery, -DELIVERY_FIRST_REMINDER_MONTHS) : null;
 
       return {
         inicioRecord,
@@ -267,7 +260,7 @@ export function ExpirationAlertsView({ rows, onExportReady, onProgramUpdate, onA
     return [...programs]
       .map((program) => {
         const rcAlert = evaluateAlert(program.rcEnd);
-        const siacAlert = evaluateAlert(program.rcMineducacion);
+        const siacAlert = evaluateAlert(program.rcSiga);
         const timeline = buildAlertTimeline(program.id, "rrc", program.rcEnd, program.rcSiga);
         const inicioStatus = buildMomentStatus(timeline.startDate, timeline.inicioRecord?.sent_at ?? null);
         const reminderStatus = buildMomentStatus(timeline.nextReminder, timeline.reminderRecord?.sent_at ?? null);
@@ -284,7 +277,7 @@ export function ExpirationAlertsView({ rows, onExportReady, onProgramUpdate, onA
           rcAlert,
           coordinatorEmail: program.programCoordinatorEmail ?? "",
           coordinatorName: program.programCoordinator ?? null,
-          siacEnd: program.rcMineducacion,
+          siacEnd: program.rcSiga,
           siacAlert,
           expiration: program.rcEnd,
           delivery: program.rcSiga,
@@ -499,9 +492,9 @@ export function ExpirationAlertsView({ rows, onExportReady, onProgramUpdate, onA
             { key: "rcEnd", header: "Vencimiento R.C.", width: 18, formatter: (v) => formatDate(v as string | null | undefined) || "-" },
             { key: "rcAlert", header: "Alerta R.C.", width: 16 },
             { key: "rcDays", header: "Dias R.C.", width: 12 },
-            { key: "siacEnd", header: "Vencimiento SIAC RRC", width: 22, formatter: (v) => formatDate(v as string | null | undefined) || "-" },
-            { key: "siacAlert", header: "Alerta SIAC RRC", width: 18 },
-            { key: "siacDays", header: "Dias SIAC RRC", width: 15 },
+            { key: "siacEnd", header: "Entrega al CGCAI", width: 22, formatter: (v) => formatDate(v as string | null | undefined) || "-" },
+            { key: "siacAlert", header: "Alerta CGCAI", width: 18 },
+            { key: "siacDays", header: "Dias CGCAI", width: 15 },
             { key: "observations", header: "Observaciones", width: 44 },
           ]
         : [
@@ -594,9 +587,9 @@ export function ExpirationAlertsView({ rows, onExportReady, onProgramUpdate, onA
                 <th>Vencimiento R.C.</th>
                 <th>Alerta R.C.</th>
                 <th>Dias R.C.</th>
-                <th>Vencimiento SIAC RRC</th>
-                <th>Alerta SIAC RRC</th>
-                <th>Dias SIAC RRC</th>
+                <th>Entrega al CGCAI</th>
+                <th>Alerta CGCAI</th>
+                <th>Dias CGCAI</th>
                 <th>Accion</th>
                 <th>{observationHeader}</th>
               </tr>
