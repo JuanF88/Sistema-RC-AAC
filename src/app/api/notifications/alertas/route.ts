@@ -163,11 +163,16 @@ function parseCoordinatorEmails(value: string | null): string[] {
     .filter((email) => email.length > 0);
 }
 
+// Las fechas se guardan como "YYYY-MM-DD" sin hora. Al pasarlas por new Date()
+// se interpretan como medianoche UTC y toLocaleDateString las convierte a la
+// zona del servidor: en Colombia (UTC-5) eso restaba un dia y el correo anunciaba
+// una fecha limite anterior a la registrada. Se formatea a partir del texto para
+// que el resultado no dependa de la zona horaria donde corra la aplicacion.
 function formatDate(value: string | null): string {
   if (!value) return "-";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "-";
-  return date.toLocaleDateString("es-CO");
+  const match = String(value).trim().match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (!match) return "-";
+  return `${match[3]}/${match[2]}/${match[1]}`;
 }
 
 function isValidAlertType(value: string): value is AlertType {
