@@ -20,6 +20,9 @@ type SendAlertPayload = {
   alertType: AlertType;
   alertKind: AlertKind;
   manualOnly?: boolean;
+  // Devuelve el correo ya armado sin enviarlo ni registrarlo, para revisarlo
+  // antes de confirmar el envio.
+  preview?: boolean;
 };
 
 type ProgramRow = {
@@ -359,6 +362,21 @@ export async function POST(request: Request) {
       titleSize: stage.titleSize,
       headerPadding: stage.headerPadding,
     });
+
+    // La previsualizacion corta aqui: el correo ya esta armado con los mismos
+    // datos del envio real, pero no sale nada ni queda registrado en el
+    // historial. Asi lo que se revisa es exactamente lo que se enviaria.
+    if (payload.preview) {
+      return NextResponse.json({
+        data: {
+          subject,
+          to: recipients,
+          cc: ccRecipients,
+          html,
+          text: plainText,
+        },
+      });
+    }
 
     if (!payload.manualOnly) {
       await sendEmail({

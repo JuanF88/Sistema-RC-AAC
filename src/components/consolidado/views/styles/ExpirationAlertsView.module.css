@@ -543,3 +543,91 @@
     align-items: flex-start;
   }
 }
+
+/* Ventana de revision del correo. Va por encima del modal de gestion de
+   alertas, que ocupa el z-index 60. */
+.previewBackdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  background: rgba(2, 6, 23, 0.56);
+  backdrop-filter: blur(3px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem 1rem;
+}
+
+/* Selector de dos clases a proposito: gana sobre el .modal heredado de
+   ProgramEditModal sin depender del orden en que se carguen las hojas. */
+.previewBackdrop .previewModal {
+  width: clamp(320px, 88vw, 860px);
+  max-width: 88vw;
+  max-height: calc(100vh - 3rem);
+  height: auto;
+  border-radius: 1rem;
+  margin: 0 !important;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.previewMeta {
+  display: grid;
+  gap: 0.45rem;
+  padding: 0.9rem 1.1rem;
+  border-bottom: 1px solid #e2e8f0;
+  background: #f8fafc;
+  font-size: 0.78rem;
+}
+
+.previewMeta > div {
+  display: grid;
+  grid-template-columns: 4.5rem 1fr;
+  gap: 0.6rem;
+  align-items: baseline;
+}
+
+.previewMeta span {
+  color: #64748b;
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: 0.66rem;
+  letter-spacing: 0.02em;
+}
+
+.previewMeta strong {
+  color: #1e293b;
+  font-weight: 600;
+  word-break: break-word;
+}
+
+.previewFrame {
+  flex: 1;
+  min-height: 320px;
+  width: 100%;
+  border: none;
+  background: #ffffff;
+}
+
+.previewActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  padding: 0.8rem 1.1rem;
+  border-top: 1px solid #e2e8f0;
+  background: #f8fafc;
+}
+
+@media (max-width: 640px) {
+  .previewBackdrop .previewModal {
+    width: 100%;
+    max-width: 100%;
+    max-height: calc(100vh - 1.5rem);
+  }
+
+  .previewMeta > div {
+    grid-template-columns: 1fr;
+    gap: 0.15rem;
+  }
+}

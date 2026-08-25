@@ -164,6 +164,17 @@ export function ExpirationAlertsView({ rows, onExportReady, onProgramUpdate, onA
   const [savingObservationId, setSavingObservationId] = useState<string | null>(null);
   const [alertHistory, setAlertHistory] = useState<AlertHistoryRecord[]>([]);
   const [qualityManagers, setQualityManagers] = useState<QualityManager[]>([]);
+  const [previewAlert, setPreviewAlert] = useState<null | {
+    programId: string;
+    program: string;
+    alertType: AlertType;
+    alertKind: AlertKind;
+    subject: string;
+    to: string[];
+    cc: string[];
+    html: string;
+  }>(null);
+  const [loadingPreviewKind, setLoadingPreviewKind] = useState<AlertKind | null>(null);
   const [loadingAlertHistory, setLoadingAlertHistory] = useState(false);
   const [sendingAlertId, setSendingAlertId] = useState<string | null>(null);
   const [alertModal, setAlertModal] = useState<null | {
@@ -465,8 +476,10 @@ export function ExpirationAlertsView({ rows, onExportReady, onProgramUpdate, onA
     }
   }, [observationField]);
 
+  // Devuelve si el envio prospero, para que la ventana de revision solo se
+  // cierre cuando el correo realmente salio.
   const handleSendAlert = useCallback(
-    async (programId: string, alertType: AlertType, alertKind: AlertKind, manualOnly = false) => {
+    async (programId: string, alertType: AlertType, alertKind: AlertKind, manualOnly = false): Promise<boolean> => {
       setSendingAlertId(programId);
       try {
         const response = await fetch("/api/notifications/alertas", {
@@ -488,18 +501,60 @@ export function ExpirationAlertsView({ rows, onExportReady, onProgramUpdate, onA
           position: "top-right",
           duration: 2000,
         });
+        return true;
       } catch (error) {
         const message = error instanceof Error ? error.message : "No se pudo enviar la alerta.";
         showToast.error(message, {
           position: "top-right",
           duration: 2800,
         });
+        return false;
       } finally {
         setSendingAlertId(null);
       }
     },
     [loadAlertHistory],
   );
+
+  // Arma el correo en el servidor sin enviarlo y lo abre para revisarlo. Se pide
+  // al mismo endpoint del envio para que lo que se revisa salga de los mismos
+  // datos y la misma plantilla que usara el correo real.
+  const handlePreviewAlert = useCallback(
+    async (programId: string, program: string, alertType: AlertType, alertKind: AlertKind) => {
+      setLoadingPreviewKind(alertKind);
+      try {
+        const response = await fetch("/api/notifications/alertas", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ programId, alertType, alertKind, preview: true }),
+        });
+        const body = (await response.json()) as {
+          error?: string;
+          data?: { subject: string; to: string[]; cc: string[]; html: string };
+        };
+        if (!response.ok || !body.data) {
+          throw new Error(body.error ?? "No se pudo generar la vista previa del correo.");
+        }
+
+        setPreviewAlert({ programId, program, alertType, alertKind, ...body.data });
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "No se pudo generar la vista previa del correo.";
+        showToast.error(message, {
+          position: "top-right",
+          duration: 2800,
+        });
+      } finally {
+        setLoadingPreviewKind(null);
+      }
+    },
+    [],
+  );
+
+  const handleConfirmSend = useCallback(async () => {
+    if (!previewAlert) return;
+    const sent = await handleSendAlert(previewAlert.programId, previewAlert.alertType, previewAlert.alertKind);
+    if (sent) setPreviewAlert(null);
+  }, [handleSendAlert, previewAlert]);
 
   // Keep reference to current data for export
   const dataRef = useRef({ rrcRows, accreditedRows, mode });
@@ -846,10 +901,17 @@ export function ExpirationAlertsView({ rows, onExportReady, onProgramUpdate, onA
                       <button
                         type="button"
                         className={styles.sendButton}
-                        onClick={() => handleSendAlert(alertModal.id, alertModal.type, "inicio")}
-                        disabled={!modalCanSend || !inicioStatus?.canSend || sendingAlertId === alertModal.id}
+                        onClick={() =>
+                          void handlePreviewAlert(alertModal.id, alertModal.program, alertModal.type, "inicio")
+                        }
+                        disabled={
+                          !modalCanSend ||
+                          !inicioStatus?.canSend ||
+                          sendingAlertId === alertModal.id ||
+                          loadingPreviewKind !== null
+                        }
                       >
-                        {sendingAlertId === alertModal.id ? "Enviando..." : "Enviar ahora"}
+                        {loadingPreviewKind ? "Preparando..." : "Revisar y enviar"}
                       </button>
                       <button
                         type="button"
@@ -898,10 +960,17 @@ export function ExpirationAlertsView({ rows, onExportReady, onProgramUpdate, onA
                       <button
                         type="button"
                         className={styles.sendButton}
-                        onClick={() => handleSendAlert(alertModal.id, alertModal.type, "recordatorio")}
-                        disabled={!modalCanSend || !reminderStatus?.canSend || sendingAlertId === alertModal.id}
+                        onClick={() =>
+                          void handlePreviewAlert(alertModal.id, alertModal.program, alertModal.type, "recordatorio")
+                        }
+                        disabled={
+                          !modalCanSend ||
+                          !reminderStatus?.canSend ||
+                          sendingAlertId === alertModal.id ||
+                          loadingPreviewKind !== null
+                        }
                       >
-                        {sendingAlertId === alertModal.id ? "Enviando..." : "Enviar ahora"}
+                        {loadingPreviewKind ? "Preparando..." : "Revisar y enviar"}
                       </button>
                       <button
                         type="button"
@@ -953,10 +1022,17 @@ export function ExpirationAlertsView({ rows, onExportReady, onProgramUpdate, onA
                       <button
                         type="button"
                         className={styles.sendButton}
-                        onClick={() => handleSendAlert(alertModal.id, alertModal.type, "entrega")}
-                        disabled={!modalCanSend || !entregaStatus?.canSend || sendingAlertId === alertModal.id}
+                        onClick={() =>
+                          void handlePreviewAlert(alertModal.id, alertModal.program, alertModal.type, "entrega")
+                        }
+                        disabled={
+                          !modalCanSend ||
+                          !entregaStatus?.canSend ||
+                          sendingAlertId === alertModal.id ||
+                          loadingPreviewKind !== null
+                        }
                       >
-                        {sendingAlertId === alertModal.id ? "Enviando..." : "Enviar ahora"}
+                        {loadingPreviewKind ? "Preparando..." : "Revisar y enviar"}
                       </button>
                       <button
                         type="button"
@@ -968,6 +1044,77 @@ export function ExpirationAlertsView({ rows, onExportReady, onProgramUpdate, onA
                       </button>
                     </div>
                   </section>
+                </div>
+              </div>
+            </div>,
+            document.body,
+          )
+        : null}
+
+      {isClient && previewAlert
+        ? createPortal(
+            <div className={styles.previewBackdrop} onClick={() => setPreviewAlert(null)}>
+              <div
+                className={`${modalStyles.modal} ${styles.previewModal}`}
+                onClick={(event) => event.stopPropagation()}
+              >
+                <div className={modalStyles.header}>
+                  <div>
+                    <div className={modalStyles.title}>Revision del correo</div>
+                    <div className={modalStyles.subtitle}>
+                      {previewAlert.program} · {ALERT_KIND_LABELS[previewAlert.alertKind]}
+                    </div>
+                    <div className={styles.modalMuted}>
+                      Asi se vera el correo. Todavia no se ha enviado nada.
+                    </div>
+                  </div>
+                  <button type="button" className={modalStyles.closeButton} onClick={() => setPreviewAlert(null)}>
+                    Cerrar
+                  </button>
+                </div>
+
+                <div className={styles.previewMeta}>
+                  <div>
+                    <span>Para</span>
+                    <strong>{previewAlert.to.join("; ") || "-"}</strong>
+                  </div>
+                  <div>
+                    <span>Copia</span>
+                    <strong>{previewAlert.cc.join("; ") || "Sin copia: la facultad no tiene gestor asignado"}</strong>
+                  </div>
+                  <div>
+                    <span>Asunto</span>
+                    <strong>{previewAlert.subject}</strong>
+                  </div>
+                </div>
+
+                {/* El correo se muestra aislado en un iframe sin permisos: la
+                    plantilla se ve tal cual, sin que sus estilos toquen la
+                    aplicacion ni pueda ejecutar nada. */}
+                <iframe
+                  className={styles.previewFrame}
+                  title="Vista previa del correo de alerta"
+                  sandbox=""
+                  srcDoc={previewAlert.html}
+                />
+
+                <div className={styles.previewActions}>
+                  <button
+                    type="button"
+                    className={styles.markButton}
+                    onClick={() => setPreviewAlert(null)}
+                    disabled={sendingAlertId === previewAlert.programId}
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="button"
+                    className={styles.sendButton}
+                    onClick={() => void handleConfirmSend()}
+                    disabled={sendingAlertId === previewAlert.programId}
+                  >
+                    {sendingAlertId === previewAlert.programId ? "Enviando..." : "Confirmar y enviar"}
+                  </button>
                 </div>
               </div>
             </div>,
