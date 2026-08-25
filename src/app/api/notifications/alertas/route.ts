@@ -24,6 +24,7 @@ type SendAlertPayload = {
 type ProgramRow = {
   id: string;
   program: string | null;
+  faculty: string | null;
   program_coordinator: string | null;
   program_coordinator_email: string | null;
   rc_end: string | null;
@@ -163,6 +164,58 @@ function parseCoordinatorEmails(value: string | null): string[] {
     .filter((email) => email.length > 0);
 }
 
+// El directorio de gestores y el consolidado guardan el nombre de la facultad
+// por separado, asi que se comparan normalizados: una tilde o una mayuscula de
+// diferencia no debe dejar al gestor sin copia. NFD separa cada letra de su
+// tilde y el reemplazo descarta todo lo que no sea letra o digito; ambos lados
+// pasan por aqui, asi que el resultado siempre es comparable.
+function normalizeFaculty(value: string | null): string {
+  return String(value ?? "")
+    .normalize("NFD")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+}
+
+// Gestores de calidad activos de la facultad del programa. La copia va solo al
+// correo institucional: el personal se guarda en el directorio como dato de
+// contacto, no como canal de notificacion. Si la tabla todavia no existe o la
+// consulta falla, la alerta se envia igual sin copia: el correo al coordinador
+// es lo que no puede perderse.
+async function loadFacultyManagers(
+  client: ReturnType<typeof getAdminClient>,
+  faculty: string | null,
+): Promise<{ names: string[]; emails: string[] }> {
+  const target = normalizeFaculty(faculty);
+  if (!target) return { names: [], emails: [] };
+
+  const { data, error } = await client
+    .from("gestores_calidad")
+    .select("faculty, full_name, institutional_email")
+    .eq("is_active", true);
+
+  if (error) {
+    console.error("No se pudieron cargar los gestores de calidad:", error.message);
+    return { names: [], emails: [] };
+  }
+
+  const managers = (data ?? []).filter((row) => normalizeFaculty(row.faculty) === target);
+  const names: string[] = [];
+  const emails: string[] = [];
+
+  for (const manager of managers) {
+    const name = manager.full_name?.trim();
+    if (name) names.push(name);
+
+    const email = manager.institutional_email?.trim();
+    if (email && !emails.some((item) => item.toLowerCase() === email.toLowerCase())) {
+      emails.push(email);
+    }
+  }
+
+  return { names, emails };
+}
+
 // Las fechas se guardan como "YYYY-MM-DD" sin hora. Al pasarlas por new Date()
 // se interpretan como medianoche UTC y toLocaleDateString las convierte a la
 // zona del servidor: en Colombia (UTC-5) eso restaba un dia y el correo anunciaba
@@ -221,7 +274,7 @@ export async function POST(request: Request) {
     const { data: program, error } = await client
       .from("consolidado_programas")
       .select(
-        "id, program, program_coordinator, program_coordinator_email, rc_end, rc_siga, aac_end, aac_cgcai_delivery",
+        "id, program, faculty, program_coordinator, program_coordinator_email, rc_end, rc_siga, aac_end, aac_cgcai_delivery",
       )
       .eq("id", payload.programId)
       .single();
@@ -235,6 +288,14 @@ export async function POST(request: Request) {
     if (!payload.manualOnly && recipients.length === 0) {
       return NextResponse.json({ error: "El programa no tiene correo de coordinador." }, { status: 400 });
     }
+
+    // El gestor de calidad de la facultad acompana el proceso, asi que recibe
+    // copia de la alerta. Se descartan los correos que ya estan en el
+    // destinatario principal para no duplicar el envio.
+    const managers = await loadFacultyManagers(client, record.faculty ?? null);
+    const ccRecipients = managers.emails.filter(
+      (email) => !recipients.some((item) => item.toLowerCase() === email.toLowerCase()),
+    );
 
     const alertTypeLabel = ALERT_TYPE_LABELS[payload.alertType];
     const alertKindLabel = ALERT_KIND_LABELS[payload.alertKind];
@@ -269,6 +330,11 @@ export async function POST(request: Request) {
       { label: EXPIRATION_DATE_LABELS[payload.alertType], value: formatDate(expirationDate) },
       { label: DELIVERY_DATE_LABELS[payload.alertType], value: formatDate(deliveryDate) },
       { label: "Coordinador(a)", value: coordinatorName || "-" },
+      // La fila del gestor solo aparece cuando la facultad tiene uno asignado,
+      // para que el correo no muestre un campo vacio.
+      ...(managers.names.length > 0
+        ? [{ label: "Gestor(a) de calidad", value: managers.names.join(" | ") }]
+        : []),
     ];
 
     const plainText = [
@@ -313,6 +379,7 @@ export async function POST(request: Request) {
     if (!payload.manualOnly) {
       await sendEmail({
         to: recipients,
+        cc: ccRecipients.length > 0 ? ccRecipients : undefined,
         subject,
         text: plainText,
         html,

@@ -89,5 +89,5 @@ function capitalize(value: string): string {
 
 /** "Seis meses para la entrega de la documentacion", para la fila "Etapa". */
 export function monthsStageLabel(months: number): string {
-  return `${capitalize(monthsInWords(months))} para la entrega de la documentación`;
+  return `${capitalize(monthsInWords(months))} para la entrega de la documentación al CGCAI`;
 }

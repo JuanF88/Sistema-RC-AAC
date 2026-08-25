@@ -1,0 +1,272 @@
+.wrap {
+  display: grid;
+  gap: 16px;
+}
+
+.headerCard,
+.formCard,
+.listCard {
+  border: 1px solid #dce7f6;
+  border-radius: 12px;
+  background: #ffffff;
+  padding: 16px;
+  box-shadow: 0 4px 14px rgba(20, 45, 90, 0.06);
+}
+
+.title {
+  margin: 0;
+  color: #103766;
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.description {
+  margin: 10px 0 0;
+  color: #2a4768;
+  line-height: 1.45;
+  font-size: 0.9rem;
+}
+
+.statsRow {
+  margin-top: 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.statPill,
+.warnPill,
+.okPill {
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-weight: 700;
+  font-size: 0.82rem;
+}
+
+.statPill {
+  background: #e7f0ff;
+  color: #0f3d78;
+  border: 1px solid #c8dcff;
+}
+
+.warnPill {
+  background: #fff4dc;
+  color: #7a5205;
+  border: 1px solid #f3d79a;
+}
+
+.okPill {
+  background: #e6f7ee;
+  color: #1a6b45;
+  border: 1px solid #b9e5cd;
+}
+
+.warnText {
+  margin: 10px 0 0;
+  color: #7a5205;
+  font-size: 0.82rem;
+  line-height: 1.4;
+}
+
+.cardTitle {
+  margin: 0 0 12px;
+  color: #103766;
+  font-size: 0.95rem;
+}
+
+.formGrid {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(3, minmax(180px, 1fr));
+}
+
+.fieldWide {
+  grid-column: span 2;
+}
+
+.fieldLabel {
+  display: grid;
+  gap: 6px;
+  color: #234267;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.input {
+  border: 1px solid #c8d6eb;
+  border-radius: 8px;
+  padding: 9px 11px;
+  font-size: 0.86rem;
+  color: #133252;
+  background: #fff;
+  width: 100%;
+}
+
+.input:focus {
+  outline: none;
+  border-color: #0f69d8;
+  box-shadow: 0 0 0 3px rgba(15, 105, 216, 0.14);
+}
+
+.formActions {
+  margin-top: 12px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.primaryButton,
+.secondaryButton,
+.editButton,
+.activateButton,
+.deactivateButton,
+.deleteButton {
+  border: none;
+  border-radius: 8px;
+  padding: 8px 11px;
+  font-weight: 700;
+  font-size: 0.82rem;
+  cursor: pointer;
+}
+
+.primaryButton,
+.activateButton {
+  background: #0f69d8;
+  color: #fff;
+}
+
+.secondaryButton,
+.editButton {
+  background: #e7f0ff;
+  color: #0f3d78;
+  border: 1px solid #c8dcff;
+}
+
+.deactivateButton {
+  background: #f9ce5f;
+  color: #5d4006;
+}
+
+.deleteButton {
+  background: #f56a6a;
+  color: #fff;
+}
+
+.primaryButton:disabled,
+.secondaryButton:disabled,
+.editButton:disabled,
+.activateButton:disabled,
+.deactivateButton:disabled,
+.deleteButton:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.groups {
+  display: grid;
+  gap: 16px;
+}
+
+.group {
+  border: 1px solid #dbe6f3;
+  border-radius: 10px;
+  padding: 12px;
+}
+
+.groupTitle {
+  margin: 0 0 10px;
+  color: #123964;
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+.tableScroll {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+  color: #25486d;
+}
+
+.table th {
+  text-align: left;
+  background: #f2f7ff;
+  color: #0f3d78;
+  font-weight: 700;
+  padding: 8px 10px;
+  border-bottom: 1px solid #dbe6f3;
+  white-space: nowrap;
+}
+
+.table td {
+  padding: 8px 10px;
+  border-bottom: 1px solid #eef3fa;
+  vertical-align: top;
+}
+
+.table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.table td strong {
+  color: #123964;
+  display: block;
+}
+
+.subText {
+  display: block;
+  color: #5b7797;
+  font-size: 0.76rem;
+}
+
+.inactiveRow {
+  background: #fbfcfe;
+  color: #7a8ea5;
+}
+
+.inactiveTag {
+  display: inline-block;
+  margin-top: 4px;
+  background: #f1f3f6;
+  color: #6b7c90;
+  border-radius: 999px;
+  padding: 2px 8px;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.itemActions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.empty {
+  margin: 0;
+  color: #4e6c8f;
+}
+
+@media (max-width: 1100px) {
+  .formGrid {
+    grid-template-columns: repeat(2, minmax(160px, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .formGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .fieldWide {
+    grid-column: span 1;
+  }
+
+  .primaryButton,
+  .secondaryButton {
+    width: 100%;
+  }
+}

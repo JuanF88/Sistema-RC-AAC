@@ -18,6 +18,7 @@ import styles from "./styles/DashboardShell.module.css";
 import type { AcreditacionGroupingMode, EstadisticasSubTab, MenuItem, ProgramDocument, ProgramRecord, RegistroCalificadoGroupingMode, UserRole, ViewMode } from "./types";
 import { ConsolidadoMatrixView } from "./views/ConsolidadoMatrixView";
 import { AlertasConfigView } from "./views/AlertasConfigView";
+import { GestoresCalidadView } from "./views/GestoresCalidadView";
 import { ExpirationAlertsView } from "./views/ExpirationAlertsView";
 import { ProgramEditModal } from "./views/ProgramEditModal";
 import { RegistroCalificadoView } from "./views/RegistroCalificadoView";
@@ -192,7 +193,7 @@ export function ConsolidadoDashboardClient({ data, currentUser, currentRole }: P
   const [acreditacionGrouping, setAcreditacionGrouping] = useState<AcreditacionGroupingMode>("programas");
   const [estadisticasSubTab, setEstadisticasSubTab] = useState<EstadisticasSubTab>("generales");
   const [view, setView] = useState<ViewMode>("consolidado");
-  const [settingsSection, setSettingsSection] = useState<"users" | "alerts">(
+  const [settingsSection, setSettingsSection] = useState<"users" | "alerts" | "gestores">(
     currentRole === "administrador" ? "users" : "alerts",
   );
   const [menuOpen, setMenuOpen] = useState(false);
@@ -972,11 +973,20 @@ export function ConsolidadoDashboardClient({ data, currentUser, currentRole }: P
                   >
                     Configuracion de Alertas
                   </button>
+                  <button
+                    type="button"
+                    className={`${styles.switchButton} ${settingsSection === "gestores" ? styles.switchButtonActive : ""}`}
+                    onClick={() => setSettingsSection("gestores")}
+                  >
+                    Gestores de Calidad
+                  </button>
                 </div>
               </div>
 
               {currentRole === "administrador" && settingsSection === "users" ? (
                 <UsersManagementView currentRole={currentRole} onExportReady={handleRegisterExportAction} />
+              ) : settingsSection === "gestores" ? (
+                <GestoresCalidadView />
               ) : (
                 <AlertasConfigView />
               )}
