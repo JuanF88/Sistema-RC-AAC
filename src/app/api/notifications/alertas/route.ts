@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { getSessionFromRequest } from "@/lib/auth";
 import { sendEmail } from "@/lib/email";
-import { findFacultyManagers } from "@/lib/qualityManagers";
+import { collectManagerEmails, findFacultyManagers } from "@/lib/qualityManagers";
 import { buildAlertTemplate } from "@/templates/templates.js";
 import {
   DELIVERY_FIRST_REMINDER_MONTHS,
@@ -168,11 +168,11 @@ function parseCoordinatorEmails(value: string | null): string[] {
     .filter((email) => email.length > 0);
 }
 
-// Gestores de calidad activos de la facultad del programa. La copia va solo al
-// correo institucional: el personal se guarda en el directorio como dato de
-// contacto, no como canal de notificacion. Si la tabla todavia no existe o la
-// consulta falla, la alerta se envia igual sin copia: el correo al coordinador
-// es lo que no puede perderse.
+// Gestores de calidad activos de la facultad del programa. Se nombran todos y
+// se copia a todos sus correos institucionales; el personal se guarda en el
+// directorio como dato de contacto, no como canal de notificacion. Si la tabla
+// todavia no existe o la consulta falla, la alerta se envia igual sin copia: el
+// correo al coordinador es lo que no puede perderse.
 async function loadFacultyManagers(
   client: ReturnType<typeof getAdminClient>,
   faculty: string | null,
@@ -187,20 +187,12 @@ async function loadFacultyManagers(
     return { names: [], emails: [] };
   }
 
-  const names: string[] = [];
-  const emails: string[] = [];
+  const managers = findFacultyManagers(data ?? [], faculty);
+  const names = managers
+    .map((manager) => manager.full_name?.trim() ?? "")
+    .filter((name) => name.length > 0);
 
-  for (const manager of findFacultyManagers(data ?? [], faculty)) {
-    const name = manager.full_name?.trim();
-    if (name) names.push(name);
-
-    const email = manager.institutional_email?.trim();
-    if (email && !emails.some((item) => item.toLowerCase() === email.toLowerCase())) {
-      emails.push(email);
-    }
-  }
-
-  return { names, emails };
+  return { names, emails: collectManagerEmails(managers) };
 }
 
 // Las fechas se guardan como "YYYY-MM-DD" sin hora. Al pasarlas por new Date()
@@ -317,10 +309,16 @@ export async function POST(request: Request) {
       { label: EXPIRATION_DATE_LABELS[payload.alertType], value: formatDate(expirationDate) },
       { label: DELIVERY_DATE_LABELS[payload.alertType], value: formatDate(deliveryDate) },
       { label: "Coordinador(a)", value: coordinatorName || "-" },
-      // La fila del gestor solo aparece cuando la facultad tiene uno asignado,
-      // para que el correo no muestre un campo vacio.
+      // La fila del gestor solo aparece cuando la facultad tiene alguno
+      // asignado, para que el correo no muestre un campo vacio. Si hay varios,
+      // se nombran todos.
       ...(managers.names.length > 0
-        ? [{ label: "Gestor(a) de calidad", value: managers.names.join(" | ") }]
+        ? [
+            {
+              label: managers.names.length > 1 ? "Gestores de calidad" : "Gestor(a) de calidad",
+              value: managers.names.join("; "),
+            },
+          ]
         : []),
     ];
 

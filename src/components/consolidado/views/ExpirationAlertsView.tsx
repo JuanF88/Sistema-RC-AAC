@@ -14,7 +14,7 @@ import {
   addMonthsToIsoDate,
   monthsLabel,
 } from "@/lib/alertSchedule";
-import { findFacultyManagers, type QualityManager } from "@/lib/qualityManagers";
+import { collectManagerEmails, findFacultyManagers, type QualityManager } from "@/lib/qualityManagers";
 import styles from "./styles/ExpirationAlertsView.module.css";
 import modalStyles from "./styles/ProgramEditModal.module.css";
 
@@ -630,14 +630,16 @@ export function ExpirationAlertsView({ rows, onExportReady, onProgramUpdate, onA
 
   const modalTypeLabel = alertModal?.type === "rrc" ? "RRC" : "AAC";
 
-  // Gestores que recibiran copia de esta alerta. Se resuelve por la facultad
-  // del programa con la misma regla que aplica el envio, para que el
-  // encabezado no anuncie una copia distinta a la que sale.
+  // Gestores de la facultad del programa y correos a los que se copiara la
+  // alerta. Se resuelven con las mismas funciones que aplica el envio, para que
+  // el encabezado no anuncie una copia distinta a la que sale.
   const modalManagers = useMemo(() => {
     if (!alertModal) return [];
     const program = programs.find((item) => item.id === alertModal.id);
     return findFacultyManagers(qualityManagers, program?.faculty ?? null);
   }, [alertModal, programs, qualityManagers]);
+
+  const modalManagerEmails = useMemo(() => collectManagerEmails(modalManagers), [modalManagers]);
 
   const modalCanSend = Boolean(alertModal?.coordinatorEmail);
   const modalCanMark = true;
@@ -851,8 +853,9 @@ export function ExpirationAlertsView({ rows, onExportReady, onProgramUpdate, onA
                     <div className={styles.modalMuted}>
                       {modalManagers.length > 0 ? (
                         <>
-                          Gestor de calidad: {modalManagers.map((manager) => manager.full_name).join("; ")} · Copia a:{" "}
-                          {modalManagers.map((manager) => manager.institutional_email).join("; ")}
+                          {modalManagers.length > 1 ? "Gestores de calidad" : "Gestor de calidad"}:{" "}
+                          {modalManagers.map((manager) => manager.full_name).join("; ")} · Copia a:{" "}
+                          {modalManagerEmails.join("; ") || "ninguno, no tienen correo institucional registrado"}
                         </>
                       ) : (
                         "Gestor de calidad: sin gestor asignado · la alerta se enviara sin copia"
@@ -1080,7 +1083,7 @@ export function ExpirationAlertsView({ rows, onExportReady, onProgramUpdate, onA
                   </div>
                   <div>
                     <span>Copia</span>
-                    <strong>{previewAlert.cc.join("; ") || "Sin copia: la facultad no tiene gestor asignado"}</strong>
+                    <strong>{previewAlert.cc.join("; ") || "Sin copia: no hay gestor con correo institucional"}</strong>
                   </div>
                   <div>
                     <span>Asunto</span>

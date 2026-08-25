@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { getSessionFromRequest } from "@/lib/auth";
+import { areValidManagerEmails, normalizeManagerEmails } from "@/lib/qualityManagers";
 
 type GestorPayload = {
   faculty?: string;
@@ -28,10 +29,6 @@ function getAdminClient() {
   }
 
   return createClient(supabaseUrl, serviceRoleKey, { auth: { persistSession: false } });
-}
-
-function isValidEmail(value: string): boolean {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
 }
 
 // Los campos opcionales se guardan como NULL cuando llegan vacios, para que la
@@ -83,13 +80,15 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "El nombre del gestor es obligatorio." }, { status: 400 });
     }
 
+    // Ambos campos admiten varios correos separados por punto y coma; se validan
+    // uno por uno y se guardan normalizados.
     const institutionalEmail = optionalText(payload.institutionalEmail);
     const personalEmail = optionalText(payload.personalEmail);
-    if (institutionalEmail && !isValidEmail(institutionalEmail)) {
-      return NextResponse.json({ error: "El correo institucional no es válido." }, { status: 400 });
+    if (institutionalEmail && !areValidManagerEmails(institutionalEmail)) {
+      return NextResponse.json({ error: "Hay un correo institucional que no es válido." }, { status: 400 });
     }
-    if (personalEmail && !isValidEmail(personalEmail)) {
-      return NextResponse.json({ error: "El correo personal no es válido." }, { status: 400 });
+    if (personalEmail && !areValidManagerEmails(personalEmail)) {
+      return NextResponse.json({ error: "Hay un correo personal que no es válido." }, { status: 400 });
     }
 
     const client = getAdminClient();
@@ -100,8 +99,8 @@ export async function POST(request: Request) {
           faculty,
           full_name: fullName,
           title: optionalText(payload.title),
-          institutional_email: institutionalEmail ? institutionalEmail.toLowerCase() : null,
-          personal_email: personalEmail ? personalEmail.toLowerCase() : null,
+          institutional_email: normalizeManagerEmails(institutionalEmail),
+          personal_email: normalizeManagerEmails(personalEmail),
           phone: optionalText(payload.phone),
           office: optionalText(payload.office),
           extension: optionalText(payload.extension),

@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { showToast } from "nextjs-toast-notify";
 
-import type { QualityManager } from "@/lib/qualityManagers";
+import { parseManagerEmails, type QualityManager } from "@/lib/qualityManagers";
 
 import { ADMIN_UNIT_OPTIONS, FACULTY_OPTIONS } from "../constants";
 import styles from "./styles/GestoresCalidadView.module.css";
@@ -65,7 +65,7 @@ export function GestoresCalidadView() {
   const facultiesWithoutManager = useMemo(() => {
     const covered = new Set(
       managers
-        .filter((manager) => manager.is_active && manager.institutional_email)
+        .filter((manager) => manager.is_active && parseManagerEmails(manager.institutional_email).length > 0)
         .map((manager) => manager.faculty),
     );
     return FACULTY_OPTIONS.filter((faculty) => !covered.has(faculty));
@@ -285,14 +285,16 @@ export function GestoresCalidadView() {
             />
           </label>
 
+          {/* type="text" y no "email": el campo admite varios correos separados
+              por punto y coma, y el validador del navegador rechazaria la lista. */}
           <label className={styles.fieldLabel}>
             <span>Correo institucional</span>
             <input
-              type="email"
+              type="text"
               className={styles.input}
               value={form.institutionalEmail}
               onChange={(event) => updateField("institutionalEmail", event.target.value)}
-              placeholder="calidad@unicauca.edu.co"
+              placeholder="calidad@unicauca.edu.co; otro@unicauca.edu.co"
               disabled={saving}
             />
           </label>
@@ -300,7 +302,7 @@ export function GestoresCalidadView() {
           <label className={styles.fieldLabel}>
             <span>Correo personal</span>
             <input
-              type="email"
+              type="text"
               className={styles.input}
               value={form.personalEmail}
               onChange={(event) => updateField("personalEmail", event.target.value)}

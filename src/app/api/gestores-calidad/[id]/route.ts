@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { getSessionFromRequest } from "@/lib/auth";
+import { areValidManagerEmails, normalizeManagerEmails } from "@/lib/qualityManagers";
 
 type RouteContext = {
   params: Promise<{ id: string }>;
@@ -38,10 +39,6 @@ function isValidUuid(value: string): boolean {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
 }
 
-function isValidEmail(value: string): boolean {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
-}
-
 function optionalText(value: string): string | null {
   const trimmed = value.trim();
   return trimmed.length > 0 ? trimmed : null;
@@ -71,11 +68,12 @@ export async function PATCH(request: Request, context: RouteContext) {
     if (payload.fullName !== undefined && !payload.fullName.trim()) {
       return NextResponse.json({ error: "El nombre del gestor es obligatorio." }, { status: 400 });
     }
-    if (payload.institutionalEmail?.trim() && !isValidEmail(payload.institutionalEmail)) {
-      return NextResponse.json({ error: "El correo institucional no es válido." }, { status: 400 });
+    // Ambos campos admiten varios correos separados por punto y coma.
+    if (payload.institutionalEmail?.trim() && !areValidManagerEmails(payload.institutionalEmail)) {
+      return NextResponse.json({ error: "Hay un correo institucional que no es válido." }, { status: 400 });
     }
-    if (payload.personalEmail?.trim() && !isValidEmail(payload.personalEmail)) {
-      return NextResponse.json({ error: "El correo personal no es válido." }, { status: 400 });
+    if (payload.personalEmail?.trim() && !areValidManagerEmails(payload.personalEmail)) {
+      return NextResponse.json({ error: "Hay un correo personal que no es válido." }, { status: 400 });
     }
 
     // Solo se escriben los campos que vienen en la peticion: asi el boton de
@@ -88,10 +86,10 @@ export async function PATCH(request: Request, context: RouteContext) {
         ...(payload.fullName !== undefined ? { full_name: payload.fullName.trim() } : {}),
         ...(payload.title !== undefined ? { title: optionalText(payload.title) } : {}),
         ...(payload.institutionalEmail !== undefined
-          ? { institutional_email: optionalText(payload.institutionalEmail)?.toLowerCase() ?? null }
+          ? { institutional_email: normalizeManagerEmails(payload.institutionalEmail) }
           : {}),
         ...(payload.personalEmail !== undefined
-          ? { personal_email: optionalText(payload.personalEmail)?.toLowerCase() ?? null }
+          ? { personal_email: normalizeManagerEmails(payload.personalEmail) }
           : {}),
         ...(payload.phone !== undefined ? { phone: optionalText(payload.phone) } : {}),
         ...(payload.office !== undefined ? { office: optionalText(payload.office) } : {}),
