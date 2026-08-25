@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { getSessionFromRequest } from "@/lib/auth";
 import { sendEmail } from "@/lib/email";
+import { findFacultyManagers } from "@/lib/qualityManagers";
 import { buildAlertTemplate } from "@/templates/templates.js";
 import {
   DELIVERY_FIRST_REMINDER_MONTHS,
@@ -164,19 +165,6 @@ function parseCoordinatorEmails(value: string | null): string[] {
     .filter((email) => email.length > 0);
 }
 
-// El directorio de gestores y el consolidado guardan el nombre de la facultad
-// por separado, asi que se comparan normalizados: una tilde o una mayuscula de
-// diferencia no debe dejar al gestor sin copia. NFD separa cada letra de su
-// tilde y el reemplazo descarta todo lo que no sea letra o digito; ambos lados
-// pasan por aqui, asi que el resultado siempre es comparable.
-function normalizeFaculty(value: string | null): string {
-  return String(value ?? "")
-    .normalize("NFD")
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, " ")
-    .trim();
-}
-
 // Gestores de calidad activos de la facultad del programa. La copia va solo al
 // correo institucional: el personal se guarda en el directorio como dato de
 // contacto, no como canal de notificacion. Si la tabla todavia no existe o la
@@ -186,9 +174,6 @@ async function loadFacultyManagers(
   client: ReturnType<typeof getAdminClient>,
   faculty: string | null,
 ): Promise<{ names: string[]; emails: string[] }> {
-  const target = normalizeFaculty(faculty);
-  if (!target) return { names: [], emails: [] };
-
   const { data, error } = await client
     .from("gestores_calidad")
     .select("faculty, full_name, institutional_email")
@@ -199,11 +184,10 @@ async function loadFacultyManagers(
     return { names: [], emails: [] };
   }
 
-  const managers = (data ?? []).filter((row) => normalizeFaculty(row.faculty) === target);
   const names: string[] = [];
   const emails: string[] = [];
 
-  for (const manager of managers) {
+  for (const manager of findFacultyManagers(data ?? [], faculty)) {
     const name = manager.full_name?.trim();
     if (name) names.push(name);
 

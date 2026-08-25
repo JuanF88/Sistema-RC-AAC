@@ -14,6 +14,7 @@ import {
   addMonthsToIsoDate,
   monthsLabel,
 } from "@/lib/alertSchedule";
+import { findFacultyManagers, type QualityManager } from "@/lib/qualityManagers";
 import styles from "./styles/ExpirationAlertsView.module.css";
 import modalStyles from "./styles/ProgramEditModal.module.css";
 
@@ -162,6 +163,7 @@ export function ExpirationAlertsView({ rows, onExportReady, onProgramUpdate, onA
   const [programs, setPrograms] = useState(rows);
   const [savingObservationId, setSavingObservationId] = useState<string | null>(null);
   const [alertHistory, setAlertHistory] = useState<AlertHistoryRecord[]>([]);
+  const [qualityManagers, setQualityManagers] = useState<QualityManager[]>([]);
   const [loadingAlertHistory, setLoadingAlertHistory] = useState(false);
   const [sendingAlertId, setSendingAlertId] = useState<string | null>(null);
   const [alertModal, setAlertModal] = useState<null | {
@@ -207,6 +209,32 @@ export function ExpirationAlertsView({ rows, onExportReady, onProgramUpdate, onA
   useEffect(() => {
     void loadAlertHistory();
   }, [loadAlertHistory]);
+
+  // Directorio de gestores para anunciar en el encabezado a quien llegara la
+  // copia. Un fallo aqui no bloquea la gestion de alertas: el modal muestra que
+  // no hay gestor y el envio sigue disponible.
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadQualityManagers = async () => {
+      try {
+        const response = await fetch("/api/gestores-calidad", { cache: "no-store" });
+        const body = (await response.json()) as { data?: QualityManager[]; error?: string };
+        if (!response.ok) {
+          throw new Error(body.error ?? "No se pudieron cargar los gestores de calidad.");
+        }
+        if (!cancelled) setQualityManagers(body.data ?? []);
+      } catch (error) {
+        console.error("No se pudieron cargar los gestores de calidad:", error);
+      }
+    };
+
+    void loadQualityManagers();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const programsRef = useRef(rows);
   useEffect(() => {
@@ -546,6 +574,16 @@ export function ExpirationAlertsView({ rows, onExportReady, onProgramUpdate, onA
     : null;
 
   const modalTypeLabel = alertModal?.type === "rrc" ? "RRC" : "AAC";
+
+  // Gestores que recibiran copia de esta alerta. Se resuelve por la facultad
+  // del programa con la misma regla que aplica el envio, para que el
+  // encabezado no anuncie una copia distinta a la que sale.
+  const modalManagers = useMemo(() => {
+    if (!alertModal) return [];
+    const program = programs.find((item) => item.id === alertModal.id);
+    return findFacultyManagers(qualityManagers, program?.faculty ?? null);
+  }, [alertModal, programs, qualityManagers]);
+
   const modalCanSend = Boolean(alertModal?.coordinatorEmail);
   const modalCanMark = true;
 
@@ -754,6 +792,16 @@ export function ExpirationAlertsView({ rows, onExportReady, onProgramUpdate, onA
                     </div>
                     <div className={styles.modalMuted}>
                       Coordinador: {alertModal.coordinatorName || "-"} · Email: {alertModal.coordinatorEmail || "-"}
+                    </div>
+                    <div className={styles.modalMuted}>
+                      {modalManagers.length > 0 ? (
+                        <>
+                          Gestor de calidad: {modalManagers.map((manager) => manager.full_name).join("; ")} · Copia a:{" "}
+                          {modalManagers.map((manager) => manager.institutional_email).join("; ")}
+                        </>
+                      ) : (
+                        "Gestor de calidad: sin gestor asignado · la alerta se enviara sin copia"
+                      )}
                     </div>
                   </div>
                   <button type="button" className={modalStyles.closeButton} onClick={() => setAlertModal(null)}>

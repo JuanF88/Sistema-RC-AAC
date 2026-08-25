@@ -3,23 +3,10 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { showToast } from "nextjs-toast-notify";
 
+import type { QualityManager } from "@/lib/qualityManagers";
+
 import { ADMIN_UNIT_OPTIONS, FACULTY_OPTIONS } from "../constants";
 import styles from "./styles/GestoresCalidadView.module.css";
-
-type QualityManager = {
-  id: string;
-  faculty: string;
-  title: string | null;
-  full_name: string;
-  institutional_email: string | null;
-  personal_email: string | null;
-  phone: string | null;
-  office: string | null;
-  extension: string | null;
-  period: string | null;
-  official_letter: string | null;
-  is_active: boolean;
-};
 
 type ManagerForm = {
   faculty: string;
