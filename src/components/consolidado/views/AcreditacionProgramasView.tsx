@@ -5,6 +5,7 @@ import { showToast } from "nextjs-toast-notify";
 
 import { exportToExcel, type ExportColumn } from "@/lib/export";
 import type { AcreditacionGroupingMode, ProgramRecord } from "../types";
+import { formatDate } from "../utils";
 import styles from "./styles/AcreditacionProgramasView.module.css";
 
 type Props = {
@@ -40,6 +41,8 @@ type SortField =
   | "snies"
   | "location"
   | "level"
+  | "aacStart"
+  | "aacEnd"
   | "estado"
   | "proceso"
   | "enviadoMinisterio"
@@ -377,6 +380,14 @@ export function AcreditacionProgramasView({ rows, groupingMode, onExportReady, o
           break;
         case "level":
           result = compareText(left.academicLevel ?? left.level ?? "", right.academicLevel ?? right.level ?? "");
+          break;
+        // Las fechas vienen en ISO (YYYY-MM-DD), asi que comparar como texto
+        // las deja en orden cronologico y agrupa las vacias al inicio.
+        case "aacStart":
+          result = compareText(left.aacStart ?? "", right.aacStart ?? "");
+          break;
+        case "aacEnd":
+          result = compareText(left.aacEnd ?? "", right.aacEnd ?? "");
           break;
         case "estado":
           result = compareText(leftEstado, rightEstado);
@@ -783,6 +794,8 @@ export function AcreditacionProgramasView({ rows, groupingMode, onExportReady, o
             { key: "snies", header: "SNIES", width: 14 },
             { key: "location", header: "Lugar de Desarrollo", width: 24 },
             { key: "level", header: "Nivel Academico", width: 22 },
+            { key: "aacStart", header: "Inicio AAC", width: 16 },
+            { key: "aacEnd", header: "Vencimiento AAC", width: 18 },
             { key: "informeCgcEnviado", header: "Informe entregado al CGC", width: 20 },
             { key: "enviadoMinisterio", header: "Enviado al ministerio", width: 20 },
             { key: "acreditacionRecibida", header: "Acreditacion recibida", width: 20 },
@@ -793,6 +806,8 @@ export function AcreditacionProgramasView({ rows, groupingMode, onExportReady, o
             { key: "snies", header: "SNIES", width: 14 },
             { key: "location", header: "Lugar de Desarrollo", width: 24 },
             { key: "level", header: "Nivel Academico", width: 22 },
+            { key: "aacStart", header: "Inicio AAC", width: 16 },
+            { key: "aacEnd", header: "Vencimiento AAC", width: 18 },
             { key: "estado", header: "Estado", width: 24 },
             { key: "active", header: "AAC Vigente", width: 14 },
             { key: "expired", header: "AAC Extendida", width: 14 },
@@ -811,6 +826,8 @@ export function AcreditacionProgramasView({ rows, groupingMode, onExportReady, o
         snies: program.snies ?? "-",
         location: program.location ?? "-",
         level: program.academicLevel ?? program.level ?? "-",
+        aacStart: formatDate(program.aacStart),
+        aacEnd: formatDate(program.aacEnd),
         estado,
         informeCgcEnviado: steps.informeCgcEnviado ? "Si" : "No",
         enviadoMinisterio: steps.enviadoMinisterio ? "Si" : "No",
@@ -971,6 +988,22 @@ export function AcreditacionProgramasView({ rows, groupingMode, onExportReady, o
                       </button>
                     </th>
                   )}
+                  {!useFacultyGrouping && (
+                    <th>
+                      <button type="button" className={styles.sortButton} onClick={() => handleSortChange("aacStart")}>
+                        <span>Inicio AAC</span>
+                        <span className={styles.sortIndicator}>{getSortIndicator("aacStart")}</span>
+                      </button>
+                    </th>
+                  )}
+                  {!useFacultyGrouping && (
+                    <th>
+                      <button type="button" className={styles.sortButton} onClick={() => handleSortChange("aacEnd")}>
+                        <span>Vencimiento AAC</span>
+                        <span className={styles.sortIndicator}>{getSortIndicator("aacEnd")}</span>
+                      </button>
+                    </th>
+                  )}
                   {!useFacultyGrouping && segment === "acreditables" && (
                     <th>
                       <button type="button" className={styles.sortButton} onClick={() => handleSortChange("proceso")}>
@@ -1034,6 +1067,8 @@ export function AcreditacionProgramasView({ rows, groupingMode, onExportReady, o
                           <td className={styles.sniesCell} title={program.snies ?? ""}>{program.snies ?? "-"}</td>
                           <td className={styles.textCell} title={program.location ?? ""}>{program.location ?? "-"}</td>
                           <td className={styles.levelCell} title={program.academicLevel ?? program.level ?? ""}>{program.academicLevel ?? program.level ?? "-"}</td>
+                          <td className={styles.dateCell}>{formatDate(program.aacStart)}</td>
+                          <td className={styles.dateCell}>{formatDate(program.aacEnd)}</td>
                           {segment === "acreditables" ? (
                             <>
                               <td className={styles.processCell}>
@@ -1097,7 +1132,7 @@ export function AcreditacionProgramasView({ rows, groupingMode, onExportReady, o
 
               <tfoot>
                 <tr>
-                  <td className={styles.footerLabel} colSpan={useFacultyGrouping ? 2 : segment === "acreditables" ? 5 : 6}>Consolidado</td>
+                  <td className={styles.footerLabel} colSpan={useFacultyGrouping ? 2 : segment === "acreditables" ? 7 : 8}>Consolidado</td>
                   {segment === "acreditables" && !useFacultyGrouping ? (
                     <>
                       <td className={styles.footerCell}>{processSummary.informeCgcEnviado} ({formatPercent(processSummary.informeCgcEnviado, processSummary.total)})</td>
