@@ -17,6 +17,16 @@ export const DELIVERY_FIRST_REMINDER_MONTHS = 6;
 export const DELIVERY_REMINDER_MONTHS = 1;
 
 /**
+ * Anticipacion con la que se habilita el envio manual de cada alerta.
+ *
+ * Las fechas de arriba definen cuando corresponde avisar, pero en la practica
+ * el envio se coordina con el programa y a veces hay que adelantarlo unos dias.
+ * Con esta ventana el boton deja de bloquearse hasta el dia exacto: la alerta
+ * queda disponible desde un mes antes de su fecha objetivo.
+ */
+export const ALERT_EARLY_SEND_MONTHS = 1;
+
+/**
  * Suma (o resta) meses a una fecha ISO conservando el dia del mes.
  *
  * Cuando el mes destino es mas corto que el de origen la fecha se ancla a su
@@ -48,6 +58,15 @@ export function addMonthsToIsoDate(value: string | null, months: number): string
   target.setUTCDate(Math.min(day, lastDay));
 
   return target.toISOString().slice(0, 10);
+}
+
+/**
+ * Primer dia en el que una alerta se puede enviar: su fecha objetivo menos la
+ * ventana de anticipacion. Devuelve null cuando el programa no tiene la fecha,
+ * porque sin fecha no hay nada que habilitar.
+ */
+export function getAlertSendWindowStart(dueDate: string | null): string | null {
+  return addMonthsToIsoDate(dueDate, -ALERT_EARLY_SEND_MONTHS);
 }
 
 const MONTH_WORDS: Record<number, string> = {

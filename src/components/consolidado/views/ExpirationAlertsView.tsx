@@ -12,6 +12,7 @@ import {
   DELIVERY_FIRST_REMINDER_MONTHS,
   DELIVERY_REMINDER_MONTHS,
   addMonthsToIsoDate,
+  getAlertSendWindowStart,
   monthsLabel,
 } from "@/lib/alertSchedule";
 import { collectManagerEmails, findFacultyManagers, type QualityManager } from "@/lib/qualityManagers";
@@ -129,15 +130,26 @@ function cycleKey(value: string | null | undefined): string {
 
 function buildMomentStatus(dueDate: string | null, sentAt: string | null) {
   if (sentAt) {
-    return { label: `Enviado ${formatDate(sentAt)}`, tone: "ok" as const, canSend: false };
+    return { label: `Enviado ${formatDate(sentAt)}`, tone: "ok" as const, canSend: false, early: false };
   }
   if (!dueDate) {
-    return { label: "Sin fecha", tone: "neutral" as const, canSend: false };
+    return { label: "Sin fecha", tone: "neutral" as const, canSend: false, early: false };
   }
   if (isOnOrAfter(dueDate)) {
-    return { label: "Pendiente", tone: "warn" as const, canSend: true };
+    return { label: "Pendiente", tone: "warn" as const, canSend: true, early: false };
   }
-  return { label: `Programado ${formatDate(dueDate)}`, tone: "neutral" as const, canSend: false };
+  // Ventana de anticipacion: la fecha objetivo aun no llega, pero la alerta ya
+  // se puede enviar. Se marca como anticipada para avisarlo en el modal.
+  if (isOnOrAfter(getAlertSendWindowStart(dueDate))) {
+    return { label: "Disponible", tone: "warn" as const, canSend: true, early: true };
+  }
+  return { label: `Programado ${formatDate(dueDate)}`, tone: "neutral" as const, canSend: false, early: false };
+}
+
+/** Aviso que acompana al boton cuando la alerta se envia antes de su fecha. */
+function earlySendNote(status: { early: boolean } | null, dueDate: string | null): string | null {
+  if (!status?.early) return null;
+  return `Envio anticipado: la fecha programada es el ${formatDate(dueDate)}`;
 }
 
 function sortByClosestExpiration(left: string | null, right: string | null): number {
@@ -654,6 +666,10 @@ export function ExpirationAlertsView({ rows, onExportReady, onProgramUpdate, onA
     ? buildMomentStatus(modalTimeline.deliveryDue, modalTimeline.entregaRecord?.sent_at ?? null)
     : null;
 
+  const inicioEarlyNote = earlySendNote(inicioStatus, modalTimeline?.startDate ?? null);
+  const reminderEarlyNote = earlySendNote(reminderStatus, modalTimeline?.nextReminder ?? null);
+  const entregaEarlyNote = earlySendNote(entregaStatus, modalTimeline?.deliveryDue ?? null);
+
   return (
     <div className={styles.wrap}>
       <div className={styles.switcher}>
@@ -924,6 +940,7 @@ export function ExpirationAlertsView({ rows, onExportReady, onProgramUpdate, onA
                       >
                         Marcar enviado
                       </button>
+                      {inicioEarlyNote ? <span className={styles.modalMuted}>{inicioEarlyNote}</span> : null}
                     </div>
                   </section>
 
@@ -984,7 +1001,8 @@ export function ExpirationAlertsView({ rows, onExportReady, onProgramUpdate, onA
                         Marcar enviado
                       </button>
                       <span className={styles.modalMuted}>
-                        Aviso programado: {monthsLabel(DELIVERY_FIRST_REMINDER_MONTHS)} antes de la entrega
+                        {reminderEarlyNote ??
+                          `Aviso programado: ${monthsLabel(DELIVERY_FIRST_REMINDER_MONTHS)} antes de la entrega`}
                       </span>
                     </div>
                   </section>
@@ -1045,6 +1063,7 @@ export function ExpirationAlertsView({ rows, onExportReady, onProgramUpdate, onA
                       >
                         Marcar enviado
                       </button>
+                      {entregaEarlyNote ? <span className={styles.modalMuted}>{entregaEarlyNote}</span> : null}
                     </div>
                   </section>
                 </div>

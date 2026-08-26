@@ -8,6 +8,7 @@ import {
   DELIVERY_FIRST_REMINDER_MONTHS,
   DELIVERY_REMINDER_MONTHS,
   addMonthsToIsoDate,
+  getAlertSendWindowStart,
 } from "@/lib/alertSchedule";
 
 import { FiltersBar } from "./common/FiltersBar";
@@ -90,7 +91,9 @@ function isOnOrAfter(value: string | null): boolean {
 function buildMomentStatus(dueDate: string | null, sentAt: string | null) {
   if (sentAt) return { canSend: false };
   if (!dueDate) return { canSend: false };
-  return { canSend: isOnOrAfter(dueDate) };
+  // Misma ventana de anticipacion que la vista de alertas, para que el contador
+  // de pendientes del panel coincida con los botones que ya estan habilitados.
+  return { canSend: isOnOrAfter(getAlertSendWindowStart(dueDate)) };
 }
 
 function mapProgramToApiPayload(program: ProgramRecord) {
