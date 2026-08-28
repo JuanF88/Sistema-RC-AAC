@@ -4,23 +4,125 @@
   gap: 0.9rem;
 }
 
-.formCard {
-  border-radius: 1rem;
-  border: 1px solid rgba(148, 163, 184, 0.2);
-  background: rgba(255, 255, 255, 0.9);
-  padding: 0.9rem;
+.headerRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
 }
 
-.formTitle {
-  margin: 0 0 0.75rem;
+.headerTitle {
+  margin: 0;
   font-size: 0.98rem;
   font-weight: 700;
   color: #0f172a;
 }
 
+.headerHint {
+  margin: 0.15rem 0 0;
+  font-size: 0.78rem;
+  color: #64748b;
+}
+
+/* Mismo boton de accion principal que "Nuevo programa" en la barra de filtros. */
+.createBtn {
+  border: 1px solid rgba(252, 111, 91, 0.24);
+  background: linear-gradient(135deg, #fc6f5b 0%, #fe965e 100%);
+  color: #fffaf7;
+  border-radius: 999px;
+  padding: 0.52rem 0.82rem;
+  font-size: 0.78rem;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 14px 28px -18px rgba(252, 111, 91, 0.78);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease, opacity 0.2s ease;
+}
+
+.createBtn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  filter: brightness(1.03);
+  box-shadow: 0 16px 34px -18px rgba(252, 111, 91, 0.88);
+}
+
+.createBtn:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+  box-shadow: none;
+}
+
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  background: rgba(2, 6, 23, 0.48);
+  backdrop-filter: blur(3px);
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+}
+
+.modal {
+  width: min(640px, 96vw);
+  max-height: 92vh;
+  overflow: auto;
+  border-radius: 1rem;
+  border: 1px solid rgba(254, 150, 94, 0.35);
+  background: #ffffff;
+  box-shadow: 0 28px 70px rgba(2, 6, 23, 0.34);
+}
+
+.modalHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.9rem 1rem;
+  border-bottom: 1px solid rgba(254, 150, 94, 0.28);
+  background: linear-gradient(135deg, #eb633d 0%, #fc6f5b 46%, #fe965e 100%);
+}
+
+.modalTitle {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 800;
+  color: #fffaf7;
+}
+
+.closeBtn {
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  background: rgba(255, 255, 255, 0.16);
+  color: #fffaf7;
+  border-radius: 0.6rem;
+  padding: 0.35rem 0.65rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.closeBtn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.28);
+}
+
+.closeBtn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.modalBody {
+  padding: 1rem;
+}
+
+.modalFooter {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  padding: 0 1rem 1rem;
+}
+
 .formGrid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(150px, 1fr));
+  grid-template-columns: repeat(2, minmax(150px, 1fr));
   gap: 0.65rem;
 }
 
@@ -31,7 +133,7 @@
 }
 
 .fieldFull {
-  grid-column: span 4;
+  grid-column: span 2;
 }
 
 .label {
@@ -57,13 +159,6 @@
   outline: none;
   border-color: #fc6f5b;
   box-shadow: 0 0 0 2px rgba(252, 111, 91, 0.15);
-}
-
-.actionsRow {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  margin-top: 0.75rem;
 }
 
 .saveBtn {
@@ -129,6 +224,31 @@
   color: #5b2a1d;
 }
 
+.sortButton {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.45rem;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  padding: 0;
+  text-transform: inherit;
+  letter-spacing: inherit;
+  cursor: pointer;
+}
+
+.sortButton:hover {
+  color: #fff1eb;
+}
+
+.sortIndicator {
+  font-size: 0.68rem;
+  opacity: 0.95;
+}
+
 .table th:last-child,
 .table td:last-child {
   border-right: 0;
@@ -149,6 +269,54 @@
 .programCell {
   font-weight: 400;
   color: #334155;
+}
+
+.cancelBtn {
+  border: 1px solid rgba(148, 163, 184, 0.55);
+  background: #ffffff;
+  color: #475569;
+  border-radius: 0.6rem;
+  padding: 0.45rem 0.8rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.cancelBtn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.rowActions {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+/* Se escribe con el mismo peso que las filas alternas para poder ganarles. */
+.table tbody tr.editingRow,
+.table tbody tr.editingRow:hover {
+  background: rgba(254, 206, 174, 0.45);
+}
+
+.editBtn {
+  border: 1px solid #fc6f5b;
+  background: #fff4ed;
+  color: #a8553a;
+  border-radius: 0.45rem;
+  font-size: 0.74rem;
+  font-weight: 700;
+  padding: 0.32rem 0.56rem;
+  cursor: pointer;
+}
+
+.editBtn:hover {
+  background: #fee9dc;
+}
+
+.editBtn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
 }
 
 .deleteBtn {
@@ -175,16 +343,6 @@
   margin: 0;
   color: #475569;
   font-size: 0.92rem;
-}
-
-@media (max-width: 1100px) {
-  .formGrid {
-    grid-template-columns: repeat(2, minmax(150px, 1fr));
-  }
-
-  .fieldFull {
-    grid-column: span 2;
-  }
 }
 
 @media (max-width: 640px) {
