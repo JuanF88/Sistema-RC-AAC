@@ -215,6 +215,98 @@ function isValidAlertKind(value: string): value is AlertKind {
   return value === "inicio" || value === "recordatorio" || value === "entrega";
 }
 
+type AlertHistoryRow = {
+  id: string;
+  program_id: string;
+  alert_type: string;
+  alert_kind: string;
+  cycle_date: string | null;
+  sent_at: string;
+  actor_username: string | null;
+  recipients: string[] | null;
+};
+
+type EmailAuditRow = {
+  source: string | null;
+  recipients: string[] | null;
+  created_at: string;
+};
+
+// Margen entre el correo y su fila del historial: se escriben una detras de la
+// otra, asi que basta con unos minutos para emparejarlas sin riesgo de cruzar
+// dos envios distintos.
+const AUDIT_MATCH_WINDOW_MS = 5 * 60 * 1000;
+
+/**
+ * Auditoria de los correos de alerta que si salieron, agrupada por el "source"
+ * con el que los registra sendEmail ("alerta-<tipo>-<etapa>").
+ */
+async function loadSentAlertEmails(
+  client: ReturnType<typeof getAdminClient>,
+): Promise<Map<string, { time: number; recipients: Set<string> }[]> | null> {
+  const { data, error } = await client
+    .from("notifications_email_audit")
+    .select("source, recipients, created_at")
+    .eq("status", "sent")
+    .like("source", "alerta-%");
+
+  // Sin auditoria no se puede afirmar nada: se devuelve null para que el
+  // historial salga con el envio "sin verificar" en vez de darlo por no enviado.
+  if (error) {
+    console.error("No se pudo cargar la auditoria de correos de alerta:", error.message);
+    return null;
+  }
+
+  const grouped = new Map<string, { time: number; recipients: Set<string> }[]>();
+
+  for (const row of (data ?? []) as EmailAuditRow[]) {
+    const source = row.source?.trim();
+    if (!source) continue;
+
+    const time = new Date(row.created_at).getTime();
+    if (Number.isNaN(time)) continue;
+
+    const entry = {
+      time,
+      recipients: new Set((row.recipients ?? []).map((email) => email.trim().toLowerCase())),
+    };
+
+    const bucket = grouped.get(source);
+    if (bucket) bucket.push(entry);
+    else grouped.set(source, [entry]);
+  }
+
+  return grouped;
+}
+
+/**
+ * Decide si una alerta del historial salio realmente por correo.
+ *
+ * Enviar la alerta y marcarla como enviada guardan la misma fila, asi que la
+ * diferencia se resuelve con la auditoria de correos: si en ese mismo momento
+ * quedo registrado un correo de esa alerta hacia alguno de esos destinatarios,
+ * la alerta se envio; si no, se marco a mano.
+ */
+function wasEmailSent(
+  row: AlertHistoryRow,
+  sentEmails: Map<string, { time: number; recipients: Set<string> }[]>,
+): boolean {
+  const candidates = sentEmails.get(`alerta-${row.alert_type}-${row.alert_kind}`);
+  if (!candidates || candidates.length === 0) return false;
+
+  const sentAt = new Date(row.sent_at).getTime();
+  if (Number.isNaN(sentAt)) return false;
+
+  const recipients = (row.recipients ?? []).map((email) => email.trim().toLowerCase());
+  if (recipients.length === 0) return false;
+
+  return candidates.some(
+    (candidate) =>
+      Math.abs(candidate.time - sentAt) <= AUDIT_MATCH_WINDOW_MS &&
+      recipients.some((email) => candidate.recipients.has(email)),
+  );
+}
+
 export async function GET() {
   try {
     const client = getAdminClient();
@@ -227,7 +319,18 @@ export async function GET() {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    return NextResponse.json({ data: data ?? [] });
+    const rows = (data ?? []) as AlertHistoryRow[];
+    const sentEmails = await loadSentAlertEmails(client);
+
+    // email_sent no se guarda: se deduce aqui cruzando el historial con la
+    // auditoria de correos, para que las estadisticas puedan separar las
+    // alertas enviadas de las marcadas sin necesidad de tocar la tabla.
+    return NextResponse.json({
+      data: rows.map((row) => ({
+        ...row,
+        email_sent: sentEmails ? wasEmailSent(row, sentEmails) : null,
+      })),
+    });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown alert history error";
     return NextResponse.json({ error: message }, { status: 500 });
@@ -410,7 +513,9 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: insertError.message }, { status: 500 });
     }
 
-    return NextResponse.json({ ok: true, data: insertData });
+    // Mismo campo deducido que devuelve el GET; aqui se sabe de primera mano si
+    // salio el correo, sin necesidad de consultar la auditoria.
+    return NextResponse.json({ ok: true, data: { ...insertData, email_sent: !payload.manualOnly } });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown send alert error";
     return NextResponse.json({ error: message }, { status: 500 });

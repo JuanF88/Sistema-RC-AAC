@@ -631,3 +631,135 @@
     gap: 0.15rem;
   }
 }
+
+/* Pestana de estadisticas de alertas ------------------------------------- */
+
+.statsWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+/* Mismas tarjetas de la vista de estadisticas generales. */
+.statCard {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 1.4rem;
+  background: linear-gradient(135deg, #fffaf7 0%, #fff1e8 100%);
+  border: 1px solid rgba(254, 150, 94, 0.18);
+  border-radius: 0.75rem;
+  box-shadow: 0 4px 16px rgba(252, 111, 91, 0.12), 0 2px 8px rgba(0, 0, 0, 0.08);
+  position: relative;
+  overflow: hidden;
+}
+
+.statCard::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #fc6f5b 0%, #fe965e 100%);
+}
+
+/* La franja superior separa de un vistazo lo que si salio de lo que no. */
+.statCardSent::before {
+  background: linear-gradient(90deg, #15803d 0%, #4ade80 100%);
+}
+
+.statCardMarked::before {
+  background: linear-gradient(90deg, #b45309 0%, #f59e0b 100%);
+}
+
+.statLabel {
+  font-size: 0.78rem;
+  color: #7c4a36;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.statValue {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: #c2410c;
+}
+
+.statCardSent .statValue {
+  color: #15803d;
+}
+
+.statCardMarked .statValue {
+  color: #b45309;
+}
+
+.statHint {
+  font-size: 0.76rem;
+  color: #7c4a36;
+  line-height: 1.35;
+}
+
+.statsSection {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.statsSectionTitle {
+  margin: 0;
+  font-size: 0.92rem;
+  font-weight: 800;
+  color: #5b2a1d;
+}
+
+/* Igual que .tableWrap pero sin alto minimo: estas tablas son cortas. */
+.statsTableWrap {
+  width: 100%;
+  overflow: auto;
+  max-height: 60vh;
+  border-radius: 1rem;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+}
+
+.statsEmpty {
+  margin: 0;
+  font-size: 0.88rem;
+  color: #7c4a36;
+}
+
+.statsSectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+/* Las tablas de estadisticas tienen otro numero de columnas: no les aplican los
+   anchos fijos que la tabla de programas reserva para las suyas. */
+.table.statsTable {
+  table-layout: auto;
+}
+
+.table.statsTable thead th:nth-child(7),
+.table.statsTable td:nth-child(7),
+.table.statsTable thead th:nth-child(8),
+.table.statsTable td:nth-child(8) {
+  width: auto;
+  max-width: none;
+}
+
+.statsNote {
+  margin: -0.6rem 0 0;
+  font-size: 0.78rem;
+  line-height: 1.4;
+  color: #7c4a36;
+}

@@ -16,6 +16,8 @@ import {
   monthsLabel,
 } from "@/lib/alertSchedule";
 import { collectManagerEmails, findFacultyManagers, type QualityManager } from "@/lib/qualityManagers";
+import { AlertasEstadisticas } from "./alertas/AlertasEstadisticas";
+import { ALERT_KIND_LABELS, ALERT_TYPE_LABELS, type AlertKind, type AlertType } from "./alertas/alertLabels";
 import styles from "./styles/ExpirationAlertsView.module.css";
 import modalStyles from "./styles/ProgramEditModal.module.css";
 
@@ -27,11 +29,7 @@ type Props = {
   onAlertHistoryCreated?: (record: AlertHistoryRecord) => void;
 };
 
-type AlertMode = "rrc" | "acreditados";
-
-type AlertType = "rrc" | "aac";
-
-type AlertKind = "inicio" | "recordatorio" | "entrega";
+type AlertMode = "rrc" | "acreditados" | "estadisticas";
 
 type AlertLevel = "vencido" | "proximo" | "aldia" | "sin-fecha";
 
@@ -50,12 +48,10 @@ type AlertHistoryRecord = {
   sent_at: string;
   actor_username: string | null;
   recipients: string[];
-};
-
-const ALERT_KIND_LABELS: Record<AlertKind, string> = {
-  inicio: "Inicio de renovacion",
-  recordatorio: "Recordatorio previo a entrega",
-  entrega: "Recordatorio de entrega",
+  // Lo deduce la API cruzando el historial con la auditoria de correos: false
+  // cuando se uso "Marcar enviado" y no salio nada, null cuando esa auditoria
+  // no se pudo consultar y no hay como verificarlo.
+  email_sent: boolean | null;
 };
 
 
@@ -569,14 +565,53 @@ export function ExpirationAlertsView({ rows, onExportReady, onProgramUpdate, onA
   }, [handleSendAlert, previewAlert]);
 
   // Keep reference to current data for export
-  const dataRef = useRef({ rrcRows, accreditedRows, mode });
+  const dataRef = useRef({ rrcRows, accreditedRows, mode, alertHistory, programs });
   useEffect(() => {
-    dataRef.current = { rrcRows, accreditedRows, mode };
-  }, [rrcRows, accreditedRows, mode]);
+    dataRef.current = { rrcRows, accreditedRows, mode, alertHistory, programs };
+  }, [rrcRows, accreditedRows, mode, alertHistory, programs]);
 
   const handleExport = useCallback(async () => {
     const timestamp = new Date().toLocaleDateString("es-CO");
     const data = dataRef.current;
+
+    // La pestana de estadisticas no muestra una tabla de programas sino el
+    // historial de alertas, asi que descarga ese registro.
+    if (data.mode === "estadisticas") {
+      const programNames = new Map(data.programs.map((program) => [program.id, program.program]));
+      const historyColumns: ExportColumn[] = [
+        { key: "program", header: "Programa", width: 38 },
+        { key: "type", header: "Proceso", width: 22 },
+        { key: "kind", header: "Etapa", width: 30 },
+        { key: "sentAt", header: "Fecha", width: 18, formatter: (v) => formatDate(v as string | null | undefined) || "-" },
+        { key: "status", header: "Estado", width: 22 },
+        { key: "actor", header: "Usuario", width: 20 },
+        { key: "recipients", header: "Destinatarios", width: 44 },
+      ];
+
+      const historyData = data.alertHistory.map((record) => ({
+        program: programNames.get(record.program_id) ?? "Programa no disponible",
+        type: ALERT_TYPE_LABELS[record.alert_type],
+        kind: ALERT_KIND_LABELS[record.alert_kind],
+        sentAt: record.sent_at,
+        status:
+          record.email_sent === true
+            ? "Correo enviado"
+            : record.email_sent === false
+              ? "Marcada sin enviar"
+              : "Sin verificar",
+        actor: record.actor_username ?? "-",
+        recipients: record.recipients.join("; ") || "-",
+      }));
+
+      await exportToExcel(
+        `Alertas-Estadisticas-${timestamp}`,
+        "Historial de alertas",
+        historyColumns,
+        historyData,
+      );
+      return;
+    }
+
     const modeLabel = data.mode === "rrc" ? "RRC" : "Acreditados";
     const filename = `Alertas-Vencimientos-${modeLabel}-${timestamp}`;
 
@@ -687,9 +722,18 @@ export function ExpirationAlertsView({ rows, onExportReady, onProgramUpdate, onA
         >
           Alerta de vencimiento acreditados
         </button>
+        <button
+          type="button"
+          onClick={() => setMode("estadisticas")}
+          className={`${styles.switchButton} ${mode === "estadisticas" ? styles.switchButtonActive : ""}`}
+        >
+          Estadisticas
+        </button>
       </div>
 
-      {mode === "rrc" ? (
+      {mode === "estadisticas" ? (
+        <AlertasEstadisticas history={alertHistory} programs={programs} loading={loadingAlertHistory} />
+      ) : mode === "rrc" ? (
         <div className={styles.tableWrap}>
           <table className={styles.table}>
             <thead>
