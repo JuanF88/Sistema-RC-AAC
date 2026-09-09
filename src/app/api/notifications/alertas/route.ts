@@ -253,7 +253,7 @@ async function loadSentAlertEmails(
   // Sin auditoria no se puede afirmar nada: se devuelve null para que el
   // historial salga con el envio "sin verificar" en vez de darlo por no enviado.
   if (error) {
-    console.error("No se pudo cargar la auditoria de correos de alerta:", error.message);
+    console.error("No se pudo cargar la auditoría de correos de alerta:", error.message);
     return null;
   }
 

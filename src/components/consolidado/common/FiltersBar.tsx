@@ -183,7 +183,7 @@ export function FiltersBar({
           value={search}
           onChange={(event) => onSearch(event.target.value)}
           className={`${styles.input} ${styles.searchInput}`}
-          placeholder="Buscar por programa, codigo o SNIES"
+          placeholder="Buscar por programa, código o SNIES"
         />
         <button
           type="button"

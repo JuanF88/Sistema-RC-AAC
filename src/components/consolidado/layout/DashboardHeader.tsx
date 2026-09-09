@@ -31,7 +31,7 @@ export function DashboardHeader({ source, generatedAt, currentUser, currentRole,
           <h1 className={styles.title}>Consolidado de Registro Calificado y Acreditación</h1>
         </div>
         <div className={styles.logoPair}>
-          <Image src="/LogoPagina.png" alt="Logo pagina" width={128} height={128} className={styles.logo} priority />
+          <Image src="/LogoPagina.png" alt="Logo página" width={128} height={128} className={styles.logo} priority />
           <Image src="/unicauca.png" alt="Logo Universidad del Cauca" width={128} height={128} className={`${styles.logo} ${styles.logoUnicauca}`} priority />
         </div>
       </div>

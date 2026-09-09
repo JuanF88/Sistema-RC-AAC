@@ -210,8 +210,8 @@ export function GestoresCalidadView() {
       <div className={styles.headerCard}>
         <h2 className={styles.title}>Gestores de Calidad</h2>
         <p className={styles.description}>
-          Directorio de gestores por facultad y dependencia. Cuando se envia una alerta de renovacion a un programa, el
-          gestor activo de su facultad queda en copia en su correo institucional y su nombre aparece en la informacion
+          Directorio de gestores por facultad y dependencia. Cuando se envía una alerta de renovación a un programa, el
+          gestor activo de su facultad queda en copia en su correo institucional y su nombre aparece en la información
           del proceso. El correo personal se guarda solo como dato de contacto: no recibe alertas.
         </p>
         <div className={styles.statsRow}>
@@ -262,7 +262,7 @@ export function GestoresCalidadView() {
           </label>
 
           <label className={styles.fieldLabel}>
-            <span>Titulo</span>
+            <span>Título</span>
             <input
               type="text"
               className={styles.input}
@@ -334,7 +334,7 @@ export function GestoresCalidadView() {
           </label>
 
           <label className={styles.fieldLabel}>
-            <span>Extension</span>
+            <span>Extensión</span>
             <input
               type="text"
               className={styles.input}
@@ -363,7 +363,7 @@ export function GestoresCalidadView() {
               className={styles.input}
               value={form.officialLetter}
               onChange={(event) => updateField("officialLetter", event.target.value)}
-              placeholder="Nombre del oficio de designacion"
+              placeholder="Nombre del oficio de designación"
               disabled={saving}
             />
           </label>

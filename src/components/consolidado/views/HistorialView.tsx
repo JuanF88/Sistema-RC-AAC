@@ -114,7 +114,7 @@ export function HistorialView({ programs, generatedAt }: Props) {
       const body = (await response.json()) as { data?: SnapshotSchedule; error?: string };
 
       if (!response.ok || !body.data) {
-        throw new Error(body.error ?? "No se pudo cargar la programacion de snapshots.");
+        throw new Error(body.error ?? "No se pudo cargar la programación de snapshots.");
       }
 
       setSchedule(body.data);

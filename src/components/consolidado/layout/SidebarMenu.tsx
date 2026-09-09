@@ -169,8 +169,8 @@ export function SidebarMenu({
             type="button"
             className={`${styles.settingsButton} ${view === "usuarios" ? styles.settingsButtonActive : ""}`}
             onClick={onOpenUsers}
-            aria-label="Abrir configuracion"
-            data-tooltip="Configuracion"
+            aria-label="Abrir configuración"
+            data-tooltip="Configuración"
           >
             <span className={styles.settingsIcon}>⚙</span>
           </button>

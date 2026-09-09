@@ -58,7 +58,7 @@ const MENU_ITEMS: MenuItem[] = [
   { id: "consolidado", label: "Consolidado", subtitle: "Matriz editable" },
   { id: "alertas", label: "Alertas", subtitle: "Vencimientos RRC/AAC" },
   { id: "registro-calificado", label: "Registro Calificado", subtitle: "Reporte por nivel" },
-  { id: "acreditacion-programas", label: "Acreditacion de Programas", subtitle: "Programas acreditados" },
+  { id: "acreditacion-programas", label: "Acreditación de Programas", subtitle: "Programas acreditados" },
   { id: "visitas-pares", label: "Visitas de Pares", subtitle: "Seguimiento de visitas" },
   { id: "estadisticas", label: "Estadísticas", subtitle: "Análisis y gráficos" },
   { id: "historial", label: "Historial", subtitle: "Snapshots de BD" },
@@ -772,7 +772,7 @@ export function ConsolidadoDashboardClient({ data, currentUser, currentRole }: P
         <div className={styles.gridOverlay} />
         <main className={styles.main}>
           <section className={styles.panel}>
-            <h2>Sesion activa en otra ventana</h2>
+            <h2>Sesión activa en otra ventana</h2>
             <p>Esta ventana se bloqueo para evitar cambios simultaneos con el mismo usuario. Puedes cerrar esta ventana y continuar en la otra.</p>
           </section>
         </main>
@@ -786,8 +786,8 @@ export function ConsolidadoDashboardClient({ data, currentUser, currentRole }: P
         <div className={styles.gridOverlay} />
         <main className={styles.main}>
           <section className={styles.panel}>
-            <h2>Sesion finalizada</h2>
-            <p>Tu sesion fue reemplazada por otro inicio de sesion. Redirigiendo al acceso...</p>
+            <h2>Sesión finalizada</h2>
+            <p>Tu sesión fue reemplazada por otro inicio de sesión. Redirigiendo al acceso...</p>
           </section>
         </main>
       </div>
@@ -958,7 +958,7 @@ export function ConsolidadoDashboardClient({ data, currentUser, currentRole }: P
           ) : view === "usuarios" ? (
             <section className={styles.panel}>
               <div className={`${styles.switchWrap} ${styles.settingsTabs}`}>
-                <span className={styles.switchLabel}>Configuracion</span>
+                <span className={styles.switchLabel}>Configuración</span>
                 <div className={styles.switchGroup}>
                   {currentRole === "administrador" && (
                     <button
@@ -974,7 +974,7 @@ export function ConsolidadoDashboardClient({ data, currentUser, currentRole }: P
                     className={`${styles.switchButton} ${settingsSection === "alerts" ? styles.switchButtonActive : ""}`}
                     onClick={() => setSettingsSection("alerts")}
                   >
-                    Configuracion de Alertas
+                    Configuración de Alertas
                   </button>
                   <button
                     type="button"

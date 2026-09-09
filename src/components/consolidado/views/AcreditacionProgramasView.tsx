@@ -512,7 +512,7 @@ export function AcreditacionProgramasView({ rows, groupingMode, onExportReady, o
 
       const syncBody = (await syncResponse.json()) as { error?: string };
       if (!syncResponse.ok) {
-        throw new Error(syncBody.error ?? "No se pudo sincronizar el estado de acreditacion del programa.");
+        throw new Error(syncBody.error ?? "No se pudo sincronizar el estado de acreditación del programa.");
       }
 
       onProgramUpdate?.(updatedProgram);
@@ -579,7 +579,7 @@ export function AcreditacionProgramasView({ rows, groupingMode, onExportReady, o
 
       const body = (await response.json()) as { error?: string };
       if (!response.ok) {
-        throw new Error(body.error ?? "No se pudo guardar el seguimiento de acreditacion.");
+        throw new Error(body.error ?? "No se pudo guardar el seguimiento de acreditación.");
       }
 
       const updatedProgram: ProgramRecord = {
@@ -596,7 +596,7 @@ export function AcreditacionProgramasView({ rows, groupingMode, onExportReady, o
 
       const syncBody = (await syncResponse.json()) as { error?: string };
       if (!syncResponse.ok) {
-        throw new Error(syncBody.error ?? "No se pudo sincronizar el estado de acreditacion del programa.");
+        throw new Error(syncBody.error ?? "No se pudo sincronizar el estado de acreditación del programa.");
       }
 
       onProgramUpdate?.(updatedProgram);
@@ -607,7 +607,7 @@ export function AcreditacionProgramasView({ rows, groupingMode, onExportReady, o
         duration: 2200,
       });
     } catch (error) {
-      const message = error instanceof Error ? error.message : "No se pudo guardar el seguimiento de acreditacion.";
+      const message = error instanceof Error ? error.message : "No se pudo guardar el seguimiento de acreditación.";
       setStepsByProgramId((prev) => {
         const copy = { ...prev };
         if (previousState) copy[program.id] = previousState;
@@ -659,7 +659,7 @@ export function AcreditacionProgramasView({ rows, groupingMode, onExportReady, o
       const body = (await response.json()) as { data?: HistoricalApiRow[] };
 
       if (!response.ok || !body.data) {
-        showToast.error("No se pudieron cargar los historicos de acreditacion.", {
+        showToast.error("No se pudieron cargar los históricos de acreditación.", {
           position: "top-right",
           transition: "slideInUp",
           duration: 3000,
@@ -677,7 +677,7 @@ export function AcreditacionProgramasView({ rows, groupingMode, onExportReady, o
         setHistoricalRows(mapApiRowsToView(body.data));
       }
     } catch {
-      showToast.error("No se pudieron cargar los historicos de acreditacion.", {
+      showToast.error("No se pudieron cargar los históricos de acreditación.", {
         position: "top-right",
         transition: "slideInUp",
         duration: 3000,
@@ -764,7 +764,7 @@ export function AcreditacionProgramasView({ rows, groupingMode, onExportReady, o
         cumplimiento: row.cumplimiento || "-",
       }));
 
-      await exportToExcel(`Acreditacion-Historicos-${timestamp}`, "Acreditacion Historicos", columns, data);
+      await exportToExcel(`Acreditacion-Historicos-${timestamp}`, "Acreditación Históricos", columns, data);
       return;
     }
 
@@ -779,7 +779,7 @@ export function AcreditacionProgramasView({ rows, groupingMode, onExportReady, o
 
       await exportToExcel(
         `Acreditacion-Facultades-${exp.segment}-${timestamp}`,
-        "Acreditacion Facultades",
+        "Acreditación Facultades",
         columns,
         exp.facultyRows,
       );
@@ -793,19 +793,19 @@ export function AcreditacionProgramasView({ rows, groupingMode, onExportReady, o
             { key: "program", header: "Programa", width: 42 },
             { key: "snies", header: "SNIES", width: 14 },
             { key: "location", header: "Lugar de Desarrollo", width: 24 },
-            { key: "level", header: "Nivel Academico", width: 22 },
+            { key: "level", header: "Nivel Académico", width: 22 },
             { key: "aacStart", header: "Inicio AAC", width: 16 },
             { key: "aacEnd", header: "Vencimiento AAC", width: 18 },
             { key: "informeCgcEnviado", header: "Informe entregado al CGC", width: 20 },
             { key: "enviadoMinisterio", header: "Enviado al ministerio", width: 20 },
-            { key: "acreditacionRecibida", header: "Acreditacion recibida", width: 20 },
+            { key: "acreditacionRecibida", header: "Acreditación recibida", width: 20 },
           ]
         : [
             { key: "faculty", header: "Facultad", width: 34 },
             { key: "program", header: "Programa", width: 42 },
             { key: "snies", header: "SNIES", width: 14 },
             { key: "location", header: "Lugar de Desarrollo", width: 24 },
-            { key: "level", header: "Nivel Academico", width: 22 },
+            { key: "level", header: "Nivel Académico", width: 22 },
             { key: "aacStart", header: "Inicio AAC", width: 16 },
             { key: "aacEnd", header: "Vencimiento AAC", width: 18 },
             { key: "estado", header: "Estado", width: 24 },
@@ -838,7 +838,7 @@ export function AcreditacionProgramasView({ rows, groupingMode, onExportReady, o
       };
     });
 
-    await exportToExcel(`Acreditacion-Programas-${exp.segment}-${timestamp}`, "Acreditacion Programas", columns, data);
+    await exportToExcel(`Acreditacion-Programas-${exp.segment}-${timestamp}`, "Acreditación Programas", columns, data);
   }, []);
 
   useEffect(() => {
@@ -936,7 +936,7 @@ export function AcreditacionProgramasView({ rows, groupingMode, onExportReady, o
               <span className={`${styles.processLegendItem} ${styles.processLegendItemPendiente}`}>Sin iniciar</span>
               <span className={`${styles.processLegendItem} ${styles.processLegendItemCgc}`}>Informe entregado al CGC</span>
               <span className={`${styles.processLegendItem} ${styles.processLegendItemMinisterio}`}>Enviado al ministerio</span>
-              <span className={`${styles.processLegendItem} ${styles.processLegendItemAcreditacion}`}>Acreditacion recibida</span>
+              <span className={`${styles.processLegendItem} ${styles.processLegendItemAcreditacion}`}>Acreditación recibida</span>
             </div>
           )}
 
@@ -983,7 +983,7 @@ export function AcreditacionProgramasView({ rows, groupingMode, onExportReady, o
                   {!useFacultyGrouping && (
                     <th>
                       <button type="button" className={styles.sortButton} onClick={() => handleSortChange("level")}>
-                        <span>Nivel Academico</span>
+                        <span>Nivel Académico</span>
                         <span className={styles.sortIndicator}>{getSortIndicator("level")}</span>
                       </button>
                     </th>
@@ -1023,7 +1023,7 @@ export function AcreditacionProgramasView({ rows, groupingMode, onExportReady, o
                   {!useFacultyGrouping && segment === "acreditables" && (
                     <th>
                       <button type="button" className={styles.sortButton} onClick={() => handleSortChange("acreditacionRecibida")}>
-                        <span>Acreditacion recibida</span>
+                        <span>Acreditación recibida</span>
                         <span className={styles.sortIndicator}>{getSortIndicator("acreditacionRecibida")}</span>
                       </button>
                     </th>
@@ -1087,7 +1087,7 @@ export function AcreditacionProgramasView({ rows, groupingMode, onExportReady, o
                                   className={`${styles.processButton} ${styles.processButtonMinisterio} ${steps.enviadoMinisterio ? styles.processButtonDoneMinisterio : ""}`}
                                   disabled={disableMinisterio}
                                   onClick={() => void handleProcessStepChange(program, "enviadoMinisterio")}
-                                  title={!steps.informeCgcEnviado ? "Primero complete el envio al CGC." : ""}
+                                  title={!steps.informeCgcEnviado ? "Primero complete el envío al CGC." : ""}
                                 >
                                   {steps.enviadoMinisterio ? "Completado" : "Pendiente"}
                                 </button>
@@ -1098,7 +1098,7 @@ export function AcreditacionProgramasView({ rows, groupingMode, onExportReady, o
                                   className={`${styles.processButton} ${styles.processButtonAcreditacion} ${steps.acreditacionRecibida ? styles.processButtonDoneAcreditacion : ""}`}
                                   disabled={disableAcreditacion}
                                   onClick={() => void handleProcessStepChange(program, "acreditacionRecibida")}
-                                  title={!steps.enviadoMinisterio ? "Primero complete el envio al ministerio." : ""}
+                                  title={!steps.enviadoMinisterio ? "Primero complete el envío al ministerio." : ""}
                                 >
                                   {steps.acreditacionRecibida ? "Recibida" : "Pendiente"}
                                 </button>

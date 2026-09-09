@@ -120,7 +120,7 @@ export function AlertasEstadisticas({ history, programs, loading }: Props) {
   }
 
   if (history.length === 0) {
-    return <p className={styles.statsEmpty}>Todavia no se ha registrado ninguna alerta.</p>;
+    return <p className={styles.statsEmpty}>Todavía no se ha registrado ninguna alerta.</p>;
   }
 
   const { totals } = stats;
@@ -157,13 +157,13 @@ export function AlertasEstadisticas({ history, programs, loading }: Props) {
           <div className={styles.statCard}>
             <span className={styles.statLabel}>Sin verificar</span>
             <span className={styles.statValue}>{totals.unknown}</span>
-            <span className={styles.statHint}>No se pudo consultar la auditoria de correos</span>
+            <span className={styles.statHint}>No se pudo consultar la auditoría de correos</span>
           </div>
         )}
       </div>
 
       <p className={styles.statsNote}>
-        Una alerta cuenta como enviada cuando el sistema tiene registrado el correo que salio por ella. Las
+        Una alerta cuenta como enviada cuando el sistema tiene registrado el correo que salió por ella. Las
         marcadas sin enviar son las que se registraron con el boton &quot;Marcar enviado&quot;, sin que el programa
         recibiera nada.
       </p>

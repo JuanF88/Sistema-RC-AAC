@@ -11,11 +11,11 @@ export type AlertKind = "inicio" | "recordatorio" | "entrega";
 
 export const ALERT_TYPE_LABELS: Record<AlertType, string> = {
   rrc: "Registro Calificado",
-  aac: "Acreditacion",
+  aac: "Acreditación",
 };
 
 export const ALERT_KIND_LABELS: Record<AlertKind, string> = {
-  inicio: "Inicio de renovacion",
+  inicio: "Inicio de renovación",
   recordatorio: "Recordatorio previo a entrega",
   entrega: "Recordatorio de entrega",
 };

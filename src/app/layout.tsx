@@ -16,7 +16,7 @@ const monoFont = IBM_Plex_Mono({
 
 export const metadata: Metadata = {
   title: "Sistema Órbita - Unicauca",
-  description: "Consolidado de programas con seguimiento de Registro Calificado y Acreditacion.",
+  description: "Consolidado de programas con seguimiento de Registro Calificado y Acreditación.",
   icons: {
     icon: "/programa.png",
     shortcut: "/programa.png",

@@ -82,8 +82,8 @@ function evaluateAlert(value: string | null): AlertResult {
   const days = daysUntil(value);
   if (days === null) return { level: "sin-fecha", label: "Sin fecha", days: null };
   if (days < 0) return { level: "vencido", label: "Vencido", days };
-  if (days <= 120) return { level: "proximo", label: "Proximo", days };
-  return { level: "aldia", label: "Al dia", days };
+  if (days <= 120) return { level: "proximo", label: "Próximo", days };
+  return { level: "aldia", label: "Al día", days };
 }
 
 function isOnOrAfter(value: string | null): boolean {
@@ -461,19 +461,19 @@ export function ExpirationAlertsView({ rows, onExportReady, onProgramUpdate, onA
 
       const body = (await response.json()) as { error?: string };
       if (!response.ok) {
-        throw new Error(body.error ?? "No se pudo guardar la observacion.");
+        throw new Error(body.error ?? "No se pudo guardar la observación.");
       }
 
       setPrograms((current) => current.map((item) => (item.id === programId ? payload : item)));
       onProgramUpdate?.(payload);
 
-      showToast.success("Observacion guardada.", {
+      showToast.success("Observación guardada.", {
         position: "top-right",
         transition: "bounceIn",
         duration: 1800,
       });
     } catch (error) {
-      const message = error instanceof Error ? error.message : "No se pudo guardar la observacion.";
+      const message = error instanceof Error ? error.message : "No se pudo guardar la observación.";
       showToast.error(message, {
         position: "top-right",
         transition: "slideInUp",
@@ -621,20 +621,20 @@ export function ExpirationAlertsView({ rows, onExportReady, onProgramUpdate, onA
             { key: "program", header: "Programa", width: 38 },
             { key: "rcEnd", header: "Vencimiento R.C.", width: 18, formatter: (v) => formatDate(v as string | null | undefined) || "-" },
             { key: "rcAlert", header: "Alerta R.C.", width: 16 },
-            { key: "rcDays", header: "Dias R.C.", width: 12 },
+            { key: "rcDays", header: "Días R.C.", width: 12 },
             { key: "siacEnd", header: "Entrega al CGCAI", width: 22, formatter: (v) => formatDate(v as string | null | undefined) || "-" },
             { key: "siacAlert", header: "Alerta CGCAI", width: 18 },
-            { key: "siacDays", header: "Dias CGCAI", width: 15 },
+            { key: "siacDays", header: "Días CGCAI", width: 15 },
             { key: "observations", header: "Observaciones", width: 44 },
           ]
         : [
             { key: "program", header: "Programa", width: 38 },
             { key: "aacEnd", header: "Vencimiento AAC", width: 18, formatter: (v) => formatDate(v as string | null | undefined) || "-" },
             { key: "aacAlert", header: "Alerta AAC", width: 16 },
-            { key: "aacDays", header: "Dias AAC", width: 12 },
+            { key: "aacDays", header: "Días AAC", width: 12 },
             { key: "siacEnd", header: "Entrega al CGCAI", width: 22, formatter: (v) => formatDate(v as string | null | undefined) || "-" },
             { key: "siacAlert", header: "Alerta CGCAI", width: 18 },
-            { key: "siacDays", header: "Dias CGCAI", width: 15 },
+            { key: "siacDays", header: "Días CGCAI", width: 15 },
             { key: "observations", header: "Observaciones", width: 44 },
           ];
 
@@ -727,7 +727,7 @@ export function ExpirationAlertsView({ rows, onExportReady, onProgramUpdate, onA
           onClick={() => setMode("estadisticas")}
           className={`${styles.switchButton} ${mode === "estadisticas" ? styles.switchButtonActive : ""}`}
         >
-          Estadisticas
+          Estadísticas
         </button>
       </div>
 
@@ -741,11 +741,11 @@ export function ExpirationAlertsView({ rows, onExportReady, onProgramUpdate, onA
                 <th>Programa</th>
                 <th>Vencimiento R.C.</th>
                 <th>Alerta R.C.</th>
-                <th>Dias R.C.</th>
+                <th>Días R.C.</th>
                 <th>Entrega al CGCAI</th>
                 <th>Alerta CGCAI</th>
-                <th>Dias CGCAI</th>
-                <th>Accion</th>
+                <th>Días CGCAI</th>
+                <th>Acción</th>
                 <th>{observationHeader}</th>
               </tr>
             </thead>
@@ -819,11 +819,11 @@ export function ExpirationAlertsView({ rows, onExportReady, onProgramUpdate, onA
                 <th>Programa</th>
                 <th>Vencimiento AAC</th>
                 <th>Alerta AAC</th>
-                <th>Dias AAC</th>
+                <th>Días AAC</th>
                 <th>Entrega al CGCAI</th>
                 <th>Alerta CGCAI</th>
-                <th>Dias CGCAI</th>
-                <th>Accion</th>
+                <th>Días CGCAI</th>
+                <th>Acción</th>
                 <th>{observationHeader}</th>
               </tr>
             </thead>
@@ -903,7 +903,7 @@ export function ExpirationAlertsView({ rows, onExportReady, onProgramUpdate, onA
               >
                 <div className={modalStyles.header}>
                   <div>
-                    <div className={modalStyles.title}>Gestion de alertas</div>
+                    <div className={modalStyles.title}>Gestión de alertas</div>
                     <div className={modalStyles.subtitle}>
                       {alertModal.program} · {modalTypeLabel}
                     </div>
@@ -950,7 +950,7 @@ export function ExpirationAlertsView({ rows, onExportReady, onProgramUpdate, onA
                         </span>
                       </div>
                       <div className={modalStyles.field}>
-                        <span>Ultimo envio</span>
+                        <span>Último envío</span>
                         <strong className={styles.modalValue}>
                           {modalTimeline.inicioRecord?.sent_at
                             ? `${formatDate(modalTimeline.inicioRecord.sent_at)} (${formatRelativeDays(
@@ -992,7 +992,7 @@ export function ExpirationAlertsView({ rows, onExportReady, onProgramUpdate, onA
                     <h4>Recordatorio previo a entrega ({monthsLabel(DELIVERY_FIRST_REMINDER_MONTHS)} antes)</h4>
                     <div className={modalStyles.grid}>
                       <div className={modalStyles.field}>
-                        <span>Proximo recordatorio</span>
+                        <span>Próximo recordatorio</span>
                         <strong className={styles.modalValue}>{formatDate(modalTimeline.nextReminder)}</strong>
                       </div>
                       <div className={modalStyles.field}>
@@ -1010,7 +1010,7 @@ export function ExpirationAlertsView({ rows, onExportReady, onProgramUpdate, onA
                         </span>
                       </div>
                       <div className={modalStyles.field}>
-                        <span>Ultimo envio</span>
+                        <span>Último envío</span>
                         <strong className={styles.modalValue}>
                           {modalTimeline.reminderRecord?.sent_at
                             ? `${formatDate(modalTimeline.reminderRecord.sent_at)} (${formatRelativeDays(
@@ -1073,7 +1073,7 @@ export function ExpirationAlertsView({ rows, onExportReady, onProgramUpdate, onA
                         </span>
                       </div>
                       <div className={modalStyles.field}>
-                        <span>Ultimo envio</span>
+                        <span>Último envío</span>
                         <strong className={styles.modalValue}>
                           {modalTimeline.entregaRecord?.sent_at
                             ? `${formatDate(modalTimeline.entregaRecord.sent_at)} (${formatRelativeDays(
@@ -1126,12 +1126,12 @@ export function ExpirationAlertsView({ rows, onExportReady, onProgramUpdate, onA
               >
                 <div className={modalStyles.header}>
                   <div>
-                    <div className={modalStyles.title}>Revision del correo</div>
+                    <div className={modalStyles.title}>Revisión del correo</div>
                     <div className={modalStyles.subtitle}>
                       {previewAlert.program} · {ALERT_KIND_LABELS[previewAlert.alertKind]}
                     </div>
                     <div className={styles.modalMuted}>
-                      Asi se vera el correo. Todavia no se ha enviado nada.
+                      Así se verá el correo. Todavía no se ha enviado nada.
                     </div>
                   </div>
                   <button type="button" className={modalStyles.closeButton} onClick={() => setPreviewAlert(null)}>

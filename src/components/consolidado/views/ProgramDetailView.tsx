@@ -25,7 +25,7 @@ export function ProgramDetailView({ program }: Props) {
     <article className={styles.panel}>
       <h3 className={styles.title}>{program.program}</h3>
       <p className={styles.subtitle}>
-        {program.faculty} · {program.degree || "Sin titulo"}
+        {program.faculty} · {program.degree || "Sin título"}
       </p>
 
       <div className={styles.chips}>
@@ -35,7 +35,7 @@ export function ProgramDetailView({ program }: Props) {
       </div>
 
       <dl className={styles.grid}>
-        <div><dt>Codigo proceso</dt><dd>{program.processCode || "Sin dato"}</dd></div>
+        <div><dt>Código proceso</dt><dd>{program.processCode || "Sin dato"}</dd></div>
         <div><dt>SNIES</dt><dd>{program.snies || "Sin dato"}</dd></div>
         <div><dt>Inicio RC</dt><dd>{formatDate(program.rcStart)}</dd></div>
         <div><dt>Vencimiento RC</dt><dd>{formatDate(program.rcEnd)}</dd></div>

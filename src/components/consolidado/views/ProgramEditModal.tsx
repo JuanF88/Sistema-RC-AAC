@@ -183,7 +183,7 @@ const LEVEL_OPTIONS = [
 
 const ACADEMIC_LEVEL_OPTIONS = ["Posgrado", "Pregrado"];
 
-const MODALITY_OPTIONS = ["Presencial", "Virtual", "Dual", "A distancia", "Híbrida"];
+const MODALITY_OPTIONS = ["Presencial", "Virtual", "A distancia", "Híbrida"];
 
 function boolToString(value: boolean | null): BoolString {
   if (value === null) return "";
@@ -732,9 +732,9 @@ export function ProgramEditModal({
 
           <fieldset className={styles.fieldsetReset} disabled={isProgramInactiveLocked}>
           <section className={`${styles.section} ${styles.sectionBlue}`}>
-            <h4>Informacion basica</h4>
+            <h4>Información básica</h4>
             <div className={styles.grid}>
-              <Field label="Codigo proceso" value={form.processCode} onChange={(value) => setField("processCode", value)} required />
+              <Field label="Código proceso" value={form.processCode} onChange={(value) => setField("processCode", value)} required />
               <SelectField
                 label="Facultad"
                 value={form.faculty}
@@ -743,7 +743,7 @@ export function ProgramEditModal({
                 options={faculties.map((faculty) => ({ value: faculty, label: faculty }))}
               />
               <Field label="Programa" value={form.program} onChange={(value) => setField("program", value)} required />
-              <Field label="Titulo otorgado" value={form.degree} onChange={(value) => setField("degree", value)} required={isCreatingProgram} />
+              <Field label="Título otorgado" value={form.degree} onChange={(value) => setField("degree", value)} required={isCreatingProgram} />
               <Field label="SNIES" value={form.snies} onChange={(value) => setField("snies", value)} />
             </div>
           </section>
@@ -751,8 +751,8 @@ export function ProgramEditModal({
           <section className={`${styles.section} ${styles.sectionAmber}`}>
             <h4>Administrativo y ubicación</h4>
             <div className={styles.grid}>
-              <Field label="Acuerdo creacion" value={form.creationAgreement} onChange={(value) => setField("creationAgreement", value)} />
-              <Field label="No renovacion" value={form.noRenewal} onChange={(value) => setField("noRenewal", value)} />
+              <Field label="Acuerdo creación" value={form.creationAgreement} onChange={(value) => setField("creationAgreement", value)} />
+              <Field label="No renovación" value={form.noRenewal} onChange={(value) => setField("noRenewal", value)} />
               <Field label="Admitidos MEN" type="number" value={form.authorizedAdmissionsMen} onChange={(value) => setField("authorizedAdmissionsMen", value)} />
               <SelectField
                 label="Periodicidad del programa"
@@ -763,7 +763,7 @@ export function ProgramEditModal({
                   ...ADMISSION_PERIODICITY_OPTIONS.map((option) => ({ value: option, label: option })),
                 ]}
               />
-              <Field label="Codigo convenio" value={form.agreementCode} onChange={(value) => setField("agreementCode", value)} />
+              <Field label="Código convenio" value={form.agreementCode} onChange={(value) => setField("agreementCode", value)} />
               <Field label="IES convenio" value={form.agreementIes} onChange={(value) => setField("agreementIes", value)} />
               <Field label="Administrador convenio" value={form.agreementAdministrator} onChange={(value) => setField("agreementAdministrator", value)} />
               <Field label="Lugar de desarrollo" value={form.location} onChange={(value) => setField("location", value)} />
@@ -796,7 +796,7 @@ export function ProgramEditModal({
                 ]}
               />
               <SelectField
-                label="Nivel academico"
+                label="Nivel académico"
                 value={form.academicLevel}
                 onChange={(value) => setField("academicLevel", value)}
                 options={[
@@ -814,7 +814,7 @@ export function ProgramEditModal({
                 ]}
               />
               <SelectField
-                label="Metodologia"
+                label="Metodología"
                 value={form.methodology}
                 onChange={(value) => setField("methodology", value)}
                 options={METHODOLOGY_OPTIONS.map((option) => ({ value: option, label: option }))}
@@ -823,14 +823,14 @@ export function ProgramEditModal({
           </section>
 
           <section className={`${styles.section} ${styles.sectionEmerald}`}>
-            <h4>Creditos y reformas</h4>
+            <h4>Créditos y reformas</h4>
             <div className={styles.grid}>
-              <Field label="Creditos investigacion" type="number" value={form.researchCredits} onChange={(value) => setField("researchCredits", value)} />
-              <Field label="Creditos profundizacion" type="number" value={form.deepeningCredits} onChange={(value) => setField("deepeningCredits", value)} />
-              <Field label="Total creditos academicos" type="number" value={form.totalAcademicCredits} onChange={(value) => setField("totalAcademicCredits", value)} />
-              <Field label="Duracion (valor)" type="number" value={form.duration} onChange={(value) => setField("duration", value)} />
+              <Field label="Créditos investigación" type="number" value={form.researchCredits} onChange={(value) => setField("researchCredits", value)} />
+              <Field label="Créditos profundización" type="number" value={form.deepeningCredits} onChange={(value) => setField("deepeningCredits", value)} />
+              <Field label="Total créditos académicos" type="number" value={form.totalAcademicCredits} onChange={(value) => setField("totalAcademicCredits", value)} />
+              <Field label="Duración (valor)" type="number" value={form.duration} onChange={(value) => setField("duration", value)} />
               <SelectField
-                label="Duracion (unidad)"
+                label="Duración (unidad)"
                 value={form.durationUnit}
                 onChange={(value) => setField("durationUnit", value)}
                 options={[
@@ -838,7 +838,7 @@ export function ProgramEditModal({
                   ...DURATION_UNIT_OPTIONS.map((option) => ({ value: option, label: option })),
                 ]}
               />
-              <Field label="Reforma consejo academico" value={form.reformAcademicCouncil} onChange={(value) => setField("reformAcademicCouncil", value)} />
+              <Field label="Reforma consejo académico" value={form.reformAcademicCouncil} onChange={(value) => setField("reformAcademicCouncil", value)} />
               <Field label="Reforma consejo superior" value={form.reformSuperiorCouncil} onChange={(value) => setField("reformSuperiorCouncil", value)} />
               <Field label="Reforma Mineducacion" value={form.reformMineducacion} onChange={(value) => setField("reformMineducacion", value)} />
               <Field label="Porcentaje TIC" type="number" step="0.01" value={form.ticPercentage} onChange={(value) => setField("ticPercentage", value)} />
@@ -858,17 +858,17 @@ export function ProgramEditModal({
                   { value: "false", label: "No" },
                 ]}
               />
-              <Field label="Resolucion RC" value={form.rcResolution} onChange={(value) => setField("rcResolution", value)} />
+              <Field label="Resolución RC" value={form.rcResolution} onChange={(value) => setField("rcResolution", value)} />
               <Field label="Inicio RC" type="date" value={form.rcStart} onChange={(value) => setField("rcStart", value)} />
-              <Field label="Duracion RC (anios)" type="number" step="0.1" value={form.rcDurationYears} onChange={(value) => setField("rcDurationYears", value)} />
+              <Field label="Duración RC (años)" type="number" step="0.1" value={form.rcDurationYears} onChange={(value) => setField("rcDurationYears", value)} />
               <Field label="RC SIGA" type="date" value={form.rcSiga} onChange={(value) => setField("rcSiga", value)} />
               <Field label="RC Mineducacion" type="date" value={form.rcMineducacion} onChange={(value) => setField("rcMineducacion", value)} />
               <Field label="Vencimiento RC" type="date" value={form.rcEnd} onChange={(value) => setField("rcEnd", value)} />
               <Field label="Prorroga decreto 1330" type="date" value={form.rcExtensionDecree1330} onChange={(value) => setField("rcExtensionDecree1330", value)} />
               <Field label="Prorroga decreto 1174" type="date" value={form.rcExtensionDecree1174} onChange={(value) => setField("rcExtensionDecree1174", value)} />
               <Field label="Cantidad resoluciones RC" type="number" value={form.rcResolutionCount} onChange={(value) => setField("rcResolutionCount", value)} />
-              <Field label="Resolucion RC oficio" value={form.rcOfficialResolution} onChange={(value) => setField("rcOfficialResolution", value)} />
-              <Field label="Resolucion RC negada" value={form.rcDeniedResolution} onChange={(value) => setField("rcDeniedResolution", value)} />
+              <Field label="Resolución RC oficio" value={form.rcOfficialResolution} onChange={(value) => setField("rcOfficialResolution", value)} />
+              <Field label="Resolución RC negada" value={form.rcDeniedResolution} onChange={(value) => setField("rcDeniedResolution", value)} />
               <Field
                 label="Fecha constancia de ejecutoria"
                 type="date"
@@ -876,11 +876,11 @@ export function ProgramEditModal({
                 onChange={(value) => setField("rcExecutoriaConceptDate", value)}
               />
             </div>
-            <TextareaField label="Historico resoluciones RC" value={form.rcHistoricalResolutions} onChange={(value) => setField("rcHistoricalResolutions", value)} />
+            <TextareaField label="Histórico resoluciones RC" value={form.rcHistoricalResolutions} onChange={(value) => setField("rcHistoricalResolutions", value)} />
           </section>
 
           <section className={`${styles.section} ${styles.sectionViolet}`}>
-            <h4>Acreditacion (AAC)</h4>
+            <h4>Acreditación (AAC)</h4>
             <div className={styles.grid}>
               <SelectField
                 label="Acreditable"
@@ -900,15 +900,15 @@ export function ProgramEditModal({
                   { value: "false", label: "No" },
                 ]}
               />
-              <Field label="Resolucion AAC" value={form.aacResolution} onChange={(value) => setField("aacResolution", value)} />
+              <Field label="Resolución AAC" value={form.aacResolution} onChange={(value) => setField("aacResolution", value)} />
               <Field label="Inicio AAC" type="date" value={form.aacStart} onChange={(value) => setField("aacStart", value)} />
-              <Field label="Duracion AAC (anios)" type="number" step="0.1" value={form.aacDurationYears} onChange={(value) => setField("aacDurationYears", value)} />
+              <Field label="Duración AAC (años)" type="number" step="0.1" value={form.aacDurationYears} onChange={(value) => setField("aacDurationYears", value)} />
               <Field label="Entrega CGCAI" type="date" value={form.aacCgcaiDelivery} onChange={(value) => setField("aacCgcaiDelivery", value)} />
-              <Field label="Radicacion Mineducacion" type="date" value={form.aacMineducacionFiling} onChange={(value) => setField("aacMineducacionFiling", value)} />
+              <Field label="Radicación Mineducacion" type="date" value={form.aacMineducacionFiling} onChange={(value) => setField("aacMineducacionFiling", value)} />
               <Field label="Vencimiento AAC" type="date" value={form.aacEnd} onChange={(value) => setField("aacEnd", value)} />
               <Field label="Mitad vigencia AAC" type="date" value={form.aacImprovementHalfway} onChange={(value) => setField("aacImprovementHalfway", value)} />
               <Field label="Cantidad resoluciones AAC" type="number" value={form.aacResolutionCount} onChange={(value) => setField("aacResolutionCount", value)} />
-              <Field label="Resolucion AAC negada" value={form.aacDeniedResolution} onChange={(value) => setField("aacDeniedResolution", value)} />
+              <Field label="Resolución AAC negada" value={form.aacDeniedResolution} onChange={(value) => setField("aacDeniedResolution", value)} />
               <Field
                 label="Fecha constancia de ejecutoria"
                 type="date"
@@ -916,7 +916,7 @@ export function ProgramEditModal({
                 onChange={(value) => setField("aacExecutoriaConceptDate", value)}
               />
             </div>
-            <TextareaField label="Historico resoluciones AAC" value={form.aacHistoricalResolutions} onChange={(value) => setField("aacHistoricalResolutions", value)} />
+            <TextareaField label="Histórico resoluciones AAC" value={form.aacHistoricalResolutions} onChange={(value) => setField("aacHistoricalResolutions", value)} />
           </section>
 
           <section className={`${styles.section} ${styles.sectionSlate}`}>
@@ -928,10 +928,10 @@ export function ProgramEditModal({
                 value={form.programCoordinatorEmail}
                 onChange={(value) => setField("programCoordinatorEmail", value)}
               />
-              <Field label="Titulo del coordinador" value={form.programCoordinatorTitle} onChange={(value) => setField("programCoordinatorTitle", value)} />
+              <Field label="Título del coordinador" value={form.programCoordinatorTitle} onChange={(value) => setField("programCoordinatorTitle", value)} />
             </div>
             <p className={styles.fieldNote}>Ejemplo: coord1@udla.edu.co; coord2@udla.edu.co</p>
-            <TextareaField label="Lineamiento de acreditacion" value={form.accreditationGuideline} onChange={(value) => setField("accreditationGuideline", value)} />
+            <TextareaField label="Lineamiento de acreditación" value={form.accreditationGuideline} onChange={(value) => setField("accreditationGuideline", value)} />
             <TextareaField label="Observaciones generales" value={form.generalObservations} onChange={(value) => setField("generalObservations", value)} />
             <TextareaField label="Observaciones alerta RRC" value={form.observacionesAlertaRrc} onChange={(value) => setField("observacionesAlertaRrc", value)} />
             <TextareaField label="Observaciones alerta acreditados" value={form.observacionesAlertaAcreditados} onChange={(value) => setField("observacionesAlertaAcreditados", value)} />

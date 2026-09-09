@@ -99,11 +99,11 @@ export function AlertasConfigView() {
       const response = await fetch("/api/notifications/snapshot-settings", { cache: "no-store" });
       const body = (await response.json()) as { data?: SnapshotSchedule; error?: string };
       if (!response.ok || !body.data) {
-        throw new Error(body.error ?? "No se pudo cargar la programacion de snapshots.");
+        throw new Error(body.error ?? "No se pudo cargar la programación de snapshots.");
       }
       setSchedule(body.data);
     } catch (error) {
-      const message = error instanceof Error ? error.message : "No se pudo cargar la programacion de snapshots.";
+      const message = error instanceof Error ? error.message : "No se pudo cargar la programación de snapshots.";
       showToast.error(message, {
         position: "top-right",
         duration: 2800,
@@ -135,16 +135,16 @@ export function AlertasConfigView() {
       const body = (await response.json()) as { data?: SnapshotSchedule; error?: string };
 
       if (!response.ok || !body.data) {
-        throw new Error(body.error ?? "No se pudo guardar la programacion.");
+        throw new Error(body.error ?? "No se pudo guardar la programación.");
       }
 
       setSchedule(body.data);
-      showToast.success("Programacion de snapshots actualizada.", {
+      showToast.success("Programación de snapshots actualizada.", {
         position: "top-right",
         duration: 2200,
       });
     } catch (error) {
-      const message = error instanceof Error ? error.message : "No se pudo guardar la programacion.";
+      const message = error instanceof Error ? error.message : "No se pudo guardar la programación.";
       showToast.error(message, {
         position: "top-right",
         duration: 2800,
@@ -257,9 +257,9 @@ export function AlertasConfigView() {
   return (
     <div className={styles.wrap}>
       <div className={styles.headerCard}>
-        <h2 className={styles.title}>Configuracion Global de Alertas</h2>
+        <h2 className={styles.title}>Configuración Global de Alertas</h2>
         <p className={styles.description}>
-          Define aqui los destinatarios globales y la programacion de snapshots para enviar automaticamente la copia de la BD.
+          Define aquí los destinatarios globales y la programación de snapshots para enviar automáticamente la copia de la BD.
         </p>
         <div className={styles.statsRow}>
           <span className={styles.statPill}>Destinatarios activos: {activeCount}</span>
@@ -267,9 +267,9 @@ export function AlertasConfigView() {
       </div>
 
       <div className={styles.formCard}>
-        <h3 className={styles.cardTitle}>Programacion automatica de snapshots</h3>
+        <h3 className={styles.cardTitle}>Programación automática de snapshots</h3>
         {loadingSchedule || !schedule ? (
-          <p className={styles.empty}>Cargando configuracion de programacion...</p>
+          <p className={styles.empty}>Cargando configuración de programación...</p>
         ) : (
           <>
             <div className={styles.scheduleGrid}>
@@ -348,7 +348,7 @@ export function AlertasConfigView() {
                 onClick={() => void handleSaveSchedule()}
                 disabled={savingSchedule}
               >
-                {savingSchedule ? "Guardando..." : "Guardar programacion"}
+                {savingSchedule ? "Guardando..." : "Guardar programación"}
               </button>
             </div>
 
