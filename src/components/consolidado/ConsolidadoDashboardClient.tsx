@@ -178,15 +178,16 @@ export function ConsolidadoDashboardClient({ data, currentUser, currentRole }: P
   const [sessionInvalid, setSessionInvalid] = useState(false);
   const [programs, setPrograms] = useState<ProgramRecord[]>(data.programs);
   const [search, setSearch] = useState("");
-  const [faculty, setFaculty] = useState("Todas");
-  const [modality, setModality] = useState("Todas");
-  const [level, setLevel] = useState("Todos");
+  // Filtros de seleccion multiple: una lista vacia significa "sin filtro".
+  const [faculty, setFaculty] = useState<string[]>([]);
+  const [modality, setModality] = useState<string[]>([]);
+  const [level, setLevel] = useState<string[]>([]);
   const [locationFilter, setLocationFilter] = useState<string[]>([]);
-  const [regionalizedFilter, setRegionalizedFilter] = useState("Todos");
-  const [acreditableFilter, setAcreditableFilter] = useState("Todos");
-  const [accreditedFilter, setAccreditedFilter] = useState("Todos");
-  const [programStatusFilter, setProgramStatusFilter] = useState("Todos");
-  const [rcState, setRcState] = useState("Todos");
+  const [regionalizedFilter, setRegionalizedFilter] = useState<string[]>([]);
+  const [acreditableFilter, setAcreditableFilter] = useState<string[]>([]);
+  const [accreditedFilter, setAccreditedFilter] = useState<string[]>([]);
+  const [programStatusFilter, setProgramStatusFilter] = useState<string[]>([]);
+  const [rcState, setRcState] = useState<string[]>([]);
   const [rcStart, setRcStart] = useState("");
   const [rcEnd, setRcEnd] = useState("");
   const [rcValidAt, setRcValidAt] = useState("");
@@ -212,15 +213,15 @@ export function ConsolidadoDashboardClient({ data, currentUser, currentRole }: P
 
   const resetFiltersToDefault = useCallback(() => {
     setSearch("");
-    setFaculty("Todas");
-    setModality("Todas");
-    setLevel("Todos");
+    setFaculty([]);
+    setModality([]);
+    setLevel([]);
     setLocationFilter([]);
-    setRegionalizedFilter("Todos");
-    setAcreditableFilter("Todos");
-    setAccreditedFilter("Todos");
-    setProgramStatusFilter("Todos");
-    setRcState("Todos");
+    setRegionalizedFilter([]);
+    setAcreditableFilter([]);
+    setAccreditedFilter([]);
+    setProgramStatusFilter([]);
+    setRcState([]);
     setRcStart("");
     setRcEnd("");
     setRcValidAt("");
@@ -478,51 +479,32 @@ export function ConsolidadoDashboardClient({ data, currentUser, currentRole }: P
       return isoDate <= end;
     };
 
+    // Cada filtro acepta varias opciones: el programa pasa si coincide con
+    // cualquiera de las marcadas, y una lista vacia no restringe nada.
+    const matches = (selected: string[], value: string | null) =>
+      selected.length === 0 || (value !== null && selected.includes(value));
+
     return programs.filter((program) => {
       const byStatus =
         view === "consolidado"
-          ? programStatusFilter === "Todos" ||
-            (programStatusFilter === "Activos" && program.isActive !== false) ||
-            (programStatusFilter === "Inactivos" && program.isActive === false)
+          ? matches(programStatusFilter, program.isActive === false ? "Inactivos" : "Activos")
           : program.isActive !== false;
       if (!byStatus) return false;
 
-      const byFaculty = faculty === "Todas" || program.faculty === faculty;
-      if (!byFaculty) return false;
-      const byModality = modality === "Todas" || program.modality === modality;
-      if (!byModality) return false;
-      const byLevel = level === "Todos" || program.level === level;
-      if (!byLevel) return false;
+      if (!matches(faculty, program.faculty)) return false;
+      if (!matches(modality, program.modality)) return false;
+      if (!matches(level, program.level)) return false;
 
       const currentLocation = program.location && program.location.trim() ? program.location.trim() : "Sin definir";
-      const byLocation = locationFilter.length === 0 || locationFilter.includes(currentLocation);
-      if (!byLocation) return false;
+      if (!matches(locationFilter, currentLocation)) return false;
 
-      const byRegionalized =
-        regionalizedFilter === "Todos" ||
-        (regionalizedFilter === "Si" && program.regionalized === "Si") ||
-        (regionalizedFilter === "No" && program.regionalized === "No") ||
-        (regionalizedFilter === "Ampliación de lugar de desarrollo" && program.regionalized === "Ampliación de lugar de desarrollo");
-      if (!byRegionalized) return false;
+      if (!matches(regionalizedFilter, program.regionalized)) return false;
+      if (!matches(acreditableFilter, program.acreditable ? "Si" : "No")) return false;
+      if (!matches(accreditedFilter, program.accredited ? "Si" : "No")) return false;
 
-      const byAcreditable =
-        acreditableFilter === "Todos" ||
-        (acreditableFilter === "Si" && program.acreditable) ||
-        (acreditableFilter === "No" && !program.acreditable);
-      if (!byAcreditable) return false;
-
-      const byAccredited =
-        accreditedFilter === "Todos" ||
-        (accreditedFilter === "Si" && program.accredited) ||
-        (accreditedFilter === "No" && !program.accredited);
-      if (!byAccredited) return false;
-
-      const byRc =
-        rcState === "Todos" ||
-        (rcState === "vigente" && program.hasCurrentRc === true) ||
-        (rcState === "vencido" && program.hasCurrentRc === false) ||
-        (rcState === "sin-definir" && program.hasCurrentRc === null);
-      if (!byRc) return false;
+      const rcStateValue =
+        program.hasCurrentRc === true ? "vigente" : program.hasCurrentRc === false ? "vencido" : "sin-definir";
+      if (!matches(rcState, rcStateValue)) return false;
 
       if (view === "consolidado") {
         if (!withinStartRange(program.rcStart, rcStart, rcEnd)) return false;

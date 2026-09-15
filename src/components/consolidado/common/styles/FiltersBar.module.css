@@ -150,6 +150,21 @@
   justify-content: space-between;
 }
 
+.multiFilterSummary {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Filtro con opciones marcadas: se distingue del que no restringe nada. */
+.multiFilterTriggerActive {
+  border-color: rgba(252, 111, 91, 0.52);
+  background: rgba(255, 238, 229, 0.95);
+  color: #a8553a;
+  font-weight: 700;
+}
+
 .multiFilterTrigger::-webkit-details-marker {
   display: none;
 }
@@ -173,7 +188,10 @@
   top: calc(100% + 0.35rem);
   left: 0;
   z-index: 30;
-  width: min(440px, 92vw);
+  /* Se ajusta al contenido: las listas cortas (Sí / No) no abren un panel ancho. */
+  min-width: 100%;
+  width: max-content;
+  max-width: min(440px, 92vw);
   max-height: 300px;
   overflow: hidden;
   border: 1px solid rgba(254, 150, 94, 0.24);

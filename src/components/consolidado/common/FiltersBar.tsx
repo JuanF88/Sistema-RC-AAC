@@ -4,16 +4,16 @@ import styles from "./styles/FiltersBar.module.css";
 
 type Props = {
   search: string;
-  faculty: string;
+  faculty: string[];
   faculties: readonly string[];
-  modality: string;
-  level: string;
+  modality: string[];
+  level: string[];
   locationFilter: string[];
-  regionalizedFilter: string;
-  acreditableFilter: string;
-  accreditedFilter: string;
-  programStatusFilter: string;
-  rcState: string;
+  regionalizedFilter: string[];
+  acreditableFilter: string[];
+  accreditedFilter: string[];
+  programStatusFilter: string[];
+  rcState: string[];
   rcStart: string;
   rcEnd: string;
   rcValidAt: string;
@@ -23,15 +23,15 @@ type Props = {
   levels: string[];
   locations: string[];
   onSearch: (value: string) => void;
-  onFacultyChange: (value: string) => void;
-  onModalityChange: (value: string) => void;
-  onLevelChange: (value: string) => void;
+  onFacultyChange: (value: string[]) => void;
+  onModalityChange: (value: string[]) => void;
+  onLevelChange: (value: string[]) => void;
   onLocationFilterChange: (value: string[]) => void;
-  onRegionalizedFilterChange: (value: string) => void;
-  onAcreditableFilterChange: (value: string) => void;
-  onAccreditedFilterChange: (value: string) => void;
-  onProgramStatusFilterChange: (value: string) => void;
-  onRcStateChange: (value: string) => void;
+  onRegionalizedFilterChange: (value: string[]) => void;
+  onAcreditableFilterChange: (value: string[]) => void;
+  onAccreditedFilterChange: (value: string[]) => void;
+  onProgramStatusFilterChange: (value: string[]) => void;
+  onRcStateChange: (value: string[]) => void;
   onRcStartChange: (value: string) => void;
   onRcEndChange: (value: string) => void;
   onRcValidAtChange: (value: string) => void;
@@ -49,6 +49,130 @@ type Props = {
   rightContent?: ReactNode;
   createDisabled?: boolean;
 };
+
+type FilterOption = {
+  value: string;
+  label: string;
+};
+
+// Opciones fijas: el valor es lo que compara el filtrado del tablero, la
+// etiqueta es lo que ve el usuario.
+const REGIONALIZED_OPTIONS: FilterOption[] = [
+  { value: "Si", label: "Sí" },
+  { value: "No", label: "No" },
+  { value: "Ampliación de lugar de desarrollo", label: "Ampliación de lugar de desarrollo" },
+];
+
+const PROGRAM_STATUS_OPTIONS: FilterOption[] = [
+  { value: "Activos", label: "Programas activos" },
+  { value: "Inactivos", label: "Programas inactivos" },
+];
+
+const YES_NO_OPTIONS: FilterOption[] = [
+  { value: "Si", label: "Sí" },
+  { value: "No", label: "No" },
+];
+
+const RC_STATE_OPTIONS: FilterOption[] = [
+  { value: "vigente", label: "Vigente" },
+  { value: "vencido", label: "Vencido" },
+  { value: "sin-definir", label: "Sin definir" },
+];
+
+function toOptions(values: readonly string[]): FilterOption[] {
+  return values.map((value) => ({ value, label: value }));
+}
+
+type MultiSelectFilterProps = {
+  /** Texto del disparador cuando no hay nada seleccionado (sin filtro). */
+  placeholder: string;
+  /** Texto del disparador cuando estan todas las opciones marcadas. */
+  allLabel: string;
+  options: FilterOption[];
+  selected: string[];
+  onChange: (value: string[]) => void;
+};
+
+/**
+ * Desplegable con casillas para elegir varias opciones a la vez. Sin nada
+ * marcado el filtro no restringe: se muestran todos los programas.
+ */
+function MultiSelectFilter({ placeholder, allLabel, options, selected, onChange }: MultiSelectFilterProps) {
+  const detailsRef = useRef<HTMLDetailsElement | null>(null);
+
+  // Un clic fuera cierra el panel, igual que un select nativo.
+  useEffect(() => {
+    const handlePointerDown = (event: MouseEvent) => {
+      const details = detailsRef.current;
+      if (!details || !details.open) return;
+
+      const target = event.target;
+      if (!(target instanceof Node)) return;
+
+      if (!details.contains(target)) {
+        details.open = false;
+      }
+    };
+
+    document.addEventListener("mousedown", handlePointerDown);
+    return () => document.removeEventListener("mousedown", handlePointerDown);
+  }, []);
+
+  const handleToggle = (value: string) => {
+    if (selected.includes(value)) {
+      onChange(selected.filter((item) => item !== value));
+      return;
+    }
+    onChange([...selected, value]);
+  };
+
+  // Con una sola opcion marcada se muestra su nombre; con varias, cuantas.
+  const summary =
+    selected.length === 0
+      ? placeholder
+      : selected.length === options.length
+        ? allLabel
+        : selected.length === 1
+          ? (options.find((option) => option.value === selected[0])?.label ?? placeholder)
+          : `${selected.length} seleccionados`;
+
+  return (
+    <details className={styles.multiFilter} ref={detailsRef}>
+      <summary
+        className={`${styles.multiFilterTrigger} ${selected.length > 0 ? styles.multiFilterTriggerActive : ""}`}
+        title={summary}
+      >
+        <span className={styles.multiFilterSummary}>{summary}</span>
+      </summary>
+      <div className={styles.multiFilterPanel}>
+        <div className={styles.multiFilterActions}>
+          <button
+            type="button"
+            className={styles.multiActionBtn}
+            onClick={() => onChange(options.map((option) => option.value))}
+          >
+            Seleccionar todos
+          </button>
+          <button type="button" className={styles.multiActionBtn} onClick={() => onChange([])}>
+            Limpiar
+          </button>
+        </div>
+        <div className={styles.multiFilterList}>
+          {options.map((option) => (
+            <label key={option.value} className={styles.multiFilterItem}>
+              <input
+                type="checkbox"
+                checked={selected.includes(option.value)}
+                onChange={() => handleToggle(option.value)}
+              />
+              <span>{option.label}</span>
+            </label>
+          ))}
+        </div>
+      </div>
+    </details>
+  );
+}
 
 export function FiltersBar({
   search,
@@ -99,52 +223,23 @@ export function FiltersBar({
 }: Props) {
   const [showFilters, setShowFilters] = useState(false);
 
-  const locationSummary =
-    locationFilter.length === 0
-      ? "Lugar de desarrollo"
-      : locationFilter.length === locations.length
-        ? "Todos los lugares"
-        : `${locationFilter.length} seleccionados`;
-
-  const locationFilterRef = useRef<HTMLDetailsElement | null>(null);
-
-  useEffect(() => {
-    const handlePointerDown = (event: MouseEvent) => {
-      const details = locationFilterRef.current;
-      if (!details || !details.open) return;
-
-      const target = event.target;
-      if (!(target instanceof Node)) return;
-
-      if (!details.contains(target)) {
-        details.open = false;
-      }
-    };
-
-    document.addEventListener("mousedown", handlePointerDown);
-    return () => document.removeEventListener("mousedown", handlePointerDown);
-  }, []);
-
-  const handleToggleLocation = (value: string) => {
-    if (locationFilter.includes(value)) {
-      onLocationFilterChange(locationFilter.filter((item) => item !== value));
-      return;
-    }
-    onLocationFilterChange([...locationFilter, value]);
-  };
+  const facultyOptions = useMemo(() => toOptions(faculties), [faculties]);
+  const modalityOptions = useMemo(() => toOptions(modalities), [modalities]);
+  const levelOptions = useMemo(() => toOptions(levels), [levels]);
+  const locationOptions = useMemo(() => toOptions(locations), [locations]);
 
   const activeFiltersCount = useMemo(() => {
     let count = 0;
     if (search.trim()) count += 1;
-    if (faculty !== "Todas") count += 1;
-    if (showModality && modality !== "Todas") count += 1;
-    if (level !== "Todos") count += 1;
+    if (faculty.length > 0) count += 1;
+    if (showModality && modality.length > 0) count += 1;
+    if (level.length > 0) count += 1;
     if (showLocationFilter && locationFilter.length > 0) count += 1;
-    if (showRegionalizedFilter && regionalizedFilter !== "Todos") count += 1;
-    if (showProgramStatus && programStatusFilter !== "Todos") count += 1;
-    if (showAccreditationState && acreditableFilter !== "Todos") count += 1;
-    if (showAccreditationState && accreditedFilter !== "Todos") count += 1;
-    if (showRcState && rcState !== "Todos") count += 1;
+    if (showRegionalizedFilter && regionalizedFilter.length > 0) count += 1;
+    if (showProgramStatus && programStatusFilter.length > 0) count += 1;
+    if (showAccreditationState && acreditableFilter.length > 0) count += 1;
+    if (showAccreditationState && accreditedFilter.length > 0) count += 1;
+    if (showRcState && rcState.length > 0) count += 1;
     if (showDateFilters && rcStart) count += 1;
     if (showDateFilters && rcEnd) count += 1;
     if (showDateFilters && rcValidAt) count += 1;
@@ -206,95 +301,82 @@ export function FiltersBar({
       </div>
 
       {showFilters && <div className={styles.inputs}>
-        <select value={faculty} onChange={(event) => onFacultyChange(event.target.value)} className={styles.select}>
-          <option value="Todas">Todas las facultades</option>
-          {faculties.map((name) => (
-            <option key={name} value={name}>
-              {name}
-            </option>
-          ))}
-        </select>
+        <MultiSelectFilter
+          placeholder="Facultad"
+          allLabel="Todas las facultades"
+          options={facultyOptions}
+          selected={faculty}
+          onChange={onFacultyChange}
+        />
         {showModality && (
-          <select value={modality} onChange={(event) => onModalityChange(event.target.value)} className={styles.select}>
-            <option value="Todas">Todas las modalidades</option>
-            {modalities.map((name) => (
-              <option key={name} value={name}>
-                {name}
-              </option>
-            ))}
-          </select>
+          <MultiSelectFilter
+            placeholder="Modalidad"
+            allLabel="Todas las modalidades"
+            options={modalityOptions}
+            selected={modality}
+            onChange={onModalityChange}
+          />
         )}
-        <select value={level} onChange={(event) => onLevelChange(event.target.value)} className={styles.select}>
-          <option value="Todos">Todos los niveles</option>
-          {levels.map((name) => (
-            <option key={name} value={name}>
-              {name}
-            </option>
-          ))}
-        </select>
+        <MultiSelectFilter
+          placeholder="Nivel"
+          allLabel="Todos los niveles"
+          options={levelOptions}
+          selected={level}
+          onChange={onLevelChange}
+        />
         {showLocationFilter && (
-          <details className={styles.multiFilter} ref={locationFilterRef}>
-            <summary className={styles.multiFilterTrigger}>{locationSummary}</summary>
-            <div className={styles.multiFilterPanel}>
-              <div className={styles.multiFilterActions}>
-                <button type="button" className={styles.multiActionBtn} onClick={() => onLocationFilterChange(locations)}>
-                  Seleccionar todos
-                </button>
-                <button type="button" className={styles.multiActionBtn} onClick={() => onLocationFilterChange([])}>
-                  Limpiar
-                </button>
-              </div>
-              <div className={styles.multiFilterList}>
-                {locations.map((name) => (
-                  <label key={name} className={styles.multiFilterItem}>
-                    <input
-                      type="checkbox"
-                      checked={locationFilter.includes(name)}
-                      onChange={() => handleToggleLocation(name)}
-                    />
-                    <span>{name}</span>
-                  </label>
-                ))}
-              </div>
-            </div>
-          </details>
+          <MultiSelectFilter
+            placeholder="Lugar de desarrollo"
+            allLabel="Todos los lugares"
+            options={locationOptions}
+            selected={locationFilter}
+            onChange={onLocationFilterChange}
+          />
         )}
         {showRegionalizedFilter && (
-          <select value={regionalizedFilter} onChange={(event) => onRegionalizedFilterChange(event.target.value)} className={styles.select}>
-            <option value="Todos">Regionalización</option>
-            <option value="Si">Sí</option>
-            <option value="No">No</option>
-            <option value="Ampliación de lugar de desarrollo">Ampliación de lugar de desarrollo</option>
-          </select>
+          <MultiSelectFilter
+            placeholder="Regionalización"
+            allLabel="Toda la regionalización"
+            options={REGIONALIZED_OPTIONS}
+            selected={regionalizedFilter}
+            onChange={onRegionalizedFilterChange}
+          />
         )}
         {showProgramStatus && (
-          <select value={programStatusFilter} onChange={(event) => onProgramStatusFilterChange(event.target.value)} className={styles.select}>
-            <option value="Activos">Programas activos</option>
-            <option value="Inactivos">Programas inactivos</option>
-            <option value="Todos">Todos los programas</option>
-          </select>
+          <MultiSelectFilter
+            placeholder="Estado del programa"
+            allLabel="Todos los programas"
+            options={PROGRAM_STATUS_OPTIONS}
+            selected={programStatusFilter}
+            onChange={onProgramStatusFilterChange}
+          />
         )}
         {showAccreditationState && (
-          <select value={acreditableFilter} onChange={(event) => onAcreditableFilterChange(event.target.value)} className={styles.select}>
-            <option value="Todos">Acreditable</option>
-            <option value="Si">Si</option>
-            <option value="No">No</option>
-          </select>
+          <MultiSelectFilter
+            placeholder="Acreditable"
+            allLabel="Acreditable: Sí y No"
+            options={YES_NO_OPTIONS}
+            selected={acreditableFilter}
+            onChange={onAcreditableFilterChange}
+          />
         )}
         {showAccreditationState && (
-          <select value={accreditedFilter} onChange={(event) => onAccreditedFilterChange(event.target.value)} className={styles.select}>
-            <option value="Todos">Acreditado</option>
-            <option value="Si">Si</option>
-            <option value="No">No</option>
-          </select>
+          <MultiSelectFilter
+            placeholder="Acreditado"
+            allLabel="Acreditado: Sí y No"
+            options={YES_NO_OPTIONS}
+            selected={accreditedFilter}
+            onChange={onAccreditedFilterChange}
+          />
         )}
         {showRcState && (
-          <select value={rcState} onChange={(event) => onRcStateChange(event.target.value)} className={styles.select}>
-            <option value="Todos">Estado RC</option>
-            <option value="vigente">Vigente</option>
-            <option value="vencido">Vencido</option>
-            <option value="sin-definir">Sin definir</option>
-          </select>
+          <MultiSelectFilter
+            placeholder="Estado RC"
+            allLabel="Todos los estados RC"
+            options={RC_STATE_OPTIONS}
+            selected={rcState}
+            onChange={onRcStateChange}
+          />
         )}
         {showDateFilters && (
           <div className={styles.dateRow}>
