@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState, useRef } from "react";
+import { createPortal } from "react-dom";
 import { showToast } from "nextjs-toast-notify";
 
 import { exportToExcel, type ExportColumn } from "@/lib/export";
@@ -37,6 +38,13 @@ type SortDirection = "asc" | "desc";
 const DATE_SORT_FIELDS: SortField[] = ["startDate", "endDate"];
 
 const MODALITY_OPTIONS = ["Presencial", "Virtual", "Hibrida"] as const;
+
+/**
+ * Visita que no pertenece a un programa sino a la universidad. Se guarda en el
+ * mismo campo "program" (texto libre en visitas_pares), asi que no requiere
+ * cambios en la base de datos ni en la API.
+ */
+const INSTITUTIONAL_VISIT = "Acreditación Institucional";
 
 const EMPTY_FORM: NewVisitaForm = {
   program: "",
@@ -315,7 +323,8 @@ export function VisitasParesView({ programs, onExportReady }: Props) {
   }
 
   async function handleDeleteVisit(row: VisitaPar) {
-    const confirmed = window.confirm(`Deseas eliminar la visita de pares del programa "${row.program}"?`);
+    const owner = row.program === INSTITUTIONAL_VISIT ? `de ${INSTITUTIONAL_VISIT}` : `del programa "${row.program}"`;
+    const confirmed = window.confirm(`¿Deseas eliminar la visita de pares ${owner}?`);
     if (!confirmed) return;
 
     try {
@@ -461,91 +470,101 @@ export function VisitasParesView({ programs, onExportReady }: Props) {
       {!loading && rows.length === 0 && <p className={styles.empty}>No hay visitas de pares registradas.</p>}
       {loading && <p className={styles.empty}>Cargando visitas de pares...</p>}
 
-      {modalOpen && (
-        <div className={styles.backdrop} onClick={handleCloseModal} role="presentation">
-          {/* El clic dentro del modal no debe cerrarlo: solo cuenta el del fondo. */}
-          <div className={styles.modal} onClick={(event) => event.stopPropagation()} role="dialog" aria-modal="true">
-            <div className={styles.modalHeader}>
-              <h3 className={styles.modalTitle}>{editingId ? "Editar visita de pares" : "Nueva visita de pares"}</h3>
-              <button type="button" className={styles.closeBtn} onClick={handleCloseModal} disabled={saving}>
-                Cerrar
-              </button>
-            </div>
-
-            <div className={styles.modalBody}>
-              <div className={styles.formGrid}>
-                <label className={`${styles.field} ${styles.fieldFull}`}>
-                  <span className={styles.label}>Programa</span>
-                  <select
-                    value={form.program}
-                    onChange={(event) => setForm((current) => ({ ...current, program: event.target.value }))}
-                  >
-                    <option value="">Selecciona un programa</option>
-                    {programOptions.map((program) => (
-                      <option key={program} value={program}>
-                        {program}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-
-                <label className={styles.field}>
-                  <span className={styles.label}>Fecha inicio</span>
-                  <input
-                    type="date"
-                    value={form.startDate}
-                    onChange={(event) => setForm((current) => ({ ...current, startDate: event.target.value }))}
-                  />
-                </label>
-
-                <label className={styles.field}>
-                  <span className={styles.label}>Fecha final</span>
-                  <input
-                    type="date"
-                    value={form.endDate}
-                    onChange={(event) => setForm((current) => ({ ...current, endDate: event.target.value }))}
-                  />
-                </label>
-
-                <label className={`${styles.field} ${styles.fieldFull}`}>
-                  <span className={styles.label}>Modalidad</span>
-                  <select
-                    value={form.modality}
-                    onChange={(event) => setForm((current) => ({ ...current, modality: event.target.value }))}
-                  >
-                    {MODALITY_OPTIONS.map((modality) => (
-                      <option key={modality} value={modality}>
-                        {modality}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-
-                <label className={`${styles.field} ${styles.fieldFull}`}>
-                  <span className={styles.label}>Asunto</span>
-                  <input
-                    type="text"
-                    value={form.subject}
-                    onChange={(event) => setForm((current) => ({ ...current, subject: event.target.value }))}
-                    placeholder="Escribe el asunto de la visita"
-                  />
-                </label>
+      {/* El modal se monta en el body: el panel que envuelve la vista tiene
+          backdrop-filter, y eso encierra cualquier position: fixed dentro de el,
+          asi que el fondo oscuro solo cubria el panel y no toda la pantalla. */}
+      {modalOpen &&
+        createPortal(
+          <div className={styles.backdrop} onClick={handleCloseModal} role="presentation">
+            {/* El clic dentro del modal no debe cerrarlo: solo cuenta el del fondo. */}
+            <div className={styles.modal} onClick={(event) => event.stopPropagation()} role="dialog" aria-modal="true">
+              <div className={styles.modalHeader}>
+                <h3 className={styles.modalTitle}>{editingId ? "Editar visita de pares" : "Nueva visita de pares"}</h3>
+                <button type="button" className={styles.closeBtn} onClick={handleCloseModal} disabled={saving}>
+                  Cerrar
+                </button>
               </div>
 
-              {message && <p className={styles.message}>{message}</p>}
-            </div>
+              <div className={styles.modalBody}>
+                <div className={styles.formGrid}>
+                  <label className={`${styles.field} ${styles.fieldFull}`}>
+                    <span className={styles.label}>Programa</span>
+                    <select
+                      value={form.program}
+                      onChange={(event) => setForm((current) => ({ ...current, program: event.target.value }))}
+                    >
+                      <option value="">Selecciona un programa</option>
+                      <optgroup label="Institucional">
+                        <option value={INSTITUTIONAL_VISIT}>{INSTITUTIONAL_VISIT}</option>
+                      </optgroup>
+                      <optgroup label="Programas">
+                        {programOptions.map((program) => (
+                          <option key={program} value={program}>
+                            {program}
+                          </option>
+                        ))}
+                      </optgroup>
+                    </select>
+                  </label>
 
-            <div className={styles.modalFooter}>
-              <button type="button" onClick={handleCloseModal} className={styles.cancelBtn} disabled={saving}>
-                Cancelar
-              </button>
-              <button type="button" onClick={handleSaveVisit} className={styles.saveBtn} disabled={saving}>
-                {saving ? "Guardando..." : editingId ? "Guardar cambios" : "Agregar visita"}
-              </button>
+                  <label className={styles.field}>
+                    <span className={styles.label}>Fecha inicio</span>
+                    <input
+                      type="date"
+                      value={form.startDate}
+                      onChange={(event) => setForm((current) => ({ ...current, startDate: event.target.value }))}
+                    />
+                  </label>
+
+                  <label className={styles.field}>
+                    <span className={styles.label}>Fecha final</span>
+                    <input
+                      type="date"
+                      value={form.endDate}
+                      onChange={(event) => setForm((current) => ({ ...current, endDate: event.target.value }))}
+                    />
+                  </label>
+
+                  <label className={`${styles.field} ${styles.fieldFull}`}>
+                    <span className={styles.label}>Modalidad</span>
+                    <select
+                      value={form.modality}
+                      onChange={(event) => setForm((current) => ({ ...current, modality: event.target.value }))}
+                    >
+                      {MODALITY_OPTIONS.map((modality) => (
+                        <option key={modality} value={modality}>
+                          {modality}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+
+                  <label className={`${styles.field} ${styles.fieldFull}`}>
+                    <span className={styles.label}>Asunto</span>
+                    <input
+                      type="text"
+                      value={form.subject}
+                      onChange={(event) => setForm((current) => ({ ...current, subject: event.target.value }))}
+                      placeholder="Escribe el asunto de la visita"
+                    />
+                  </label>
+                </div>
+
+                {message && <p className={styles.message}>{message}</p>}
+              </div>
+
+              <div className={styles.modalFooter}>
+                <button type="button" onClick={handleCloseModal} className={styles.cancelBtn} disabled={saving}>
+                  Cancelar
+                </button>
+                <button type="button" onClick={handleSaveVisit} className={styles.saveBtn} disabled={saving}>
+                  {saving ? "Guardando..." : editingId ? "Guardar cambios" : "Agregar visita"}
+                </button>
+              </div>
             </div>
-          </div>
-        </div>
-      )}
+          </div>,
+          document.body,
+        )}
     </div>
   );
 }
