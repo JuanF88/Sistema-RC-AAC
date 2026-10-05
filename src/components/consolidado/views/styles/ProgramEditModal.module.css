@@ -500,3 +500,56 @@
   opacity: 0.6;
   cursor: wait;
 }
+
+
+/* Campo con varias casillas (lugares de desarrollo). */
+.multiFieldRows {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.multiFieldRow {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.multiFieldRow input {
+  flex: 1;
+  min-width: 0;
+}
+
+.multiFieldRemove {
+  flex: 0 0 auto;
+  width: 1.75rem;
+  height: 1.75rem;
+  border: 1px solid rgba(148, 163, 184, 0.4);
+  border-radius: 0.5rem;
+  background: #ffffff;
+  color: #991b1b;
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.multiFieldRemove:hover {
+  background: #fef2f2;
+  border-color: #dc2626;
+}
+
+.multiFieldAdd {
+  align-self: flex-start;
+  border: 1px dashed rgba(252, 111, 91, 0.5);
+  border-radius: 0.5rem;
+  background: #fff7f3;
+  color: #a8553a;
+  font-size: 0.74rem;
+  font-weight: 700;
+  padding: 0.26rem 0.5rem;
+  cursor: pointer;
+}
+
+.multiFieldAdd:hover {
+  background: #ffe9dd;
+}

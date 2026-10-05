@@ -12,6 +12,7 @@ import {
 } from "@/lib/alertSchedule";
 
 import { FiltersBar } from "./common/FiltersBar";
+import { LOCATION_UNDEFINED, parseLocations } from "@/lib/locations";
 import { FACULTY_OPTIONS } from "./constants";
 import { DashboardHeader } from "./layout/DashboardHeader";
 import { SidebarMenu } from "./layout/SidebarMenu";
@@ -375,13 +376,25 @@ export function ConsolidadoDashboardClient({ data, currentUser, currentRole }: P
   const faculties = useMemo(() => FACULTY_OPTIONS, []);
   const modalities = useMemo(() => [...new Set(programs.map((program) => program.modality).filter((value): value is string => Boolean(value)))], [programs]);
   const levels = useMemo(() => [...new Set(programs.map((program) => program.level).filter((value): value is string => Boolean(value)))], [programs]);
-  const locations = useMemo(
-    () =>
-      [...new Set(programs.map((program) => (program.location && program.location.trim() ? program.location.trim() : "Sin definir")))].sort(
-        (left, right) => left.localeCompare(right, "es", { sensitivity: "base" }),
-      ),
-    [programs],
-  );
+  // Un programa puede tener varios lugares: el filtro lista cada uno por
+  // separado, no la enumeracion completa.
+  const locations = useMemo(() => {
+    const places = new Set<string>();
+
+    for (const program of programs) {
+      const programPlaces = parseLocations(program.location);
+      if (programPlaces.length === 0) {
+        places.add(LOCATION_UNDEFINED);
+        continue;
+      }
+      for (const place of programPlaces) places.add(place);
+    }
+
+    return [...places].sort((left, right) => left.localeCompare(right, "es", { sensitivity: "base" }));
+  }, [programs]);
+
+  // Las mismas sedes, sin la etiqueta del filtro, para sugerirlas en el modal.
+  const locationOptions = useMemo(() => locations.filter((place) => place !== LOCATION_UNDEFINED), [locations]);
   const activePrograms = useMemo(() => programs.filter((program) => program.isActive !== false), [programs]);
 
   const alertHistoryMap = useMemo(() => {
@@ -495,8 +508,14 @@ export function ConsolidadoDashboardClient({ data, currentUser, currentRole }: P
       if (!matches(modality, program.modality)) return false;
       if (!matches(level, program.level)) return false;
 
-      const currentLocation = program.location && program.location.trim() ? program.location.trim() : "Sin definir";
-      if (!matches(locationFilter, currentLocation)) return false;
+      // Basta con que uno de los lugares del programa este entre los marcados.
+      const programPlaces = parseLocations(program.location);
+      const byLocation =
+        locationFilter.length === 0 ||
+        (programPlaces.length === 0
+          ? locationFilter.includes(LOCATION_UNDEFINED)
+          : programPlaces.some((place) => locationFilter.includes(place)));
+      if (!byLocation) return false;
 
       if (!matches(regionalizedFilter, program.regionalized)) return false;
       if (!matches(acreditableFilter, program.acreditable ? "Si" : "No")) return false;
@@ -1000,6 +1019,7 @@ export function ConsolidadoDashboardClient({ data, currentUser, currentRole }: P
         open={modalOpen}
         program={selected}
         faculties={FACULTY_OPTIONS}
+        locationOptions={locationOptions}
         documents={selectedDocuments}
         loadingDocuments={loadingDocuments}
         isCreatingProgram={isCreatingProgram}

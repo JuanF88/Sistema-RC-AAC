@@ -7,11 +7,14 @@ import type { ProgramDocument, ProgramRecord } from "../types";
 import { DURATION_UNIT_OPTIONS, normalizeDurationUnit } from "@/lib/duration";
 import { METHODOLOGY_OPTIONS, normalizeMethodology } from "@/lib/methodology";
 import { addMonthsToIsoDate } from "@/lib/alertSchedule";
+import { formatLocations, parseLocations } from "@/lib/locations";
 import styles from "./styles/ProgramEditModal.module.css";
 
 type Props = {
   program: ProgramRecord | null;
   faculties: readonly string[];
+  /** Sedes ya registradas en otros programas, para sugerirlas al escribir. */
+  locationOptions: readonly string[];
   documents: ProgramDocument[];
   loadingDocuments: boolean;
   isCreatingProgram?: boolean;
@@ -371,6 +374,80 @@ function Field({ label, value, onChange, type = "text", required, step }: InputP
   );
 }
 
+type MultiFieldProps = {
+  label: string;
+  /** Una casilla por valor; la lista nunca se muestra vacia. */
+  values: string[];
+  onChange: (values: string[]) => void;
+  addLabel: string;
+  placeholder?: string;
+  /** Valores sugeridos en el desplegable; se puede escribir uno distinto. */
+  options?: readonly string[];
+  /** Identificador del datalist, unico dentro del formulario. */
+  listId?: string;
+};
+
+/**
+ * Campo con varias casillas: sirve para los datos que pueden tener mas de un
+ * valor, como los lugares donde se desarrolla el programa.
+ */
+function MultiField({ label, values, onChange, addLabel, placeholder, options, listId }: MultiFieldProps) {
+  // Siempre hay al menos una casilla, para que se pueda escribir sin tener que
+  // pulsar "agregar" primero.
+  const rows = values.length > 0 ? values : [""];
+
+  const updateAt = (index: number, value: string) => {
+    onChange(rows.map((item, position) => (position === index ? value : item)));
+  };
+
+  const removeAt = (index: number) => {
+    onChange(rows.filter((_, position) => position !== index));
+  };
+
+  const suggestions = options ?? [];
+
+  return (
+    <label className={styles.field}>
+      <span>{label}</span>
+      {/* Las opciones se sugieren en un desplegable, pero el campo sigue siendo
+          de texto libre: se puede escribir una sede que todavia no exista. */}
+      {suggestions.length > 0 && listId && (
+        <datalist id={listId}>
+          {suggestions.map((option) => (
+            <option key={option} value={option} />
+          ))}
+        </datalist>
+      )}
+      <div className={styles.multiFieldRows}>
+        {rows.map((value, index) => (
+          <div key={index} className={styles.multiFieldRow}>
+            <input
+              value={value}
+              placeholder={placeholder}
+              list={suggestions.length > 0 ? listId : undefined}
+              onChange={(event) => updateAt(index, event.target.value)}
+            />
+            {rows.length > 1 && (
+              <button
+                type="button"
+                className={styles.multiFieldRemove}
+                onClick={() => removeAt(index)}
+                aria-label={`Quitar ${label.toLocaleLowerCase("es")} ${index + 1}`}
+                title="Quitar"
+              >
+                ×
+              </button>
+            )}
+          </div>
+        ))}
+        <button type="button" className={styles.multiFieldAdd} onClick={() => onChange([...rows, ""])}>
+          + {addLabel}
+        </button>
+      </div>
+    </label>
+  );
+}
+
 type SelectProps = {
   label: string;
   value: string;
@@ -412,6 +489,7 @@ function TextareaField({ label, value, onChange }: TextareaProps) {
 export function ProgramEditModal({
   program,
   faculties,
+  locationOptions,
   documents,
   loadingDocuments,
   isCreatingProgram = false,
@@ -432,10 +510,14 @@ export function ProgramEditModal({
   const [docName, setDocName] = useState("");
   const [docUrl, setDocUrl] = useState("");
   const [docError, setDocError] = useState<string | null>(null);
+  // Los lugares se editan como lista y se guardan en form.location unidos por
+  // "; ", que es el formato con el que viajan al resto del sistema.
+  const [locations, setLocations] = useState<string[]>([]);
 
   useEffect(() => {
     if (open) {
       setForm(mapProgramToForm(program));
+      setLocations(parseLocations(program?.location));
       setError(null);
       setDocError(null);
     }
@@ -500,6 +582,13 @@ export function ProgramEditModal({
 
   const setField = (key: keyof FormState, value: string) => {
     setForm((prev) => ({ ...prev, [key]: value }));
+  };
+
+  // Las casillas vacias solo existen mientras se escribe: lo que se guarda es
+  // la lista de lugares con contenido.
+  const handleLocationsChange = (values: string[]) => {
+    setLocations(values);
+    setField("location", formatLocations(values));
   };
 
   const buildProgramPayload = (nextIsActive?: boolean): ProgramRecord => ({
@@ -766,7 +855,15 @@ export function ProgramEditModal({
               <Field label="Código convenio" value={form.agreementCode} onChange={(value) => setField("agreementCode", value)} />
               <Field label="IES convenio" value={form.agreementIes} onChange={(value) => setField("agreementIes", value)} />
               <Field label="Administrador convenio" value={form.agreementAdministrator} onChange={(value) => setField("agreementAdministrator", value)} />
-              <Field label="Lugar de desarrollo" value={form.location} onChange={(value) => setField("location", value)} />
+              <MultiField
+                label="Lugar de desarrollo"
+                values={locations}
+                onChange={handleLocationsChange}
+                addLabel="Agregar lugar"
+                placeholder="Ciudad o sede"
+                options={locationOptions}
+                listId="program-location-options"
+              />
               <SelectField
                 label="Jornada"
                 value={form.workday}

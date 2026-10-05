@@ -5,6 +5,7 @@ import { createClient } from "@supabase/supabase-js";
 import * as XLSX from "xlsx";
 import { parseDurationFromValue } from "@/lib/duration";
 import { normalizeMethodology } from "@/lib/methodology";
+import { normalizeLocations } from "@/lib/locations";
 
 export type ConsolidadoProgram = {
   regionalized: "Si" | "No" | "Ampliación de lugar de desarrollo";
@@ -316,7 +317,7 @@ function mapSupabaseRow(raw: Record<string, unknown>): ConsolidadoProgram | null
     agreementCode: String(getFirst(raw, ["agreement_code", "codigo_convenio"]) ?? "") || null,
     agreementIes: String(getFirst(raw, ["agreement_ies", "ies_convenio"]) ?? "") || null,
     agreementAdministrator: String(getFirst(raw, ["agreement_administrator", "administrador_convenio"]) ?? "") || null,
-    location: String(getFirst(raw, ["location", "lugar_desarrollo", "sede"]) ?? "") || null,
+    location: normalizeLocations(String(getFirst(raw, ["location", "lugar_desarrollo", "sede"]) ?? "")),
     workday: String(getFirst(raw, ["workday", "jornada"]) ?? "") || null,
     regionalized: normalizeRegionalized(getFirst(raw, ["regionalized", "regionalizado"])),
     level: String(getFirst(raw, ["level", "nivel_academico", "nivel"]) ?? "") || null,
@@ -463,7 +464,7 @@ function mapExcelRow(ws: XLSX.WorkSheet, row: number): ConsolidadoProgram | null
     agreementAdministrator: String(val("M") ?? "").trim() || null,
 
     // Location and Format
-    location: String(val("N") ?? "").trim() || null,
+    location: normalizeLocations(String(val("N") ?? "")),
     workday: String(val("O") ?? "").trim() || null,
     regionalized: normalizeRegionalized(val("P")),
     level: String(val("Q") ?? "").trim() || null,
