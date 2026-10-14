@@ -509,17 +509,26 @@ async function createHistorialExcel(
   return buffer;
 }
 
+/**
+ * La instantánea solo incluye programas activos, igual que la descarga del
+ * consolidado. Se filtra aquí para que la regla valga tanto para la generada a
+ * mano desde el historial como para la que envía el programador automático.
+ */
+function onlyActive(programs: ConsolidadoProgram[]): ConsolidadoProgram[] {
+  return programs.filter((program) => program.isActive !== false);
+}
+
 async function resolvePrograms(options?: SnapshotRunOptions): Promise<{ programs: ConsolidadoProgram[]; generatedAt: string }> {
   if (options?.programs && options.programs.length > 0) {
     return {
-      programs: options.programs,
+      programs: onlyActive(options.programs),
       generatedAt: options.generatedAt ?? new Date().toISOString(),
     };
   }
 
   const dashboard = await getConsolidadoDashboard();
   return {
-    programs: dashboard.programs,
+    programs: onlyActive(dashboard.programs),
     generatedAt: dashboard.generatedAt,
   };
 }

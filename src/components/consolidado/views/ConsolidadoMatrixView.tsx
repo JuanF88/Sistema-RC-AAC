@@ -292,7 +292,11 @@ export function ConsolidadoMatrixView({ rows, selectedId, onExportReady, onSelec
     const state = sortStateRef.current;
     const column = COLUMNS.find((item) => item.key === state.sortKey);
     
-    const exportRows = sortPrograms(state.rows, column, state.sortDirection);
+    // La descarga solo trae programas activos, para que coincida con el conteo
+    // de la tarjeta "Programas". Los inactivos siguen visibles en la tabla, que
+    // es donde se consultan, pero no entran al archivo.
+    const activeRows = state.rows.filter((program) => program.isActive !== false);
+    const exportRows = sortPrograms(activeRows, column, state.sortDirection);
 
     const visibleExportData = exportRows.map((program) => ({
       ...Object.fromEntries(COLUMNS.map((col) => [col.key, col.render(program)])),
