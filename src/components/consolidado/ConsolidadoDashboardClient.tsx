@@ -212,6 +212,14 @@ export function ConsolidadoDashboardClient({ data, currentUser, currentRole }: P
   const [alertHistory, setAlertHistory] = useState<AlertHistoryRecord[]>([]);
   const [loadingAlertHistory, setLoadingAlertHistory] = useState(false);
 
+  // El filtro de estado arranca distinto segun la vista: el consolidado
+  // muestra todos los programas, mientras que los reportes por programa se
+  // hacen sobre los activos. En las dos vistas se puede cambiar a mano.
+  const defaultProgramStatusFilter = useMemo<string[]>(
+    () => (view === "consolidado" ? [] : ["Activos"]),
+    [view],
+  );
+
   const resetFiltersToDefault = useCallback(() => {
     setSearch("");
     setFaculty([]);
@@ -221,14 +229,14 @@ export function ConsolidadoDashboardClient({ data, currentUser, currentRole }: P
     setRegionalizedFilter([]);
     setAcreditableFilter([]);
     setAccreditedFilter([]);
-    setProgramStatusFilter([]);
+    setProgramStatusFilter(defaultProgramStatusFilter);
     setRcState([]);
     setRcStart("");
     setRcEnd("");
     setRcValidAt("");
     setAacStart("");
     setAacEnd("");
-  }, []);
+  }, [defaultProgramStatusFilter]);
 
   useEffect(() => {
     const lockKey = `siac_active_tab_lock:${currentUser}`;
@@ -498,11 +506,9 @@ export function ConsolidadoDashboardClient({ data, currentUser, currentRole }: P
       selected.length === 0 || (value !== null && selected.includes(value));
 
     return programs.filter((program) => {
-      const byStatus =
-        view === "consolidado"
-          ? matches(programStatusFilter, program.isActive === false ? "Inactivos" : "Activos")
-          : program.isActive !== false;
-      if (!byStatus) return false;
+      if (!matches(programStatusFilter, program.isActive === false ? "Inactivos" : "Activos")) {
+        return false;
+      }
 
       if (!matches(faculty, program.faculty)) return false;
       if (!matches(modality, program.modality)) return false;
@@ -863,7 +869,6 @@ export function ConsolidadoDashboardClient({ data, currentUser, currentRole }: P
                 showLocationFilter={view === "consolidado"}
                 showRegionalizedFilter={view === "consolidado"}
                 showAccreditationState={view === "consolidado"}
-                showProgramStatus={view === "consolidado"}
                 showRcState={view === "consolidado"}
                 showDateFilters={view === "consolidado"}
                 showCreateProgram={view === "consolidado"}
