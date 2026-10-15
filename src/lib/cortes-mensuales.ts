@@ -148,6 +148,12 @@ function buildFilename(month: string, programs: number): string {
 
 const FILENAME_PATTERN = /^corte-(\d{4}-\d{2})_(\d+)-programas\.xlsx$/;
 
+/** El almacenamiento rechaza subir un archivo que ya existe. */
+function isDuplicateError(message: string): boolean {
+  const normalized = message.toLowerCase();
+  return normalized.includes("already exists") || normalized.includes("duplicate");
+}
+
 function parseFilename(name: string): { month: string; programs: number } | null {
   const match = FILENAME_PATTERN.exec(name);
   if (!match) return null;
@@ -581,6 +587,14 @@ export async function generateCortes(options?: GenerateCortesOptions): Promise<C
       });
 
       if (uploadError) {
+        // Dos generaciones a la vez: la segunda encuentra el archivo que acaba
+        // de subir la primera. El corte quedó guardado, no es un fallo.
+        if (isDuplicateError(uploadError.message)) {
+          result.skipped.push(month);
+          storedMonths.add(month);
+          continue;
+        }
+
         throw new Error(uploadError.message);
       }
 

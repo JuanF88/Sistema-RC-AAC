@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { showToast } from "nextjs-toast-notify";
 import type { ProgramRecord } from "../types";
 import styles from "./styles/HistorialView.module.css";
@@ -302,6 +302,20 @@ export function HistorialView({ programs, generatedAt }: Props) {
       setIsGeneratingCortes(false);
     }
   }, [loadCortes]);
+
+  // Respaldo por si la tarea programada no corre: al abrir la pestana se
+  // generan los cortes de los meses ya cerrados que falten, una sola vez.
+  const cortesAutoGenerados = useRef(false);
+
+  useEffect(() => {
+    if (activeTab !== "cortes") return;
+    if (cortesAutoGenerados.current) return;
+    if (isLoadingCortes || isGeneratingCortes) return;
+    if (missingCortes.length === 0) return;
+
+    cortesAutoGenerados.current = true;
+    void handleGenerateCortes();
+  }, [activeTab, isLoadingCortes, isGeneratingCortes, missingCortes, handleGenerateCortes]);
 
   if (isLoadingSnapshots) {
     return <div className={styles.container}>Cargando historial...</div>;
