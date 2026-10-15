@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
 import { runSnapshotExport } from "@/app/api/historial/export-snapshot/route";
+import { ensureMonthlyCortes } from "@/lib/cortes-mensuales";
 
 type SnapshotFrequency = "daily" | "weekly" | "biweekly" | "monthly";
 
@@ -79,6 +80,11 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "Unauthorized cron invocation." }, { status: 401 });
     }
 
+    // Los cortes mensuales no dependen de la programacion de instantaneas: se
+    // revisan en cada corrida y se genera el del mes recien cerrado si falta.
+    const cortes = await ensureMonthlyCortes();
+    const respond = <T extends object>(payload: T) => NextResponse.json({ ...payload, cortes });
+
     const client = getAdminClient();
     const { data, error } = await client
       .from("notifications_snapshot_settings")
@@ -101,7 +107,7 @@ export async function GET(request: Request) {
     }) as SnapshotSettingsRow;
 
     if (!settings.enabled) {
-      return NextResponse.json({ ok: true, skipped: true, reason: "disabled" });
+      return respond({ ok: true, skipped: true, reason: "disabled" });
     }
 
     const expectedNextRunAt = settings.last_run_at
@@ -125,7 +131,7 @@ export async function GET(request: Request) {
           next_run_at: recomputed,
         }, { onConflict: "id" });
 
-      return NextResponse.json({ ok: true, skipped: true, reason: "next_run_initialized", nextRunAt: recomputed });
+      return respond({ ok: true, skipped: true, reason: "next_run_initialized", nextRunAt: recomputed });
     }
 
     if (expectedNextRunAt && settings.next_run_at !== expectedNextRunAt) {
@@ -137,14 +143,14 @@ export async function GET(request: Request) {
         .eq("id", "default");
 
       if (repairError) {
-        return NextResponse.json({ ok: true, warning: repairError.message, nextRunAt: expectedNextRunAt });
+        return respond({ ok: true, warning: repairError.message, nextRunAt: expectedNextRunAt });
       }
 
-      return NextResponse.json({ ok: true, skipped: true, reason: "schedule_repaired", nextRunAt: expectedNextRunAt });
+      return respond({ ok: true, skipped: true, reason: "schedule_repaired", nextRunAt: expectedNextRunAt });
     }
 
     if (now.getTime() < nextRunAt.getTime()) {
-      return NextResponse.json({ ok: true, skipped: true, reason: "not_due", nextRunAt: nextRunAtValue });
+      return respond({ ok: true, skipped: true, reason: "not_due", nextRunAt: nextRunAtValue });
     }
 
     const exportResult = await runSnapshotExport({ trigger: "scheduled" });
@@ -159,14 +165,14 @@ export async function GET(request: Request) {
       .eq("id", "default");
 
     if (updateError) {
-      return NextResponse.json({
+      return respond({
         ok: true,
         warning: updateError.message,
         snapshot: exportResult,
       });
     }
 
-    return NextResponse.json({
+    return respond({
       ok: true,
       scheduledRun: true,
       nextRunAt: computedNextRunAt,
