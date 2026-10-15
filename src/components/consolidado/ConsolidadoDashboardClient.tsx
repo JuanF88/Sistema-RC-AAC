@@ -55,6 +55,12 @@ function cycleKey(value: string | null | undefined): string {
   return value ? value.slice(0, 10) : "";
 }
 
+// El filtro de estado del programa arranca en activos, que es la base con la
+// que se reporta. Las tarjetas, la tabla y la descarga cuentan siempre lo
+// mismo que deja ese filtro, asi que marcar inactivos (o los dos) mueve las
+// tres cosas a la vez y nunca aparece un numero distinto en cada lado.
+const defaultProgramStatusFilter = (): string[] => ["Activos"];
+
 const MENU_ITEMS: MenuItem[] = [
   { id: "consolidado", label: "Consolidado", subtitle: "Matriz editable" },
   { id: "alertas", label: "Alertas", subtitle: "Vencimientos RRC/AAC" },
@@ -187,7 +193,7 @@ export function ConsolidadoDashboardClient({ data, currentUser, currentRole }: P
   const [regionalizedFilter, setRegionalizedFilter] = useState<string[]>([]);
   const [acreditableFilter, setAcreditableFilter] = useState<string[]>([]);
   const [accreditedFilter, setAccreditedFilter] = useState<string[]>([]);
-  const [programStatusFilter, setProgramStatusFilter] = useState<string[]>([]);
+  const [programStatusFilter, setProgramStatusFilter] = useState<string[]>(defaultProgramStatusFilter);
   const [rcState, setRcState] = useState<string[]>([]);
   const [rcStart, setRcStart] = useState("");
   const [rcEnd, setRcEnd] = useState("");
@@ -212,14 +218,6 @@ export function ConsolidadoDashboardClient({ data, currentUser, currentRole }: P
   const [alertHistory, setAlertHistory] = useState<AlertHistoryRecord[]>([]);
   const [loadingAlertHistory, setLoadingAlertHistory] = useState(false);
 
-  // El filtro de estado arranca distinto segun la vista: el consolidado
-  // muestra todos los programas, mientras que los reportes por programa se
-  // hacen sobre los activos. En las dos vistas se puede cambiar a mano.
-  const defaultProgramStatusFilter = useMemo<string[]>(
-    () => (view === "consolidado" ? [] : ["Activos"]),
-    [view],
-  );
-
   const resetFiltersToDefault = useCallback(() => {
     setSearch("");
     setFaculty([]);
@@ -229,14 +227,14 @@ export function ConsolidadoDashboardClient({ data, currentUser, currentRole }: P
     setRegionalizedFilter([]);
     setAcreditableFilter([]);
     setAccreditedFilter([]);
-    setProgramStatusFilter(defaultProgramStatusFilter);
+    setProgramStatusFilter(defaultProgramStatusFilter());
     setRcState([]);
     setRcStart("");
     setRcEnd("");
     setRcValidAt("");
     setAacStart("");
     setAacEnd("");
-  }, [defaultProgramStatusFilter]);
+  }, []);
 
   useEffect(() => {
     const lockKey = `siac_active_tab_lock:${currentUser}`;
@@ -551,14 +549,13 @@ export function ConsolidadoDashboardClient({ data, currentUser, currentRole }: P
   }, [programs, view, programStatusFilter, faculty, modality, level, locationFilter, regionalizedFilter, acreditableFilter, accreditedFilter, rcState, search, rcStart, rcEnd, rcValidAt, aacStart, aacEnd]);
 
   const filteredSummary = useMemo(() => {
-    const activeFiltered = filtered.filter((program) => program.isActive !== false);
-    const faculties = new Set(activeFiltered.map((program) => program.faculty)).size;
-    const accreditable = activeFiltered.filter((program) => program.acreditable).length;
-    const accredited = activeFiltered.filter((program) => program.accredited).length;
+    const faculties = new Set(filtered.map((program) => program.faculty)).size;
+    const accreditable = filtered.filter((program) => program.acreditable).length;
+    const accredited = filtered.filter((program) => program.accredited).length;
     const accreditedOverAccreditablePct = accreditable > 0
       ? Number(((accredited / accreditable) * 100).toFixed(1))
       : 0;
-    const upcomingRrcIn120Days = activeFiltered.filter((program) => {
+    const upcomingRrcIn120Days = filtered.filter((program) => {
       if (!program.rcMineducacion) return false;
       const target = new Date(program.rcMineducacion);
       if (Number.isNaN(target.getTime())) return false;
@@ -568,7 +565,7 @@ export function ConsolidadoDashboardClient({ data, currentUser, currentRole }: P
       return days >= 0 && days <= 120;
     }).length;
     return {
-      totalPrograms: activeFiltered.length,
+      totalPrograms: filtered.length,
       faculties,
       accreditable,
       accredited,
