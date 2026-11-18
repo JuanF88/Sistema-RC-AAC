@@ -437,6 +437,7 @@ async function createHistorialExcel(
     { key: "acreditable", header: "Acreditable" },
     { key: "accredited", header: "Acreditado" },
     { key: "aacStart", header: "Inicio AAC" },
+    { key: "aacDurationYears", header: "Años AAC" },
     { key: "aacEnd", header: "Vencimiento AAC" },
   ];
 
@@ -456,6 +457,7 @@ async function createHistorialExcel(
         acreditable: program.acreditable ? "Sí" : "No",
         accredited: program.accredited ? "Sí" : "No",
         aacStart: formatDate(program.aacStart),
+        aacDurationYears: program.aacDurationYears ?? "-",
         aacEnd: formatDate(program.aacEnd),
       });
       const stripeColor = idx % 2 === 0 ? "FFFFFFFF" : "FFF8FAFC";
@@ -475,6 +477,7 @@ async function createHistorialExcel(
     { key: "faculty", header: "Facultad" },
     { key: "program", header: "Programa" },
     { key: "rcStart", header: "Inicio RC" },
+    { key: "rcDurationYears", header: "Años RC" },
     { key: "rcEnd", header: "Vencimiento RC" },
     { key: "rcStatus", header: "Estado" },
     { key: "rcResolution", header: "Resolución" },
@@ -494,6 +497,7 @@ async function createHistorialExcel(
       faculty: program.faculty,
       program: program.program,
       rcStart: formatDate(program.rcStart),
+      rcDurationYears: program.rcDurationYears ?? "-",
       rcEnd: formatDate(program.rcEnd),
       rcStatus,
       rcResolution: program.rcResolution || "-",

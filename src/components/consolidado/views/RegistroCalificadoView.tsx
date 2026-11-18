@@ -149,7 +149,12 @@ export function RegistroCalificadoView({ rows, groupingMode, onExportReady }: Pr
     const columns: ExportColumn[] = [
       { key: "faculty", header: "Facultad", width: 30 },
       { key: data.useFacultyGrouping ? "programCount" : "program", header: data.useFacultyGrouping ? "Programas" : "Programa", width: data.useFacultyGrouping ? 14 : 36 },
-      ...(data.useFacultyGrouping ? [] : [{ key: "level", header: "Nivel", width: 20 }]),
+      ...(data.useFacultyGrouping
+        ? []
+        : [
+            { key: "level", header: "Nivel", width: 20 },
+            { key: "rcDurationYears", header: "Años RC", width: 12 },
+          ]),
       ...LEVEL_COLUMNS.map((column) => ({ key: column.key, header: column.label, width: 14 })),
       { key: "totalPregrado", header: "Total Pregrado", width: 16 },
       { key: "totalPosgrado", header: "Total Posgrado", width: 16 },
@@ -182,6 +187,7 @@ export function RegistroCalificadoView({ rows, groupingMode, onExportReady }: Pr
             faculty: program.faculty,
             program: program.program,
             level: program.academicLevel ?? program.level ?? "-",
+            rcDurationYears: program.rcDurationYears ?? "-",
             tecn: bucket === "tecn" ? 1 : "",
             pregrado: bucket === "pregrado" ? 1 : "",
             esp: bucket === "esp" ? 1 : "",

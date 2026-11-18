@@ -320,6 +320,7 @@ export function ExpirationAlertsView({ rows, onExportReady, onProgramUpdate, onA
         return {
           id: program.id,
           program: program.program,
+          rcDurationYears: program.rcDurationYears,
           rcEnd: program.rcEnd,
           rcAlert,
           coordinatorEmail: program.programCoordinatorEmail ?? "",
@@ -354,6 +355,7 @@ export function ExpirationAlertsView({ rows, onExportReady, onProgramUpdate, onA
         return {
           id: program.id,
           program: program.program,
+          aacDurationYears: program.aacDurationYears,
           aacEnd: program.aacEnd,
           aacAlert,
           coordinatorEmail: program.programCoordinatorEmail ?? "",
@@ -619,6 +621,7 @@ export function ExpirationAlertsView({ rows, onExportReady, onProgramUpdate, onA
       data.mode === "rrc"
         ? [
             { key: "program", header: "Programa", width: 38 },
+            { key: "rcDurationYears", header: "Años R.C.", width: 12 },
             { key: "rcEnd", header: "Vencimiento R.C.", width: 18, formatter: (v) => formatDate(v as string | null | undefined) || "-" },
             { key: "rcAlert", header: "Alerta R.C.", width: 16 },
             { key: "rcDays", header: "Días R.C.", width: 12 },
@@ -629,6 +632,7 @@ export function ExpirationAlertsView({ rows, onExportReady, onProgramUpdate, onA
           ]
         : [
             { key: "program", header: "Programa", width: 38 },
+            { key: "aacDurationYears", header: "Años AAC", width: 12 },
             { key: "aacEnd", header: "Vencimiento AAC", width: 18, formatter: (v) => formatDate(v as string | null | undefined) || "-" },
             { key: "aacAlert", header: "Alerta AAC", width: 16 },
             { key: "aacDays", header: "Días AAC", width: 12 },
@@ -642,6 +646,7 @@ export function ExpirationAlertsView({ rows, onExportReady, onProgramUpdate, onA
       data.mode === "rrc"
         ? data.rrcRows.map((row) => ({
             program: row.program,
+            rcDurationYears: row.rcDurationYears ?? "-",
             rcEnd: row.rcEnd,
             rcAlert: row.rcAlert.label,
             rcDays: row.rcAlert.days ?? "-",
@@ -652,6 +657,7 @@ export function ExpirationAlertsView({ rows, onExportReady, onProgramUpdate, onA
           }))
         : data.accreditedRows.map((row) => ({
             program: row.program,
+            aacDurationYears: row.aacDurationYears ?? "-",
             aacEnd: row.aacEnd,
             aacAlert: row.aacAlert.label,
             aacDays: row.aacAlert.days ?? "-",

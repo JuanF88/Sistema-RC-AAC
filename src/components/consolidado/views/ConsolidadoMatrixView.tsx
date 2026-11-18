@@ -31,6 +31,7 @@ type SortKey =
   | "duration"
   | "rcResolution"
   | "rcStart"
+  | "rcDurationYears"
   | "rcEnd"
   | "rcSiga"
   | "rcMineducacion"
@@ -38,6 +39,7 @@ type SortKey =
   | "accredited"
   | "aacResolution"
   | "aacStart"
+  | "aacDurationYears"
   | "aacEnd"
   | "aacImprovementHalfway"
   | "rcExecutoriaConceptDate"
@@ -159,6 +161,7 @@ const COLUMNS: ColumnDef[] = [
   { key: "duration", label: "Duración", width: 140, sortable: true, render: (program) => formatDurationLabel(program.duration, program.durationUnit) },
   { key: "rcResolution", label: "Resolución\nR.C.", width: 160, sortable: true, render: (program) => program.rcResolution },
   { key: "rcStart", label: "Inicio RC", width: 140, sortable: true, render: (program) => formatDate(program.rcStart) },
+  { key: "rcDurationYears", label: "Años RC", width: 110, sortable: true, render: (program) => program.rcDurationYears },
   { key: "rcEnd", label: "Vencimiento RC", width: 150, sortable: true, render: (program) => formatDate(program.rcEnd) },
   { key: "rcSiga", label: "RC SIGA", width: 140, sortable: true, render: (program) => formatDate(program.rcSiga) },
   { key: "rcMineducacion", label: "RC MinEdu", width: 150, sortable: true, render: (program) => formatDate(program.rcMineducacion) },
@@ -173,6 +176,7 @@ const COLUMNS: ColumnDef[] = [
   { key: "accredited", label: "Acreditado", width: 110, sortable: true, render: (program) => (program.accredited ? "Sí" : "No") },
   { key: "aacResolution", label: "Resolución\nAcreditación A.C.", width: 180, sortable: true, render: (program) => program.aacResolution },
   { key: "aacStart", label: "Inicio AAC", width: 140, sortable: true, render: (program) => formatDate(program.aacStart) },
+  { key: "aacDurationYears", label: "Años AAC", width: 110, sortable: true, render: (program) => program.aacDurationYears },
   { key: "aacEnd", label: "Vencimiento AAC", width: 150, sortable: true, render: (program) => formatDate(program.aacEnd) },
   { key: "aacImprovementHalfway", label: "Mitad Vigencia AAC", width: 170, sortable: true, render: (program) => formatDate(program.aacImprovementHalfway) },
   {
@@ -217,7 +221,7 @@ const FULL_EXPORT_COLUMNS: ExportMatrixColumn[] = [
   { key: "rcResolution", header: "Resolución\nR.C.", width: 18, getValue: (program) => program.rcResolution },
   { key: "rcResolutionCopy", header: "Resolución\nR.C.", width: 18, getValue: (program) => program.rcResolution },
   { key: "rcStart", header: "Inicio R.C.", width: 14, getValue: (program) => formatDate(program.rcStart) },
-  { key: "rcDurationYears", header: "Duración\n(años)", width: 12, getValue: (program) => program.rcDurationYears },
+  { key: "rcDurationYears", header: "Duración R.C.\n(años)", width: 14, getValue: (program) => program.rcDurationYears },
   { key: "rcSiga", header: "SiGA RRC\n(14 meses antes)", width: 18, getValue: (program) => formatDate(program.rcSiga) },
   { key: "rcMineducacion", header: "Plazo Radicación RRC\nante MinEducación\n(12 meses antes)", width: 24, getValue: (program) => formatDate(program.rcMineducacion) },
   { key: "rcEnd", header: "Vencimiento\nR.C.", width: 16, getValue: (program) => formatDate(program.rcEnd) },
@@ -232,7 +236,7 @@ const FULL_EXPORT_COLUMNS: ExportMatrixColumn[] = [
   { key: "accredited", header: "Acreditado", width: 12, getValue: (program) => (program.accredited ? "Si" : "No") },
   { key: "aacResolution", header: "Resolución\nAcreditacion A.C.", width: 20, getValue: (program) => program.aacResolution },
   { key: "aacStart", header: "Inicio A.A.C.", width: 14, getValue: (program) => formatDate(program.aacStart) },
-  { key: "aacDurationYears", header: "Duración\n(años)", width: 12, getValue: (program) => program.aacDurationYears },
+  { key: "aacDurationYears", header: "Duración A.A.C.\n(años)", width: 14, getValue: (program) => program.aacDurationYears },
   { key: "aacCgcaiDelivery", header: "Entrega al CGCAI\n(14 meses antes)", width: 20, getValue: (program) => formatDate(program.aacCgcaiDelivery) },
   { key: "aacMineducacionFiling", header: "Plazo Radicación AAC\nante MinEducación\n(1 año antes)", width: 24, getValue: (program) => formatDate(program.aacMineducacionFiling) },
   { key: "aacEnd", header: "Vencimiento\nA.A.C.", width: 16, getValue: (program) => formatDate(program.aacEnd) },
